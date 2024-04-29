@@ -13,7 +13,7 @@ export * from './burn';
 export * from './burnChecked';
 export * from './closeAccount';
 export * from './createAssociatedToken';
-export * from './createIdempotentAssociatedToken';
+export * from './createAssociatedTokenIdempotent';
 export * from './freezeAccount';
 export * from './getAccountDataSize';
 export * from './initializeAccount';

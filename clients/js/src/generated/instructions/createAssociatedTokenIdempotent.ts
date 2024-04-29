@@ -20,7 +20,7 @@ import {
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type CreateIdempotentAssociatedTokenInstruction<
+export type CreateAssociatedTokenIdempotentInstruction<
   TProgram extends string = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountAta extends string | IAccountMeta<string> = string,
@@ -57,7 +57,7 @@ export type CreateIdempotentAssociatedTokenInstruction<
     ]
   >;
 
-export type CreateIdempotentAssociatedTokenInput<
+export type CreateAssociatedTokenIdempotentInput<
   TAccountPayer extends string = string,
   TAccountAta extends string = string,
   TAccountOwner extends string = string,
@@ -65,15 +65,21 @@ export type CreateIdempotentAssociatedTokenInput<
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
+  /** Funding account (must be a system account). */
   payer: TransactionSigner<TAccountPayer>;
+  /** Associated token account address to be created. */
   ata: Address<TAccountAta>;
+  /** Wallet address for the new associated token account. */
   owner: Address<TAccountOwner>;
+  /** The token mint for the new associated token account. */
   mint: Address<TAccountMint>;
+  /** System program. */
   systemProgram?: Address<TAccountSystemProgram>;
+  /** SPL Token program. */
   tokenProgram?: Address<TAccountTokenProgram>;
 };
 
-export function getCreateIdempotentAssociatedTokenInstruction<
+export function getCreateAssociatedTokenIdempotentInstruction<
   TAccountPayer extends string,
   TAccountAta extends string,
   TAccountOwner extends string,
@@ -81,7 +87,7 @@ export function getCreateIdempotentAssociatedTokenInstruction<
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
 >(
-  input: CreateIdempotentAssociatedTokenInput<
+  input: CreateAssociatedTokenIdempotentInput<
     TAccountPayer,
     TAccountAta,
     TAccountOwner,
@@ -89,7 +95,7 @@ export function getCreateIdempotentAssociatedTokenInstruction<
     TAccountSystemProgram,
     TAccountTokenProgram
   >
-): CreateIdempotentAssociatedTokenInstruction<
+): CreateAssociatedTokenIdempotentInstruction<
   typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   TAccountPayer,
   TAccountAta,
@@ -136,7 +142,7 @@ export function getCreateIdempotentAssociatedTokenInstruction<
       getAccountMeta(accounts.tokenProgram),
     ],
     programAddress,
-  } as CreateIdempotentAssociatedTokenInstruction<
+  } as CreateAssociatedTokenIdempotentInstruction<
     typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
     TAccountPayer,
     TAccountAta,
@@ -149,27 +155,33 @@ export function getCreateIdempotentAssociatedTokenInstruction<
   return instruction;
 }
 
-export type ParsedCreateIdempotentAssociatedTokenInstruction<
+export type ParsedCreateAssociatedTokenIdempotentInstruction<
   TProgram extends string = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** Funding account (must be a system account). */
     payer: TAccountMetas[0];
+    /** Associated token account address to be created. */
     ata: TAccountMetas[1];
+    /** Wallet address for the new associated token account. */
     owner: TAccountMetas[2];
+    /** The token mint for the new associated token account. */
     mint: TAccountMetas[3];
+    /** System program. */
     systemProgram: TAccountMetas[4];
+    /** SPL Token program. */
     tokenProgram: TAccountMetas[5];
   };
 };
 
-export function parseCreateIdempotentAssociatedTokenInstruction<
+export function parseCreateAssociatedTokenIdempotentInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> & IInstructionWithAccounts<TAccountMetas>
-): ParsedCreateIdempotentAssociatedTokenInstruction<TProgram, TAccountMetas> {
+): ParsedCreateAssociatedTokenIdempotentInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 6) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');

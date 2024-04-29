@@ -65,11 +65,17 @@ export type CreateAssociatedTokenInput<
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
+  /** Funding account (must be a system account). */
   payer: TransactionSigner<TAccountPayer>;
+  /** Associated token account address to be created. */
   ata: Address<TAccountAta>;
+  /** Wallet address for the new associated token account. */
   owner: Address<TAccountOwner>;
+  /** The token mint for the new associated token account. */
   mint: Address<TAccountMint>;
+  /** System program. */
   systemProgram?: Address<TAccountSystemProgram>;
+  /** SPL Token program. */
   tokenProgram?: Address<TAccountTokenProgram>;
 };
 
@@ -155,11 +161,17 @@ export type ParsedCreateAssociatedTokenInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** Funding account (must be a system account). */
     payer: TAccountMetas[0];
+    /** Associated token account address to be created. */
     ata: TAccountMetas[1];
+    /** Wallet address for the new associated token account. */
     owner: TAccountMetas[2];
+    /** The token mint for the new associated token account. */
     mint: TAccountMetas[3];
+    /** System program. */
     systemProgram: TAccountMetas[4];
+    /** SPL Token program. */
     tokenProgram: TAccountMetas[5];
   };
 };

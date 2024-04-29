@@ -76,12 +76,19 @@ export type RecoverNestedAssociatedTokenInput<
   TAccountWalletAddress extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
+  /** Nested associated token account, must be owned by `ownerAssociatedAccountAddress`. */
   nestedAssociatedAccountAddress: Address<TAccountNestedAssociatedAccountAddress>;
+  /** Token mint for the nested associated token account. */
   nestedTokenMintAddress: Address<TAccountNestedTokenMintAddress>;
+  /** Wallet's associated token account. */
   destinationAssociatedAccountAddress: Address<TAccountDestinationAssociatedAccountAddress>;
+  /** Owner associated token account address, must be owned by `walletAddress`. */
   ownerAssociatedAccountAddress: Address<TAccountOwnerAssociatedAccountAddress>;
+  /** Token mint for the owner associated token account. */
   ownerTokenMintAddress: Address<TAccountOwnerTokenMintAddress>;
+  /** Wallet address for the owner associated token account. */
   walletAddress: TransactionSigner<TAccountWalletAddress>;
+  /** SPL Token program. */
   tokenProgram?: Address<TAccountTokenProgram>;
 };
 
@@ -184,12 +191,19 @@ export type ParsedRecoverNestedAssociatedTokenInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** Nested associated token account, must be owned by `ownerAssociatedAccountAddress`. */
     nestedAssociatedAccountAddress: TAccountMetas[0];
+    /** Token mint for the nested associated token account. */
     nestedTokenMintAddress: TAccountMetas[1];
+    /** Wallet's associated token account. */
     destinationAssociatedAccountAddress: TAccountMetas[2];
+    /** Owner associated token account address, must be owned by `walletAddress`. */
     ownerAssociatedAccountAddress: TAccountMetas[3];
+    /** Token mint for the owner associated token account. */
     ownerTokenMintAddress: TAccountMetas[4];
+    /** Wallet address for the owner associated token account. */
     walletAddress: TAccountMetas[5];
+    /** SPL Token program. */
     tokenProgram: TAccountMetas[6];
   };
 };

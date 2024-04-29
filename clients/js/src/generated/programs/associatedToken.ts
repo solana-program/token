@@ -8,8 +8,8 @@
 
 import { Address } from '@solana/web3.js';
 import {
+  ParsedCreateAssociatedTokenIdempotentInstruction,
   ParsedCreateAssociatedTokenInstruction,
-  ParsedCreateIdempotentAssociatedTokenInstruction,
   ParsedRecoverNestedAssociatedTokenInstruction,
 } from '../instructions';
 
@@ -18,7 +18,7 @@ export const ASSOCIATED_TOKEN_PROGRAM_ADDRESS =
 
 export enum AssociatedTokenInstruction {
   CreateAssociatedToken,
-  CreateIdempotentAssociatedToken,
+  CreateAssociatedTokenIdempotent,
   RecoverNestedAssociatedToken,
 }
 
@@ -29,8 +29,8 @@ export type ParsedAssociatedTokenInstruction<
       instructionType: AssociatedTokenInstruction.CreateAssociatedToken;
     } & ParsedCreateAssociatedTokenInstruction<TProgram>)
   | ({
-      instructionType: AssociatedTokenInstruction.CreateIdempotentAssociatedToken;
-    } & ParsedCreateIdempotentAssociatedTokenInstruction<TProgram>)
+      instructionType: AssociatedTokenInstruction.CreateAssociatedTokenIdempotent;
+    } & ParsedCreateAssociatedTokenIdempotentInstruction<TProgram>)
   | ({
       instructionType: AssociatedTokenInstruction.RecoverNestedAssociatedToken;
     } & ParsedRecoverNestedAssociatedTokenInstruction<TProgram>);

@@ -2262,7 +2262,7 @@
               "isWritable": true,
               "isSigner": true,
               "isOptional": false,
-              "docs": [],
+              "docs": ["Funding account (must be a system account)."],
               "defaultValue": { "kind": "payerValueNode" }
             },
             {
@@ -2271,7 +2271,7 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Associated token account address to be created."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2279,7 +2279,7 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Wallet address for the new associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2287,7 +2287,7 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["The token mint for the new associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2295,11 +2295,10 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": [],
+              "docs": ["System program."],
               "defaultValue": {
                 "kind": "publicKeyValueNode",
-                "publicKey": "11111111111111111111111111111111",
-                "identifier": "splSystem"
+                "publicKey": "11111111111111111111111111111111"
               }
             },
             {
@@ -2308,17 +2307,19 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": [],
+              "docs": ["SPL Token program."],
               "defaultValue": {
                 "kind": "publicKeyValueNode",
-                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                "identifier": "splToken"
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
               }
             }
           ],
           "arguments": [],
           "name": "createAssociatedToken",
-          "docs": [],
+          "docs": [
+            "Creates an associated token account for the given wallet address and",
+            "token mint Returns an error if the account exists."
+          ],
           "optionalAccountStrategy": "programId"
         },
         {
@@ -2330,7 +2331,7 @@
               "isWritable": true,
               "isSigner": true,
               "isOptional": false,
-              "docs": [],
+              "docs": ["Funding account (must be a system account)."],
               "defaultValue": { "kind": "payerValueNode" }
             },
             {
@@ -2339,7 +2340,7 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Associated token account address to be created."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2347,7 +2348,7 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Wallet address for the new associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2355,7 +2356,7 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["The token mint for the new associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2363,11 +2364,10 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": [],
+              "docs": ["System program."],
               "defaultValue": {
                 "kind": "publicKeyValueNode",
-                "publicKey": "11111111111111111111111111111111",
-                "identifier": "splSystem"
+                "publicKey": "11111111111111111111111111111111"
               }
             },
             {
@@ -2376,17 +2376,20 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": [],
+              "docs": ["SPL Token program."],
               "defaultValue": {
                 "kind": "publicKeyValueNode",
-                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                "identifier": "splToken"
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
               }
             }
           ],
           "arguments": [],
-          "name": "createIdempotentAssociatedToken",
-          "docs": [],
+          "name": "createAssociatedTokenIdempotent",
+          "docs": [
+            "Creates an associated token account for the given wallet address and",
+            "token mint, if it doesn't already exist. Returns an error if the",
+            "account exists, but with a different owner."
+          ],
           "optionalAccountStrategy": "programId"
         },
         {
@@ -2398,7 +2401,9 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": [
+                "Nested associated token account, must be owned by `ownerAssociatedAccountAddress`."
+              ]
             },
             {
               "kind": "instructionAccountNode",
@@ -2406,7 +2411,7 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Token mint for the nested associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2414,7 +2419,7 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Wallet's associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2422,7 +2427,9 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": [
+                "Owner associated token account address, must be owned by `walletAddress`."
+              ]
             },
             {
               "kind": "instructionAccountNode",
@@ -2430,7 +2437,7 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": []
+              "docs": ["Token mint for the owner associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2438,7 +2445,7 @@
               "isWritable": true,
               "isSigner": true,
               "isOptional": false,
-              "docs": []
+              "docs": ["Wallet address for the owner associated token account."]
             },
             {
               "kind": "instructionAccountNode",
@@ -2446,17 +2453,27 @@
               "isWritable": false,
               "isSigner": false,
               "isOptional": false,
-              "docs": [],
+              "docs": ["SPL Token program."],
               "defaultValue": {
                 "kind": "publicKeyValueNode",
-                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                "identifier": "splToken"
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
               }
             }
           ],
           "arguments": [],
           "name": "recoverNestedAssociatedToken",
-          "docs": [],
+          "docs": [
+            "Transfers from and closes a nested associated token account: an",
+            "associated token account owned by an associated token account.",
+            "",
+            "The tokens are moved from the nested associated token account to the",
+            "wallet's associated token account, and the nested account lamports are",
+            "moved to the wallet.",
+            "",
+            "Note: Nested token accounts are an anti-pattern, and almost always",
+            "created unintentionally, so this instruction should only be used to",
+            "recover from errors."
+          ],
           "optionalAccountStrategy": "programId"
         }
       ],
