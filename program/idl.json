@@ -20,8 +20,7 @@
                   "format": "u32",
                   "endian": "le"
                 },
-                "fixed": true,
-                "idlOption": "coption"
+                "fixed": true
               },
               "docs": []
             },
@@ -69,15 +68,13 @@
                   "format": "u32",
                   "endian": "le"
                 },
-                "fixed": true,
-                "idlOption": "coption"
+                "fixed": true
               },
               "docs": []
             }
           ]
         },
         "name": "mint",
-        "idlName": "Mint",
         "docs": [],
         "size": 82
       },
@@ -119,8 +116,7 @@
                   "format": "u32",
                   "endian": "le"
                 },
-                "fixed": true,
-                "idlOption": "coption"
+                "fixed": true
               },
               "docs": []
             },
@@ -145,8 +141,7 @@
                   "format": "u32",
                   "endian": "le"
                 },
-                "fixed": true,
-                "idlOption": "coption"
+                "fixed": true
               },
               "docs": []
             },
@@ -171,15 +166,13 @@
                   "format": "u32",
                   "endian": "le"
                 },
-                "fixed": true,
-                "idlOption": "coption"
+                "fixed": true
               },
               "docs": []
             }
           ]
         },
-        "name": "token",
-        "idlName": "Token",
+        "name": "account",
         "docs": [],
         "size": 165
       },
@@ -234,7 +227,6 @@
           ]
         },
         "name": "multisig",
-        "idlName": "Multisig",
         "docs": [],
         "size": 355
       }
@@ -304,8 +296,7 @@
                 "format": "u8",
                 "endian": "le"
               },
-              "fixed": false,
-              "idlOption": "option"
+              "fixed": false
             },
             "docs": []
           }
@@ -318,7 +309,6 @@
           }
         ],
         "name": "initializeMint",
-        "idlName": "initializeMint",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -384,7 +374,6 @@
           }
         ],
         "name": "initializeToken",
-        "idlName": "initializeToken",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -444,7 +433,6 @@
           }
         ],
         "name": "initializeMultisig",
-        "idlName": "initializeMultisig",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -509,7 +497,6 @@
           }
         ],
         "name": "transferTokens",
-        "idlName": "transferTokens",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -573,7 +560,6 @@
           }
         ],
         "name": "approveTokenDelegate",
-        "idlName": "approveTokenDelegate",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -619,7 +605,6 @@
           }
         ],
         "name": "revokeTokenDelegate",
-        "idlName": "revokeTokenDelegate",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -673,8 +658,7 @@
                 "format": "u8",
                 "endian": "le"
               },
-              "fixed": false,
-              "idlOption": "option"
+              "fixed": false
             },
             "docs": []
           }
@@ -687,7 +671,6 @@
           }
         ],
         "name": "setAuthority",
-        "idlName": "setAuthority",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -751,7 +734,6 @@
           }
         ],
         "name": "mintTokensTo",
-        "idlName": "mintTokensTo",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -816,7 +798,6 @@
           }
         ],
         "name": "burnToken",
-        "idlName": "burnToken",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -870,7 +851,6 @@
           }
         ],
         "name": "closeToken",
-        "idlName": "closeToken",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -924,7 +904,6 @@
           }
         ],
         "name": "freezeToken",
-        "idlName": "freezeToken",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -978,7 +957,6 @@
           }
         ],
         "name": "thawToken",
-        "idlName": "thawToken",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1061,7 +1039,6 @@
           }
         ],
         "name": "transferTokensChecked",
-        "idlName": "transferTokensChecked",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1143,7 +1120,6 @@
           }
         ],
         "name": "approveTokenDelegateChecked",
-        "idlName": "approveTokenDelegateChecked",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1217,7 +1193,6 @@
           }
         ],
         "name": "mintTokensToChecked",
-        "idlName": "mintTokensToChecked",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1292,7 +1267,6 @@
           }
         ],
         "name": "burnTokenChecked",
-        "idlName": "burnTokenChecked",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1356,7 +1330,6 @@
           }
         ],
         "name": "initializeToken2",
-        "idlName": "initializeToken2",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1394,7 +1367,6 @@
           }
         ],
         "name": "syncNative",
-        "idlName": "syncNative",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1446,7 +1418,6 @@
           }
         ],
         "name": "initializeToken3",
-        "idlName": "initializeToken3",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1502,7 +1473,6 @@
           }
         ],
         "name": "initializeMultisig2",
-        "idlName": "initializeMultisig2",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1558,8 +1528,7 @@
                 "format": "u8",
                 "endian": "le"
               },
-              "fixed": false,
-              "idlOption": "option"
+              "fixed": false
             },
             "docs": []
           }
@@ -1572,7 +1541,6 @@
           }
         ],
         "name": "initializeMint2",
-        "idlName": "initializeMint2",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1610,7 +1578,6 @@
           }
         ],
         "name": "getTokenDataSize",
-        "idlName": "getTokenDataSize",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1648,7 +1615,6 @@
           }
         ],
         "name": "initializeImmutableOwner",
-        "idlName": "initializeImmutableOwner",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1696,7 +1662,6 @@
           }
         ],
         "name": "amountToUiAmount",
-        "idlName": "amountToUiAmount",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1744,7 +1709,6 @@
           }
         ],
         "name": "uiAmountToAmount",
-        "idlName": "uiAmountToAmount",
         "docs": [],
         "optionalAccountStrategy": "programId"
       }
@@ -1762,7 +1726,6 @@
           ],
           "size": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
         },
-        "idlName": "TokenState",
         "docs": []
       },
       {
@@ -1778,7 +1741,6 @@
           ],
           "size": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
         },
-        "idlName": "AuthorityType",
         "docs": []
       }
     ],
@@ -1786,7 +1748,6 @@
       {
         "kind": "errorNode",
         "name": "notRentExempt",
-        "idlName": "NotRentExempt",
         "code": 0,
         "message": "Lamport balance below rent-exempt threshold",
         "docs": ["NotRentExempt: Lamport balance below rent-exempt threshold"]
@@ -1794,7 +1755,6 @@
       {
         "kind": "errorNode",
         "name": "insufficientFunds",
-        "idlName": "InsufficientFunds",
         "code": 1,
         "message": "Insufficient funds",
         "docs": ["InsufficientFunds: Insufficient funds"]
@@ -1802,7 +1762,6 @@
       {
         "kind": "errorNode",
         "name": "invalidMint",
-        "idlName": "InvalidMint",
         "code": 2,
         "message": "Invalid Mint",
         "docs": ["InvalidMint: Invalid Mint"]
@@ -1810,7 +1769,6 @@
       {
         "kind": "errorNode",
         "name": "mintMismatch",
-        "idlName": "MintMismatch",
         "code": 3,
         "message": "Account not associated with this Mint",
         "docs": ["MintMismatch: Account not associated with this Mint"]
@@ -1818,7 +1776,6 @@
       {
         "kind": "errorNode",
         "name": "ownerMismatch",
-        "idlName": "OwnerMismatch",
         "code": 4,
         "message": "Owner does not match",
         "docs": ["OwnerMismatch: Owner does not match"]
@@ -1826,7 +1783,6 @@
       {
         "kind": "errorNode",
         "name": "fixedSupply",
-        "idlName": "FixedSupply",
         "code": 5,
         "message": "Fixed supply",
         "docs": ["FixedSupply: Fixed supply"]
@@ -1834,7 +1790,6 @@
       {
         "kind": "errorNode",
         "name": "alreadyInUse",
-        "idlName": "AlreadyInUse",
         "code": 6,
         "message": "Already in use",
         "docs": ["AlreadyInUse: Already in use"]
@@ -1842,7 +1797,6 @@
       {
         "kind": "errorNode",
         "name": "invalidNumberOfProvidedSigners",
-        "idlName": "InvalidNumberOfProvidedSigners",
         "code": 7,
         "message": "Invalid number of provided signers",
         "docs": [
@@ -1852,7 +1806,6 @@
       {
         "kind": "errorNode",
         "name": "invalidNumberOfRequiredSigners",
-        "idlName": "InvalidNumberOfRequiredSigners",
         "code": 8,
         "message": "Invalid number of required signers",
         "docs": [
@@ -1862,7 +1815,6 @@
       {
         "kind": "errorNode",
         "name": "uninitializedState",
-        "idlName": "UninitializedState",
         "code": 9,
         "message": "State is unititialized",
         "docs": ["UninitializedState: State is unititialized"]
@@ -1870,7 +1822,6 @@
       {
         "kind": "errorNode",
         "name": "nativeNotSupported",
-        "idlName": "NativeNotSupported",
         "code": 10,
         "message": "Instruction does not support native tokens",
         "docs": [
@@ -1880,7 +1831,6 @@
       {
         "kind": "errorNode",
         "name": "nonNativeHasBalance",
-        "idlName": "NonNativeHasBalance",
         "code": 11,
         "message": "Non-native account can only be closed if its balance is zero",
         "docs": [
@@ -1890,7 +1840,6 @@
       {
         "kind": "errorNode",
         "name": "invalidInstruction",
-        "idlName": "InvalidInstruction",
         "code": 12,
         "message": "Invalid instruction",
         "docs": ["InvalidInstruction: Invalid instruction"]
@@ -1898,7 +1847,6 @@
       {
         "kind": "errorNode",
         "name": "invalidState",
-        "idlName": "InvalidState",
         "code": 13,
         "message": "State is invalid for requested operation",
         "docs": ["InvalidState: State is invalid for requested operation"]
@@ -1906,7 +1854,6 @@
       {
         "kind": "errorNode",
         "name": "overflow",
-        "idlName": "Overflow",
         "code": 14,
         "message": "Operation overflowed",
         "docs": ["Overflow: Operation overflowed"]
@@ -1914,7 +1861,6 @@
       {
         "kind": "errorNode",
         "name": "authorityTypeNotSupported",
-        "idlName": "AuthorityTypeNotSupported",
         "code": 15,
         "message": "Account does not support specified authority type",
         "docs": [
@@ -1924,7 +1870,6 @@
       {
         "kind": "errorNode",
         "name": "mintCannotFreeze",
-        "idlName": "MintCannotFreeze",
         "code": 16,
         "message": "This token mint cannot freeze accounts",
         "docs": ["MintCannotFreeze: This token mint cannot freeze accounts"]
@@ -1932,7 +1877,6 @@
       {
         "kind": "errorNode",
         "name": "accountFrozen",
-        "idlName": "AccountFrozen",
         "code": 17,
         "message": "Account is frozen",
         "docs": ["AccountFrozen: Account is frozen"]
@@ -1940,7 +1884,6 @@
       {
         "kind": "errorNode",
         "name": "mintDecimalsMismatch",
-        "idlName": "MintDecimalsMismatch",
         "code": 18,
         "message": "The provided decimals value different from the Mint decimals",
         "docs": [
@@ -1950,7 +1893,6 @@
       {
         "kind": "errorNode",
         "name": "nonNativeNotSupported",
-        "idlName": "NonNativeNotSupported",
         "code": 19,
         "message": "Instruction does not support non-native tokens",
         "docs": [
@@ -2035,7 +1977,6 @@
           ],
           "arguments": [],
           "name": "createAssociatedToken",
-          "idlName": "createAssociatedToken",
           "docs": [],
           "optionalAccountStrategy": "programId"
         },
@@ -2104,7 +2045,6 @@
           ],
           "arguments": [],
           "name": "createIdempotentAssociatedToken",
-          "idlName": "createIdempotentAssociatedToken",
           "docs": [],
           "optionalAccountStrategy": "programId"
         },
@@ -2175,7 +2115,6 @@
           ],
           "arguments": [],
           "name": "recoverNestedAssociatedToken",
-          "idlName": "recoverNestedAssociatedToken",
           "docs": [],
           "optionalAccountStrategy": "programId"
         }
@@ -2185,7 +2124,6 @@
         {
           "kind": "errorNode",
           "name": "invalidOwner",
-          "idlName": "InvalidOwner",
           "code": 0,
           "message": "Associated token account owner does not match address derivation",
           "docs": [
