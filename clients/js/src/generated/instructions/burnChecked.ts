@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -16,6 +17,7 @@ import {
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
+  ReadonlyAccount,
   ReadonlySignerAccount,
   TransactionSigner,
   WritableAccount,
@@ -48,8 +50,7 @@ export type BurnCheckedInstruction<
         ? WritableAccount<TAccountMint>
         : TAccountMint,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            IAccountSignerMeta<TAccountAuthority>
+        ? ReadonlyAccount<TAccountAuthority>
         : TAccountAuthority,
       ...TRemainingAccounts,
     ]
@@ -57,12 +58,16 @@ export type BurnCheckedInstruction<
 
 export type BurnCheckedInstructionData = {
   discriminator: number;
+  /** The amount of tokens to burn. */
   amount: bigint;
+  /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
 };
 
 export type BurnCheckedInstructionDataArgs = {
+  /** The amount of tokens to burn. */
   amount: number | bigint;
+  /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
 };
 
@@ -100,11 +105,15 @@ export type BurnCheckedInput<
   TAccountMint extends string = string,
   TAccountAuthority extends string = string,
 > = {
+  /** The account to burn from. */
   account: Address<TAccountAccount>;
+  /** The token mint. */
   mint: Address<TAccountMint>;
-  authority: TransactionSigner<TAccountAuthority>;
+  /** The account's owner/delegate or its multisignature account. */
+  authority: Address<TAccountAuthority> | TransactionSigner<TAccountAuthority>;
   amount: BurnCheckedInstructionDataArgs['amount'];
   decimals: BurnCheckedInstructionDataArgs['decimals'];
+  multiSigners?: Array<TransactionSigner>;
 };
 
 export function getBurnCheckedInstruction<
@@ -117,7 +126,10 @@ export function getBurnCheckedInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
   TAccountMint,
-  TAccountAuthority
+  (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
+    ? ReadonlySignerAccount<TAccountAuthority> &
+        IAccountSignerMeta<TAccountAuthority>
+    : TAccountAuthority
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -136,12 +148,22 @@ export function getBurnCheckedInstruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.account),
       getAccountMeta(accounts.mint),
       getAccountMeta(accounts.authority),
+      ...remainingAccounts,
     ],
     programAddress,
     data: getBurnCheckedInstructionDataEncoder().encode(
@@ -151,7 +173,10 @@ export function getBurnCheckedInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
     TAccountMint,
-    TAccountAuthority
+    (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
+      ? ReadonlySignerAccount<TAccountAuthority> &
+          IAccountSignerMeta<TAccountAuthority>
+      : TAccountAuthority
   >;
 
   return instruction;
@@ -163,8 +188,11 @@ export type ParsedBurnCheckedInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to burn from. */
     account: TAccountMetas[0];
+    /** The token mint. */
     mint: TAccountMetas[1];
+    /** The account's owner/delegate or its multisignature account. */
     authority: TAccountMetas[2];
   };
   data: BurnCheckedInstructionData;

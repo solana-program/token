@@ -26,7 +26,7 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type GetTokenDataSizeInstruction<
+export type GetAccountDataSizeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
@@ -41,38 +41,39 @@ export type GetTokenDataSizeInstruction<
     ]
   >;
 
-export type GetTokenDataSizeInstructionData = { discriminator: number };
+export type GetAccountDataSizeInstructionData = { discriminator: number };
 
-export type GetTokenDataSizeInstructionDataArgs = {};
+export type GetAccountDataSizeInstructionDataArgs = {};
 
-export function getGetTokenDataSizeInstructionDataEncoder(): Encoder<GetTokenDataSizeInstructionDataArgs> {
+export function getGetAccountDataSizeInstructionDataEncoder(): Encoder<GetAccountDataSizeInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
     (value) => ({ ...value, discriminator: 21 })
   );
 }
 
-export function getGetTokenDataSizeInstructionDataDecoder(): Decoder<GetTokenDataSizeInstructionData> {
+export function getGetAccountDataSizeInstructionDataDecoder(): Decoder<GetAccountDataSizeInstructionData> {
   return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getGetTokenDataSizeInstructionDataCodec(): Codec<
-  GetTokenDataSizeInstructionDataArgs,
-  GetTokenDataSizeInstructionData
+export function getGetAccountDataSizeInstructionDataCodec(): Codec<
+  GetAccountDataSizeInstructionDataArgs,
+  GetAccountDataSizeInstructionData
 > {
   return combineCodec(
-    getGetTokenDataSizeInstructionDataEncoder(),
-    getGetTokenDataSizeInstructionDataDecoder()
+    getGetAccountDataSizeInstructionDataEncoder(),
+    getGetAccountDataSizeInstructionDataDecoder()
   );
 }
 
-export type GetTokenDataSizeInput<TAccountMint extends string = string> = {
+export type GetAccountDataSizeInput<TAccountMint extends string = string> = {
+  /** The mint to calculate for. */
   mint: Address<TAccountMint>;
 };
 
-export function getGetTokenDataSizeInstruction<TAccountMint extends string>(
-  input: GetTokenDataSizeInput<TAccountMint>
-): GetTokenDataSizeInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint> {
+export function getGetAccountDataSizeInstruction<TAccountMint extends string>(
+  input: GetAccountDataSizeInput<TAccountMint>
+): GetAccountDataSizeInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint> {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
 
@@ -89,31 +90,35 @@ export function getGetTokenDataSizeInstruction<TAccountMint extends string>(
   const instruction = {
     accounts: [getAccountMeta(accounts.mint)],
     programAddress,
-    data: getGetTokenDataSizeInstructionDataEncoder().encode({}),
-  } as GetTokenDataSizeInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint>;
+    data: getGetAccountDataSizeInstructionDataEncoder().encode({}),
+  } as GetAccountDataSizeInstruction<
+    typeof TOKEN_PROGRAM_ADDRESS,
+    TAccountMint
+  >;
 
   return instruction;
 }
 
-export type ParsedGetTokenDataSizeInstruction<
+export type ParsedGetAccountDataSizeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The mint to calculate for. */
     mint: TAccountMetas[0];
   };
-  data: GetTokenDataSizeInstructionData;
+  data: GetAccountDataSizeInstructionData;
 };
 
-export function parseGetTokenDataSizeInstruction<
+export function parseGetAccountDataSizeInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedGetTokenDataSizeInstruction<TProgram, TAccountMetas> {
+): ParsedGetAccountDataSizeInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 1) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -129,6 +134,8 @@ export function parseGetTokenDataSizeInstruction<
     accounts: {
       mint: getNextAccount(),
     },
-    data: getGetTokenDataSizeInstructionDataDecoder().decode(instruction.data),
+    data: getGetAccountDataSizeInstructionDataDecoder().decode(
+      instruction.data
+    ),
   };
 }

@@ -19,10 +19,10 @@ import {
   combineCodec,
   getStructDecoder,
   getStructEncoder,
-  getU64Decoder,
-  getU64Encoder,
   getU8Decoder,
   getU8Encoder,
+  getUtf8Decoder,
+  getUtf8Encoder,
   transformEncoder,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
@@ -45,16 +45,20 @@ export type UiAmountToAmountInstruction<
 
 export type UiAmountToAmountInstructionData = {
   discriminator: number;
-  uiAmount: bigint;
+  /** The ui_amount of tokens to reformat. */
+  uiAmount: string;
 };
 
-export type UiAmountToAmountInstructionDataArgs = { uiAmount: number | bigint };
+export type UiAmountToAmountInstructionDataArgs = {
+  /** The ui_amount of tokens to reformat. */
+  uiAmount: string;
+};
 
 export function getUiAmountToAmountInstructionDataEncoder(): Encoder<UiAmountToAmountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['uiAmount', getU64Encoder()],
+      ['uiAmount', getUtf8Encoder()],
     ]),
     (value) => ({ ...value, discriminator: 24 })
   );
@@ -63,7 +67,7 @@ export function getUiAmountToAmountInstructionDataEncoder(): Encoder<UiAmountToA
 export function getUiAmountToAmountInstructionDataDecoder(): Decoder<UiAmountToAmountInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['uiAmount', getU64Decoder()],
+    ['uiAmount', getUtf8Decoder()],
   ]);
 }
 
@@ -78,6 +82,7 @@ export function getUiAmountToAmountInstructionDataCodec(): Codec<
 }
 
 export type UiAmountToAmountInput<TAccountMint extends string = string> = {
+  /** The mint to calculate for. */
   mint: Address<TAccountMint>;
   uiAmount: UiAmountToAmountInstructionDataArgs['uiAmount'];
 };
@@ -118,6 +123,7 @@ export type ParsedUiAmountToAmountInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The mint to calculate for. */
     mint: TAccountMetas[0];
   };
   data: UiAmountToAmountInstructionData;

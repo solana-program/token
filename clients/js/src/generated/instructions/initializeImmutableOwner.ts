@@ -69,6 +69,7 @@ export function getInitializeImmutableOwnerInstructionDataCodec(): Codec<
 export type InitializeImmutableOwnerInput<
   TAccountAccount extends string = string,
 > = {
+  /** The account to initialize. */
   account: Address<TAccountAccount>;
 };
 
@@ -111,6 +112,7 @@ export type ParsedInitializeImmutableOwnerInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to initialize. */
     account: TAccountMetas[0];
   };
   data: InitializeImmutableOwnerInstructionData;

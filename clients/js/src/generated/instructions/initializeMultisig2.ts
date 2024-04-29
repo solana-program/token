@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -15,7 +16,6 @@ import {
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
-  ReadonlyAccount,
   WritableAccount,
   combineCodec,
   getStructDecoder,
@@ -30,7 +30,6 @@ import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 export type InitializeMultisig2Instruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMultisig extends string | IAccountMeta<string> = string,
-  TAccountSigner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -39,19 +38,20 @@ export type InitializeMultisig2Instruction<
       TAccountMultisig extends string
         ? WritableAccount<TAccountMultisig>
         : TAccountMultisig,
-      TAccountSigner extends string
-        ? ReadonlyAccount<TAccountSigner>
-        : TAccountSigner,
       ...TRemainingAccounts,
     ]
   >;
 
 export type InitializeMultisig2InstructionData = {
   discriminator: number;
+  /** The number of signers (M) required to validate this multisignature account. */
   m: number;
 };
 
-export type InitializeMultisig2InstructionDataArgs = { m: number };
+export type InitializeMultisig2InstructionDataArgs = {
+  /** The number of signers (M) required to validate this multisignature account. */
+  m: number;
+};
 
 export function getInitializeMultisig2InstructionDataEncoder(): Encoder<InitializeMultisig2InstructionDataArgs> {
   return transformEncoder(
@@ -80,24 +80,21 @@ export function getInitializeMultisig2InstructionDataCodec(): Codec<
   );
 }
 
-export type InitializeMultisig2Input<
-  TAccountMultisig extends string = string,
-  TAccountSigner extends string = string,
-> = {
-  multisig: Address<TAccountMultisig>;
-  signer: Address<TAccountSigner>;
-  m: InitializeMultisig2InstructionDataArgs['m'];
-};
+export type InitializeMultisig2Input<TAccountMultisig extends string = string> =
+  {
+    /** The multisignature account to initialize. */
+    multisig: Address<TAccountMultisig>;
+    m: InitializeMultisig2InstructionDataArgs['m'];
+    signers: Array<Address>;
+  };
 
 export function getInitializeMultisig2Instruction<
   TAccountMultisig extends string,
-  TAccountSigner extends string,
 >(
-  input: InitializeMultisig2Input<TAccountMultisig, TAccountSigner>
+  input: InitializeMultisig2Input<TAccountMultisig>
 ): InitializeMultisig2Instruction<
   typeof TOKEN_PROGRAM_ADDRESS,
-  TAccountMultisig,
-  TAccountSigner
+  TAccountMultisig
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -105,7 +102,6 @@ export function getInitializeMultisig2Instruction<
   // Original accounts.
   const originalAccounts = {
     multisig: { value: input.multisig ?? null, isWritable: true },
-    signer: { value: input.signer ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -115,20 +111,22 @@ export function getInitializeMultisig2Instruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = args.signers.map((address) => ({
+    address,
+    role: AccountRole.READONLY,
+  }));
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
-    accounts: [
-      getAccountMeta(accounts.multisig),
-      getAccountMeta(accounts.signer),
-    ],
+    accounts: [getAccountMeta(accounts.multisig), ...remainingAccounts],
     programAddress,
     data: getInitializeMultisig2InstructionDataEncoder().encode(
       args as InitializeMultisig2InstructionDataArgs
     ),
   } as InitializeMultisig2Instruction<
     typeof TOKEN_PROGRAM_ADDRESS,
-    TAccountMultisig,
-    TAccountSigner
+    TAccountMultisig
   >;
 
   return instruction;
@@ -140,8 +138,8 @@ export type ParsedInitializeMultisig2Instruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The multisignature account to initialize. */
     multisig: TAccountMetas[0];
-    signer: TAccountMetas[1];
   };
   data: InitializeMultisig2InstructionData;
 };
@@ -154,7 +152,7 @@ export function parseInitializeMultisig2Instruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedInitializeMultisig2Instruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 2) {
+  if (instruction.accounts.length < 1) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -168,7 +166,6 @@ export function parseInitializeMultisig2Instruction<
     programAddress: instruction.programAddress,
     accounts: {
       multisig: getNextAccount(),
-      signer: getNextAccount(),
     },
     data: getInitializeMultisig2InstructionDataDecoder().decode(
       instruction.data

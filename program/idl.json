@@ -383,7 +383,7 @@
         ],
         "name": "initializeAccount",
         "docs": [
-          "Initializes a new account to hold tokens.  If this account is associated",
+          "Initializes a new account to hold tokens. If this account is associated",
           "with the native mint then the token balance of the initialized account",
           "will be equal to the amount of SOL in the account. If this account is",
           "associated with another mint, that mint must be initialized before this",
@@ -459,8 +459,7 @@
             "value": {
               "kind": "argumentValueNode",
               "name": "signers"
-            },
-            "isOptional": true
+            }
           }
         ],
         "name": "initializeMultisig",
@@ -469,7 +468,7 @@
           "",
           "Multisignature accounts can used in place of any single owner/delegate",
           "accounts in any token instruction that require an owner/delegate to be",
-          "present.  The variant field represents the number of signers (M)",
+          "present. The variant field represents the number of signers (M)",
           "required to validate this multisignature account.",
           "",
           "The `InitializeMultisig` instruction requires no signers and MUST be",
@@ -1243,7 +1242,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1251,7 +1250,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The token mint."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1259,15 +1258,15 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The delegate."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "owner",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account owner or its multisignature account."]
           }
         ],
         "arguments": [
@@ -1291,7 +1290,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of tokens the delegate is approved for."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -1301,7 +1300,9 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "Expected number of base 10 digits to the right of the decimal place."
+            ]
           }
         ],
         "discriminators": [
@@ -1311,8 +1312,26 @@
             "offset": 0
           }
         ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
         "name": "approveChecked",
-        "docs": [],
+        "docs": [
+          "Approves a delegate. A delegate is given the authority over tokens on",
+          "behalf of the source account's owner.",
+          "",
+          "This instruction differs from Approve in that the token mint and",
+          "decimals value is checked by the caller. This may be useful when",
+          "creating transactions offline or within a hardware wallet."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1324,7 +1343,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1332,15 +1351,17 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to mint tokens to."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "mintAuthority",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": [
+              "The mint's minting authority or its multisignature account."
+            ]
           }
         ],
         "arguments": [
@@ -1364,7 +1385,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of new tokens to mint."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -1374,7 +1395,9 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "Expected number of base 10 digits to the right of the decimal place."
+            ]
           }
         ],
         "discriminators": [
@@ -1384,8 +1407,25 @@
             "offset": 0
           }
         ],
-        "name": "mintTokensToChecked",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "mintToChecked",
+        "docs": [
+          "Mints new tokens to an account. The native mint does not support minting.",
+          "",
+          "This instruction differs from MintTo in that the decimals value is",
+          "checked by the caller. This may be useful when creating transactions",
+          "offline or within a hardware wallet."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1397,7 +1437,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to burn from."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1405,15 +1445,17 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The token mint."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "authority",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": [],
+            "docs": [
+              "The account's owner/delegate or its multisignature account."
+            ],
             "defaultValue": { "kind": "identityValueNode" }
           }
         ],
@@ -1438,7 +1480,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of tokens to burn."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -1448,7 +1490,9 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "Expected number of base 10 digits to the right of the decimal place."
+            ]
           }
         ],
         "discriminators": [
@@ -1458,8 +1502,26 @@
             "offset": 0
           }
         ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
         "name": "burnChecked",
-        "docs": [],
+        "docs": [
+          "Burns tokens by removing them from an account. `BurnChecked` does not",
+          "support accounts associated with the native mint, use `CloseAccount` instead.",
+          "",
+          "This instruction differs from Burn in that the decimals value is checked",
+          "by the caller. This may be useful when creating transactions offline or",
+          "within a hardware wallet."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1471,7 +1533,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to initialize."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1479,7 +1541,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint this account will be associated with."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1487,7 +1549,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": [],
+            "docs": ["Rent sysvar."],
             "defaultValue": {
               "kind": "publicKeyValueNode",
               "publicKey": "SysvarRent111111111111111111111111111111111"
@@ -1511,7 +1573,7 @@
             "kind": "instructionArgumentNode",
             "name": "owner",
             "type": { "kind": "publicKeyTypeNode" },
-            "docs": []
+            "docs": ["The new account's owner/multisignature."]
           }
         ],
         "discriminators": [
@@ -1522,7 +1584,12 @@
           }
         ],
         "name": "initializeAccount2",
-        "docs": [],
+        "docs": [
+          "Like InitializeAccount, but the owner pubkey is passed via instruction",
+          "data rather than the accounts list. This variant may be preferable",
+          "when using Cross Program Invocation from an instruction that does",
+          "not need the owner's `AccountInfo` otherwise."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1534,7 +1601,9 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": [
+              "The native token account to sync with its underlying lamports."
+            ]
           }
         ],
         "arguments": [
@@ -1559,7 +1628,13 @@
           }
         ],
         "name": "syncNative",
-        "docs": [],
+        "docs": [
+          "Given a wrapped / native token account (a token account containing SOL)",
+          "updates its amount field based on the account's underlying `lamports`.",
+          "This is useful if a non-wrapped SOL account uses",
+          "`system_instruction::transfer` to move lamports to a wrapped token",
+          "account, and needs to have its token `amount` field updated."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1571,7 +1646,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to initialize."]
           },
           {
             "kind": "instructionAccountNode",
@@ -1579,7 +1654,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint this account will be associated with."]
           }
         ],
         "arguments": [
@@ -1599,7 +1674,7 @@
             "kind": "instructionArgumentNode",
             "name": "owner",
             "type": { "kind": "publicKeyTypeNode" },
-            "docs": []
+            "docs": ["The new account's owner/multisignature."]
           }
         ],
         "discriminators": [
@@ -1610,7 +1685,9 @@
           }
         ],
         "name": "initializeAccount3",
-        "docs": [],
+        "docs": [
+          "Like InitializeAccount2, but does not require the Rent sysvar to be provided."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1622,15 +1699,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
-          },
-          {
-            "kind": "instructionAccountNode",
-            "name": "signer",
-            "isWritable": false,
-            "isSigner": false,
-            "isOptional": false,
-            "docs": []
+            "docs": ["The multisignature account to initialize."]
           }
         ],
         "arguments": [
@@ -1654,7 +1723,9 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "The number of signers (M) required to validate this multisignature account."
+            ]
           }
         ],
         "discriminators": [
@@ -1664,8 +1735,19 @@
             "offset": 0
           }
         ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "signers"
+            }
+          }
+        ],
         "name": "initializeMultisig2",
-        "docs": [],
+        "docs": [
+          "Like InitializeMultisig, but does not require the Rent sysvar to be provided."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1677,7 +1759,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint to initialize."]
           }
         ],
         "arguments": [
@@ -1701,13 +1783,15 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "Number of base 10 digits to the right of the decimal place."
+            ]
           },
           {
             "kind": "instructionArgumentNode",
             "name": "mintAuthority",
             "type": { "kind": "publicKeyTypeNode" },
-            "docs": []
+            "docs": ["The authority/multisignature to mint tokens."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -1722,7 +1806,9 @@
               },
               "fixed": false
             },
-            "docs": []
+            "docs": [
+              "The optional freeze authority/multisignature of the mint."
+            ]
           }
         ],
         "discriminators": [
@@ -1733,7 +1819,9 @@
           }
         ],
         "name": "initializeMint2",
-        "docs": [],
+        "docs": [
+          "Like [`InitializeMint`], but does not require the Rent sysvar to be provided."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1745,7 +1833,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint to calculate for."]
           }
         ],
         "arguments": [
@@ -1769,8 +1857,14 @@
             "offset": 0
           }
         ],
-        "name": "getTokenDataSize",
-        "docs": [],
+        "name": "getAccountDataSize",
+        "docs": [
+          "Gets the required size of an account for the given mint as a",
+          "little-endian `u64`.",
+          "",
+          "Return data can be fetched using `sol_get_return_data` and deserializing",
+          "the return data as a little-endian `u64`."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1782,7 +1876,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to initialize."]
           }
         ],
         "arguments": [
@@ -1807,7 +1901,15 @@
           }
         ],
         "name": "initializeImmutableOwner",
-        "docs": [],
+        "docs": [
+          "Initialize the Immutable Owner extension for the given token account",
+          "",
+          "Fails if the account has already been initialized, so must be called",
+          "before `InitializeAccount`.",
+          "",
+          "No-ops in this version of the program, but is included for compatibility",
+          "with the Associated Token Account program."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1819,7 +1921,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint to calculate for."]
           }
         ],
         "arguments": [
@@ -1843,7 +1945,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of tokens to reformat."]
           }
         ],
         "discriminators": [
@@ -1854,7 +1956,16 @@
           }
         ],
         "name": "amountToUiAmount",
-        "docs": [],
+        "docs": [
+          "Convert an Amount of tokens to a UiAmount `string`, using the given",
+          "mint. In this version of the program, the mint can only specify the",
+          "number of decimals.",
+          "",
+          "Fails on an invalid mint.",
+          "",
+          "Return data can be fetched using `sol_get_return_data` and deserialized",
+          "with `String::from_utf8`."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1866,7 +1977,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint to calculate for."]
           }
         ],
         "arguments": [
@@ -1886,11 +1997,10 @@
             "kind": "instructionArgumentNode",
             "name": "uiAmount",
             "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
             },
-            "docs": []
+            "docs": ["The ui_amount of tokens to reformat."]
           }
         ],
         "discriminators": [
@@ -1901,7 +2011,14 @@
           }
         ],
         "name": "uiAmountToAmount",
-        "docs": [],
+        "docs": [
+          "Convert a UiAmount of tokens to a little-endian `u64` raw Amount, using",
+          "the given mint. In this version of the program, the mint can only",
+          "specify the number of decimals.",
+          "",
+          "Return data can be fetched using `sol_get_return_data` and deserializing",
+          "the return data as a little-endian `u64`."
+        ],
         "optionalAccountStrategy": "programId"
       }
     ],

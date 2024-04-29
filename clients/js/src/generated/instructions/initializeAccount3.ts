@@ -50,10 +50,14 @@ export type InitializeAccount3Instruction<
 
 export type InitializeAccount3InstructionData = {
   discriminator: number;
+  /** The new account's owner/multisignature. */
   owner: Address;
 };
 
-export type InitializeAccount3InstructionDataArgs = { owner: Address };
+export type InitializeAccount3InstructionDataArgs = {
+  /** The new account's owner/multisignature. */
+  owner: Address;
+};
 
 export function getInitializeAccount3InstructionDataEncoder(): Encoder<InitializeAccount3InstructionDataArgs> {
   return transformEncoder(
@@ -86,7 +90,9 @@ export type InitializeAccount3Input<
   TAccountAccount extends string = string,
   TAccountMint extends string = string,
 > = {
+  /** The account to initialize. */
   account: Address<TAccountAccount>;
+  /** The mint this account will be associated with. */
   mint: Address<TAccountMint>;
   owner: InitializeAccount3InstructionDataArgs['owner'];
 };
@@ -139,7 +145,9 @@ export type ParsedInitializeAccount3Instruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to initialize. */
     account: TAccountMetas[0];
+    /** The mint this account will be associated with. */
     mint: TAccountMetas[1];
   };
   data: InitializeAccount3InstructionData;

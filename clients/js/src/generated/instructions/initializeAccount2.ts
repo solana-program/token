@@ -56,10 +56,14 @@ export type InitializeAccount2Instruction<
 
 export type InitializeAccount2InstructionData = {
   discriminator: number;
+  /** The new account's owner/multisignature. */
   owner: Address;
 };
 
-export type InitializeAccount2InstructionDataArgs = { owner: Address };
+export type InitializeAccount2InstructionDataArgs = {
+  /** The new account's owner/multisignature. */
+  owner: Address;
+};
 
 export function getInitializeAccount2InstructionDataEncoder(): Encoder<InitializeAccount2InstructionDataArgs> {
   return transformEncoder(
@@ -93,8 +97,11 @@ export type InitializeAccount2Input<
   TAccountMint extends string = string,
   TAccountRent extends string = string,
 > = {
+  /** The account to initialize. */
   account: Address<TAccountAccount>;
+  /** The mint this account will be associated with. */
   mint: Address<TAccountMint>;
+  /** Rent sysvar. */
   rent?: Address<TAccountRent>;
   owner: InitializeAccount2InstructionDataArgs['owner'];
 };
@@ -161,8 +168,11 @@ export type ParsedInitializeAccount2Instruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to initialize. */
     account: TAccountMetas[0];
+    /** The mint this account will be associated with. */
     mint: TAccountMetas[1];
+    /** Rent sysvar. */
     rent: TAccountMetas[2];
   };
   data: InitializeAccount2InstructionData;

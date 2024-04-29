@@ -96,7 +96,7 @@ export type InitializeMultisigInput<
   /** Rent sysvar. */
   rent?: Address<TAccountRent>;
   m: InitializeMultisigInstructionDataArgs['m'];
-  signers?: Array<Address>;
+  signers: Array<Address>;
 };
 
 export function getInitializeMultisigInstruction<
@@ -132,9 +132,10 @@ export function getInitializeMultisigInstruction<
   }
 
   // Remaining accounts.
-  const remainingAccounts: IAccountMeta[] = (args.signers ?? []).map(
-    (address) => ({ address, role: AccountRole.READONLY })
-  );
+  const remainingAccounts: IAccountMeta[] = args.signers.map((address) => ({
+    address,
+    role: AccountRole.READONLY,
+  }));
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {

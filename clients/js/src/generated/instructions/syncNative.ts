@@ -67,6 +67,7 @@ export function getSyncNativeInstructionDataCodec(): Codec<
 }
 
 export type SyncNativeInput<TAccountAccount extends string = string> = {
+  /** The native token account to sync with its underlying lamports. */
   account: Address<TAccountAccount>;
 };
 
@@ -101,6 +102,7 @@ export type ParsedSyncNativeInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The native token account to sync with its underlying lamports. */
     account: TAccountMetas[0];
   };
   data: SyncNativeInstructionData;

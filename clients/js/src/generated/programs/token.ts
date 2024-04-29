@@ -15,7 +15,7 @@ import {
   ParsedBurnInstruction,
   ParsedCloseAccountInstruction,
   ParsedFreezeAccountInstruction,
-  ParsedGetTokenDataSizeInstruction,
+  ParsedGetAccountDataSizeInstruction,
   ParsedInitializeAccount2Instruction,
   ParsedInitializeAccount3Instruction,
   ParsedInitializeAccountInstruction,
@@ -24,8 +24,8 @@ import {
   ParsedInitializeMintInstruction,
   ParsedInitializeMultisig2Instruction,
   ParsedInitializeMultisigInstruction,
+  ParsedMintToCheckedInstruction,
   ParsedMintToInstruction,
-  ParsedMintTokensToCheckedInstruction,
   ParsedRevokeInstruction,
   ParsedSetAuthorityInstruction,
   ParsedSyncNativeInstruction,
@@ -59,14 +59,14 @@ export enum TokenInstruction {
   ThawAccount,
   TransferChecked,
   ApproveChecked,
-  MintTokensToChecked,
+  MintToChecked,
   BurnChecked,
   InitializeAccount2,
   SyncNative,
   InitializeAccount3,
   InitializeMultisig2,
   InitializeMint2,
-  GetTokenDataSize,
+  GetAccountDataSize,
   InitializeImmutableOwner,
   AmountToUiAmount,
   UiAmountToAmount,
@@ -120,7 +120,7 @@ export function identifyTokenInstruction(
     return TokenInstruction.ApproveChecked;
   }
   if (containsBytes(data, getU8Encoder().encode(14), 0)) {
-    return TokenInstruction.MintTokensToChecked;
+    return TokenInstruction.MintToChecked;
   }
   if (containsBytes(data, getU8Encoder().encode(15), 0)) {
     return TokenInstruction.BurnChecked;
@@ -141,7 +141,7 @@ export function identifyTokenInstruction(
     return TokenInstruction.InitializeMint2;
   }
   if (containsBytes(data, getU8Encoder().encode(21), 0)) {
-    return TokenInstruction.GetTokenDataSize;
+    return TokenInstruction.GetAccountDataSize;
   }
   if (containsBytes(data, getU8Encoder().encode(22), 0)) {
     return TokenInstruction.InitializeImmutableOwner;
@@ -203,8 +203,8 @@ export type ParsedTokenInstruction<
       instructionType: TokenInstruction.ApproveChecked;
     } & ParsedApproveCheckedInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.MintTokensToChecked;
-    } & ParsedMintTokensToCheckedInstruction<TProgram>)
+      instructionType: TokenInstruction.MintToChecked;
+    } & ParsedMintToCheckedInstruction<TProgram>)
   | ({
       instructionType: TokenInstruction.BurnChecked;
     } & ParsedBurnCheckedInstruction<TProgram>)
@@ -224,8 +224,8 @@ export type ParsedTokenInstruction<
       instructionType: TokenInstruction.InitializeMint2;
     } & ParsedInitializeMint2Instruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.GetTokenDataSize;
-    } & ParsedGetTokenDataSizeInstruction<TProgram>)
+      instructionType: TokenInstruction.GetAccountDataSize;
+    } & ParsedGetAccountDataSizeInstruction<TProgram>)
   | ({
       instructionType: TokenInstruction.InitializeImmutableOwner;
     } & ParsedInitializeImmutableOwnerInstruction<TProgram>)

@@ -49,14 +49,20 @@ export type InitializeMint2Instruction<
 
 export type InitializeMint2InstructionData = {
   discriminator: number;
+  /** Number of base 10 digits to the right of the decimal place. */
   decimals: number;
+  /** The authority/multisignature to mint tokens. */
   mintAuthority: Address;
+  /** The optional freeze authority/multisignature of the mint. */
   freezeAuthority: Option<Address>;
 };
 
 export type InitializeMint2InstructionDataArgs = {
+  /** Number of base 10 digits to the right of the decimal place. */
   decimals: number;
+  /** The authority/multisignature to mint tokens. */
   mintAuthority: Address;
+  /** The optional freeze authority/multisignature of the mint. */
   freezeAuthority: OptionOrNullable<Address>;
 };
 
@@ -92,6 +98,7 @@ export function getInitializeMint2InstructionDataCodec(): Codec<
 }
 
 export type InitializeMint2Input<TAccountMint extends string = string> = {
+  /** The mint to initialize. */
   mint: Address<TAccountMint>;
   decimals: InitializeMint2InstructionDataArgs['decimals'];
   mintAuthority: InitializeMint2InstructionDataArgs['mintAuthority'];
@@ -134,6 +141,7 @@ export type ParsedInitializeMint2Instruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The mint to initialize. */
     mint: TAccountMetas[0];
   };
   data: InitializeMint2InstructionData;

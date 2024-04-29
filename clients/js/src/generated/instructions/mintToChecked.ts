@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -16,6 +17,7 @@ import {
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
+  ReadonlyAccount,
   ReadonlySignerAccount,
   TransactionSigner,
   WritableAccount,
@@ -31,7 +33,7 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type MintTokensToCheckedInstruction<
+export type MintToCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
   TAccountToken extends string | IAccountMeta<string> = string,
@@ -48,25 +50,28 @@ export type MintTokensToCheckedInstruction<
         ? WritableAccount<TAccountToken>
         : TAccountToken,
       TAccountMintAuthority extends string
-        ? ReadonlySignerAccount<TAccountMintAuthority> &
-            IAccountSignerMeta<TAccountMintAuthority>
+        ? ReadonlyAccount<TAccountMintAuthority>
         : TAccountMintAuthority,
       ...TRemainingAccounts,
     ]
   >;
 
-export type MintTokensToCheckedInstructionData = {
+export type MintToCheckedInstructionData = {
   discriminator: number;
+  /** The amount of new tokens to mint. */
   amount: bigint;
+  /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
 };
 
-export type MintTokensToCheckedInstructionDataArgs = {
+export type MintToCheckedInstructionDataArgs = {
+  /** The amount of new tokens to mint. */
   amount: number | bigint;
+  /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
 };
 
-export function getMintTokensToCheckedInstructionDataEncoder(): Encoder<MintTokensToCheckedInstructionDataArgs> {
+export function getMintToCheckedInstructionDataEncoder(): Encoder<MintToCheckedInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
@@ -77,7 +82,7 @@ export function getMintTokensToCheckedInstructionDataEncoder(): Encoder<MintToke
   );
 }
 
-export function getMintTokensToCheckedInstructionDataDecoder(): Decoder<MintTokensToCheckedInstructionData> {
+export function getMintToCheckedInstructionDataDecoder(): Decoder<MintToCheckedInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['amount', getU64Decoder()],
@@ -85,43 +90,48 @@ export function getMintTokensToCheckedInstructionDataDecoder(): Decoder<MintToke
   ]);
 }
 
-export function getMintTokensToCheckedInstructionDataCodec(): Codec<
-  MintTokensToCheckedInstructionDataArgs,
-  MintTokensToCheckedInstructionData
+export function getMintToCheckedInstructionDataCodec(): Codec<
+  MintToCheckedInstructionDataArgs,
+  MintToCheckedInstructionData
 > {
   return combineCodec(
-    getMintTokensToCheckedInstructionDataEncoder(),
-    getMintTokensToCheckedInstructionDataDecoder()
+    getMintToCheckedInstructionDataEncoder(),
+    getMintToCheckedInstructionDataDecoder()
   );
 }
 
-export type MintTokensToCheckedInput<
+export type MintToCheckedInput<
   TAccountMint extends string = string,
   TAccountToken extends string = string,
   TAccountMintAuthority extends string = string,
 > = {
+  /** The mint. */
   mint: Address<TAccountMint>;
+  /** The account to mint tokens to. */
   token: Address<TAccountToken>;
-  mintAuthority: TransactionSigner<TAccountMintAuthority>;
-  amount: MintTokensToCheckedInstructionDataArgs['amount'];
-  decimals: MintTokensToCheckedInstructionDataArgs['decimals'];
+  /** The mint's minting authority or its multisignature account. */
+  mintAuthority:
+    | Address<TAccountMintAuthority>
+    | TransactionSigner<TAccountMintAuthority>;
+  amount: MintToCheckedInstructionDataArgs['amount'];
+  decimals: MintToCheckedInstructionDataArgs['decimals'];
+  multiSigners?: Array<TransactionSigner>;
 };
 
-export function getMintTokensToCheckedInstruction<
+export function getMintToCheckedInstruction<
   TAccountMint extends string,
   TAccountToken extends string,
   TAccountMintAuthority extends string,
 >(
-  input: MintTokensToCheckedInput<
-    TAccountMint,
-    TAccountToken,
-    TAccountMintAuthority
-  >
-): MintTokensToCheckedInstruction<
+  input: MintToCheckedInput<TAccountMint, TAccountToken, TAccountMintAuthority>
+): MintToCheckedInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint,
   TAccountToken,
-  TAccountMintAuthority
+  (typeof input)['mintAuthority'] extends TransactionSigner<TAccountMintAuthority>
+    ? ReadonlySignerAccount<TAccountMintAuthority> &
+        IAccountSignerMeta<TAccountMintAuthority>
+    : TAccountMintAuthority
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -140,48 +150,64 @@ export function getMintTokensToCheckedInstruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.mint),
       getAccountMeta(accounts.token),
       getAccountMeta(accounts.mintAuthority),
+      ...remainingAccounts,
     ],
     programAddress,
-    data: getMintTokensToCheckedInstructionDataEncoder().encode(
-      args as MintTokensToCheckedInstructionDataArgs
+    data: getMintToCheckedInstructionDataEncoder().encode(
+      args as MintToCheckedInstructionDataArgs
     ),
-  } as MintTokensToCheckedInstruction<
+  } as MintToCheckedInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountMint,
     TAccountToken,
-    TAccountMintAuthority
+    (typeof input)['mintAuthority'] extends TransactionSigner<TAccountMintAuthority>
+      ? ReadonlySignerAccount<TAccountMintAuthority> &
+          IAccountSignerMeta<TAccountMintAuthority>
+      : TAccountMintAuthority
   >;
 
   return instruction;
 }
 
-export type ParsedMintTokensToCheckedInstruction<
+export type ParsedMintToCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The mint. */
     mint: TAccountMetas[0];
+    /** The account to mint tokens to. */
     token: TAccountMetas[1];
+    /** The mint's minting authority or its multisignature account. */
     mintAuthority: TAccountMetas[2];
   };
-  data: MintTokensToCheckedInstructionData;
+  data: MintToCheckedInstructionData;
 };
 
-export function parseMintTokensToCheckedInstruction<
+export function parseMintToCheckedInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedMintTokensToCheckedInstruction<TProgram, TAccountMetas> {
+): ParsedMintToCheckedInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -199,8 +225,6 @@ export function parseMintTokensToCheckedInstruction<
       token: getNextAccount(),
       mintAuthority: getNextAccount(),
     },
-    data: getMintTokensToCheckedInstructionDataDecoder().decode(
-      instruction.data
-    ),
+    data: getMintToCheckedInstructionDataDecoder().decode(instruction.data),
   };
 }

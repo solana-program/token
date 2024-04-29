@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -53,8 +54,7 @@ export type ApproveCheckedInstruction<
         ? ReadonlyAccount<TAccountDelegate>
         : TAccountDelegate,
       TAccountOwner extends string
-        ? ReadonlySignerAccount<TAccountOwner> &
-            IAccountSignerMeta<TAccountOwner>
+        ? ReadonlyAccount<TAccountOwner>
         : TAccountOwner,
       ...TRemainingAccounts,
     ]
@@ -62,12 +62,16 @@ export type ApproveCheckedInstruction<
 
 export type ApproveCheckedInstructionData = {
   discriminator: number;
+  /** The amount of tokens the delegate is approved for. */
   amount: bigint;
+  /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
 };
 
 export type ApproveCheckedInstructionDataArgs = {
+  /** The amount of tokens the delegate is approved for. */
   amount: number | bigint;
+  /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
 };
 
@@ -106,12 +110,17 @@ export type ApproveCheckedInput<
   TAccountDelegate extends string = string,
   TAccountOwner extends string = string,
 > = {
+  /** The source account. */
   source: Address<TAccountSource>;
+  /** The token mint. */
   mint: Address<TAccountMint>;
+  /** The delegate. */
   delegate: Address<TAccountDelegate>;
-  owner: TransactionSigner<TAccountOwner>;
+  /** The source account owner or its multisignature account. */
+  owner: Address<TAccountOwner> | TransactionSigner<TAccountOwner>;
   amount: ApproveCheckedInstructionDataArgs['amount'];
   decimals: ApproveCheckedInstructionDataArgs['decimals'];
+  multiSigners?: Array<TransactionSigner>;
 };
 
 export function getApproveCheckedInstruction<
@@ -131,7 +140,9 @@ export function getApproveCheckedInstruction<
   TAccountSource,
   TAccountMint,
   TAccountDelegate,
-  TAccountOwner
+  (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+    ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+    : TAccountOwner
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -151,6 +162,15 @@ export function getApproveCheckedInstruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
@@ -158,6 +178,7 @@ export function getApproveCheckedInstruction<
       getAccountMeta(accounts.mint),
       getAccountMeta(accounts.delegate),
       getAccountMeta(accounts.owner),
+      ...remainingAccounts,
     ],
     programAddress,
     data: getApproveCheckedInstructionDataEncoder().encode(
@@ -168,7 +189,9 @@ export function getApproveCheckedInstruction<
     TAccountSource,
     TAccountMint,
     TAccountDelegate,
-    TAccountOwner
+    (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+      ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+      : TAccountOwner
   >;
 
   return instruction;
@@ -180,9 +203,13 @@ export type ParsedApproveCheckedInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The source account. */
     source: TAccountMetas[0];
+    /** The token mint. */
     mint: TAccountMetas[1];
+    /** The delegate. */
     delegate: TAccountMetas[2];
+    /** The source account owner or its multisignature account. */
     owner: TAccountMetas[3];
   };
   data: ApproveCheckedInstructionData;

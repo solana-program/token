@@ -45,10 +45,14 @@ export type AmountToUiAmountInstruction<
 
 export type AmountToUiAmountInstructionData = {
   discriminator: number;
+  /** The amount of tokens to reformat. */
   amount: bigint;
 };
 
-export type AmountToUiAmountInstructionDataArgs = { amount: number | bigint };
+export type AmountToUiAmountInstructionDataArgs = {
+  /** The amount of tokens to reformat. */
+  amount: number | bigint;
+};
 
 export function getAmountToUiAmountInstructionDataEncoder(): Encoder<AmountToUiAmountInstructionDataArgs> {
   return transformEncoder(
@@ -78,6 +82,7 @@ export function getAmountToUiAmountInstructionDataCodec(): Codec<
 }
 
 export type AmountToUiAmountInput<TAccountMint extends string = string> = {
+  /** The mint to calculate for. */
   mint: Address<TAccountMint>;
   amount: AmountToUiAmountInstructionDataArgs['amount'];
 };
@@ -118,6 +123,7 @@ export type ParsedAmountToUiAmountInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The mint to calculate for. */
     mint: TAccountMetas[0];
   };
   data: AmountToUiAmountInstructionData;
