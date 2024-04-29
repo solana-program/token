@@ -121,6 +121,9 @@ export function getFreezeAccountInstruction<
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   // Remaining accounts.
   const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
     (signer) => ({

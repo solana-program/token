@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
-    "@metaplex-foundation/kinobi": "^0.19.0",
+    "@metaplex-foundation/kinobi": "^0.19.2",
     "@metaplex-foundation/shank-js": "^0.1.7",
     "typescript": "^5.4.2",
     "zx": "^7.2.3"
