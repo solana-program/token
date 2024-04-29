@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "scripts": {
+    "generate": "pnpm generate:clients",
+    "generate:clients": "zx ./scripts/generate-clients.mjs",
+    "validator:start": "zx ./scripts/start-validator.mjs",
+    "validator:restart": "pnpm validator:start --restart",
+    "validator:stop": "zx ./scripts/stop-validator.mjs",
+    "clients:js:test": "zx ./scripts/client/test-js.mjs",
+    "clients:rust:test": "zx ./scripts/client/test-rust.mjs"
+  },
+  "devDependencies": {
+    "@iarna/toml": "^2.2.5",
+    "@metaplex-foundation/kinobi": "^0.19.0",
+    "@metaplex-foundation/shank-js": "^0.1.7",
+    "typescript": "^5.4.2",
+    "zx": "^7.2.3"
+  },
+  "packageManager": "pnpm@8.9.0"
+}
