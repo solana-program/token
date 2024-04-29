@@ -26,6 +26,8 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU32Decoder,
+  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
   transformEncoder,
@@ -56,14 +58,20 @@ export type InitializeMintInstruction<
 
 export type InitializeMintInstructionData = {
   discriminator: number;
+  /** Number of decimals in token account amounts. */
   decimals: number;
+  /** Minting authority. */
   mintAuthority: Address;
+  /** Optional authority that can freeze token accounts. */
   freezeAuthority: Option<Address>;
 };
 
 export type InitializeMintInstructionDataArgs = {
+  /** Number of decimals in token account amounts. */
   decimals: number;
+  /** Minting authority. */
   mintAuthority: Address;
+  /** Optional authority that can freeze token accounts. */
   freezeAuthority: OptionOrNullable<Address>;
 };
 
@@ -73,7 +81,13 @@ export function getInitializeMintInstructionDataEncoder(): Encoder<InitializeMin
       ['discriminator', getU8Encoder()],
       ['decimals', getU8Encoder()],
       ['mintAuthority', getAddressEncoder()],
-      ['freezeAuthority', getOptionEncoder(getAddressEncoder())],
+      [
+        'freezeAuthority',
+        getOptionEncoder(getAddressEncoder(), {
+          prefix: getU32Encoder(),
+          fixed: true,
+        }),
+      ],
     ]),
     (value) => ({ ...value, discriminator: 0 })
   );
@@ -84,7 +98,13 @@ export function getInitializeMintInstructionDataDecoder(): Decoder<InitializeMin
     ['discriminator', getU8Decoder()],
     ['decimals', getU8Decoder()],
     ['mintAuthority', getAddressDecoder()],
-    ['freezeAuthority', getOptionDecoder(getAddressDecoder())],
+    [
+      'freezeAuthority',
+      getOptionDecoder(getAddressDecoder(), {
+        prefix: getU32Decoder(),
+        fixed: true,
+      }),
+    ],
   ]);
 }
 
@@ -102,7 +122,9 @@ export type InitializeMintInput<
   TAccountMint extends string = string,
   TAccountRent extends string = string,
 > = {
+  /** Token mint account. */
   mint: Address<TAccountMint>;
+  /** Rent sysvar. */
   rent?: Address<TAccountRent>;
   decimals: InitializeMintInstructionDataArgs['decimals'];
   mintAuthority: InitializeMintInstructionDataArgs['mintAuthority'];
@@ -163,7 +185,9 @@ export type ParsedInitializeMintInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** Token mint account. */
     mint: TAccountMetas[0];
+    /** Rent sysvar. */
     rent: TAccountMetas[1];
   };
   data: InitializeMintInstructionData;

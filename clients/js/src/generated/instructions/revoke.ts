@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -23,8 +24,6 @@ import {
   combineCodec,
   getStructDecoder,
   getStructEncoder,
-  getU64Decoder,
-  getU64Encoder,
   getU8Decoder,
   getU8Encoder,
   transformEncoder,
@@ -32,10 +31,9 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type ApproveTokenDelegateInstruction<
+export type RevokeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
-  TAccountDelegate extends string | IAccountMeta<string> = string,
   TAccountOwner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
@@ -45,79 +43,60 @@ export type ApproveTokenDelegateInstruction<
       TAccountSource extends string
         ? WritableAccount<TAccountSource>
         : TAccountSource,
-      TAccountDelegate extends string
-        ? ReadonlyAccount<TAccountDelegate>
-        : TAccountDelegate,
       TAccountOwner extends string
-        ? ReadonlySignerAccount<TAccountOwner> &
-            IAccountSignerMeta<TAccountOwner>
+        ? ReadonlyAccount<TAccountOwner>
         : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
 
-export type ApproveTokenDelegateInstructionData = {
-  discriminator: number;
-  amount: bigint;
-};
+export type RevokeInstructionData = { discriminator: number };
 
-export type ApproveTokenDelegateInstructionDataArgs = {
-  amount: number | bigint;
-};
+export type RevokeInstructionDataArgs = {};
 
-export function getApproveTokenDelegateInstructionDataEncoder(): Encoder<ApproveTokenDelegateInstructionDataArgs> {
+export function getRevokeInstructionDataEncoder(): Encoder<RevokeInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([
-      ['discriminator', getU8Encoder()],
-      ['amount', getU64Encoder()],
-    ]),
-    (value) => ({ ...value, discriminator: 4 })
+    getStructEncoder([['discriminator', getU8Encoder()]]),
+    (value) => ({ ...value, discriminator: 5 })
   );
 }
 
-export function getApproveTokenDelegateInstructionDataDecoder(): Decoder<ApproveTokenDelegateInstructionData> {
-  return getStructDecoder([
-    ['discriminator', getU8Decoder()],
-    ['amount', getU64Decoder()],
-  ]);
+export function getRevokeInstructionDataDecoder(): Decoder<RevokeInstructionData> {
+  return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getApproveTokenDelegateInstructionDataCodec(): Codec<
-  ApproveTokenDelegateInstructionDataArgs,
-  ApproveTokenDelegateInstructionData
+export function getRevokeInstructionDataCodec(): Codec<
+  RevokeInstructionDataArgs,
+  RevokeInstructionData
 > {
   return combineCodec(
-    getApproveTokenDelegateInstructionDataEncoder(),
-    getApproveTokenDelegateInstructionDataDecoder()
+    getRevokeInstructionDataEncoder(),
+    getRevokeInstructionDataDecoder()
   );
 }
 
-export type ApproveTokenDelegateInput<
+export type RevokeInput<
   TAccountSource extends string = string,
-  TAccountDelegate extends string = string,
   TAccountOwner extends string = string,
 > = {
+  /** The source account. */
   source: Address<TAccountSource>;
-  delegate: Address<TAccountDelegate>;
-  owner: TransactionSigner<TAccountOwner>;
-  amount: ApproveTokenDelegateInstructionDataArgs['amount'];
+  /** The source account owner or its multisignature. */
+  owner: Address<TAccountOwner> | TransactionSigner<TAccountOwner>;
+  multiSigners?: Array<TransactionSigner>;
 };
 
-export function getApproveTokenDelegateInstruction<
+export function getRevokeInstruction<
   TAccountSource extends string,
-  TAccountDelegate extends string,
   TAccountOwner extends string,
 >(
-  input: ApproveTokenDelegateInput<
-    TAccountSource,
-    TAccountDelegate,
-    TAccountOwner
-  >
-): ApproveTokenDelegateInstruction<
+  input: RevokeInput<TAccountSource, TAccountOwner>
+): RevokeInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource,
-  TAccountDelegate,
-  TAccountOwner
+  (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+    ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+    : TAccountOwner
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -125,7 +104,6 @@ export function getApproveTokenDelegateInstruction<
   // Original accounts.
   const originalAccounts = {
     source: { value: input.source ?? null, isWritable: true },
-    delegate: { value: input.delegate ?? null, isWritable: false },
     owner: { value: input.owner ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -133,52 +111,58 @@ export function getApproveTokenDelegateInstruction<
     ResolvedAccount
   >;
 
-  // Original args.
-  const args = { ...input };
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.source),
-      getAccountMeta(accounts.delegate),
       getAccountMeta(accounts.owner),
+      ...remainingAccounts,
     ],
     programAddress,
-    data: getApproveTokenDelegateInstructionDataEncoder().encode(
-      args as ApproveTokenDelegateInstructionDataArgs
-    ),
-  } as ApproveTokenDelegateInstruction<
+    data: getRevokeInstructionDataEncoder().encode({}),
+  } as RevokeInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountSource,
-    TAccountDelegate,
-    TAccountOwner
+    (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+      ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+      : TAccountOwner
   >;
 
   return instruction;
 }
 
-export type ParsedApproveTokenDelegateInstruction<
+export type ParsedRevokeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The source account. */
     source: TAccountMetas[0];
-    delegate: TAccountMetas[1];
-    owner: TAccountMetas[2];
+    /** The source account owner or its multisignature. */
+    owner: TAccountMetas[1];
   };
-  data: ApproveTokenDelegateInstructionData;
+  data: RevokeInstructionData;
 };
 
-export function parseApproveTokenDelegateInstruction<
+export function parseRevokeInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedApproveTokenDelegateInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+): ParsedRevokeInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 2) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -192,11 +176,8 @@ export function parseApproveTokenDelegateInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       source: getNextAccount(),
-      delegate: getNextAccount(),
       owner: getNextAccount(),
     },
-    data: getApproveTokenDelegateInstructionDataDecoder().decode(
-      instruction.data
-    ),
+    data: getRevokeInstructionDataDecoder().decode(instruction.data),
   };
 }

@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -30,10 +31,10 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type FreezeTokenInstruction<
+export type CloseAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
-  TAccountMint extends string | IAccountMeta<string> = string,
+  TAccountDestination extends string | IAccountMeta<string> = string,
   TAccountOwner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
@@ -43,63 +44,68 @@ export type FreezeTokenInstruction<
       TAccountAccount extends string
         ? WritableAccount<TAccountAccount>
         : TAccountAccount,
-      TAccountMint extends string
-        ? ReadonlyAccount<TAccountMint>
-        : TAccountMint,
+      TAccountDestination extends string
+        ? WritableAccount<TAccountDestination>
+        : TAccountDestination,
       TAccountOwner extends string
-        ? ReadonlySignerAccount<TAccountOwner> &
-            IAccountSignerMeta<TAccountOwner>
+        ? ReadonlyAccount<TAccountOwner>
         : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
 
-export type FreezeTokenInstructionData = { discriminator: number };
+export type CloseAccountInstructionData = { discriminator: number };
 
-export type FreezeTokenInstructionDataArgs = {};
+export type CloseAccountInstructionDataArgs = {};
 
-export function getFreezeTokenInstructionDataEncoder(): Encoder<FreezeTokenInstructionDataArgs> {
+export function getCloseAccountInstructionDataEncoder(): Encoder<CloseAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 10 })
+    (value) => ({ ...value, discriminator: 9 })
   );
 }
 
-export function getFreezeTokenInstructionDataDecoder(): Decoder<FreezeTokenInstructionData> {
+export function getCloseAccountInstructionDataDecoder(): Decoder<CloseAccountInstructionData> {
   return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getFreezeTokenInstructionDataCodec(): Codec<
-  FreezeTokenInstructionDataArgs,
-  FreezeTokenInstructionData
+export function getCloseAccountInstructionDataCodec(): Codec<
+  CloseAccountInstructionDataArgs,
+  CloseAccountInstructionData
 > {
   return combineCodec(
-    getFreezeTokenInstructionDataEncoder(),
-    getFreezeTokenInstructionDataDecoder()
+    getCloseAccountInstructionDataEncoder(),
+    getCloseAccountInstructionDataDecoder()
   );
 }
 
-export type FreezeTokenInput<
+export type CloseAccountInput<
   TAccountAccount extends string = string,
-  TAccountMint extends string = string,
+  TAccountDestination extends string = string,
   TAccountOwner extends string = string,
 > = {
+  /** The account to close. */
   account: Address<TAccountAccount>;
-  mint: Address<TAccountMint>;
-  owner: TransactionSigner<TAccountOwner>;
+  /** The destination account. */
+  destination: Address<TAccountDestination>;
+  /** The account's owner or its multisignature account. */
+  owner: Address<TAccountOwner> | TransactionSigner<TAccountOwner>;
+  multiSigners?: Array<TransactionSigner>;
 };
 
-export function getFreezeTokenInstruction<
+export function getCloseAccountInstruction<
   TAccountAccount extends string,
-  TAccountMint extends string,
+  TAccountDestination extends string,
   TAccountOwner extends string,
 >(
-  input: FreezeTokenInput<TAccountAccount, TAccountMint, TAccountOwner>
-): FreezeTokenInstruction<
+  input: CloseAccountInput<TAccountAccount, TAccountDestination, TAccountOwner>
+): CloseAccountInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
-  TAccountMint,
-  TAccountOwner
+  TAccountDestination,
+  (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+    ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+    : TAccountOwner
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -107,7 +113,7 @@ export function getFreezeTokenInstruction<
   // Original accounts.
   const originalAccounts = {
     account: { value: input.account ?? null, isWritable: true },
-    mint: { value: input.mint ?? null, isWritable: false },
+    destination: { value: input.destination ?? null, isWritable: true },
     owner: { value: input.owner ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -115,46 +121,61 @@ export function getFreezeTokenInstruction<
     ResolvedAccount
   >;
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.account),
-      getAccountMeta(accounts.mint),
+      getAccountMeta(accounts.destination),
       getAccountMeta(accounts.owner),
+      ...remainingAccounts,
     ],
     programAddress,
-    data: getFreezeTokenInstructionDataEncoder().encode({}),
-  } as FreezeTokenInstruction<
+    data: getCloseAccountInstructionDataEncoder().encode({}),
+  } as CloseAccountInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
-    TAccountMint,
-    TAccountOwner
+    TAccountDestination,
+    (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+      ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+      : TAccountOwner
   >;
 
   return instruction;
 }
 
-export type ParsedFreezeTokenInstruction<
+export type ParsedCloseAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to close. */
     account: TAccountMetas[0];
-    mint: TAccountMetas[1];
+    /** The destination account. */
+    destination: TAccountMetas[1];
+    /** The account's owner or its multisignature account. */
     owner: TAccountMetas[2];
   };
-  data: FreezeTokenInstructionData;
+  data: CloseAccountInstructionData;
 };
 
-export function parseFreezeTokenInstruction<
+export function parseCloseAccountInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedFreezeTokenInstruction<TProgram, TAccountMetas> {
+): ParsedCloseAccountInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -169,9 +190,9 @@ export function parseFreezeTokenInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       account: getNextAccount(),
-      mint: getNextAccount(),
+      destination: getNextAccount(),
       owner: getNextAccount(),
     },
-    data: getFreezeTokenInstructionDataDecoder().decode(instruction.data),
+    data: getCloseAccountInstructionDataDecoder().decode(instruction.data),
   };
 }

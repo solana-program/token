@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -29,6 +30,8 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU32Decoder,
+  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
   transformEncoder,
@@ -63,12 +66,16 @@ export type SetAuthorityInstruction<
 
 export type SetAuthorityInstructionData = {
   discriminator: number;
+  /** The type of authority to update. */
   authorityType: AuthorityType;
+  /** The new authority */
   newAuthority: Option<Address>;
 };
 
 export type SetAuthorityInstructionDataArgs = {
+  /** The type of authority to update. */
   authorityType: AuthorityTypeArgs;
+  /** The new authority */
   newAuthority: OptionOrNullable<Address>;
 };
 
@@ -77,7 +84,13 @@ export function getSetAuthorityInstructionDataEncoder(): Encoder<SetAuthorityIns
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['authorityType', getAuthorityTypeEncoder()],
-      ['newAuthority', getOptionEncoder(getAddressEncoder())],
+      [
+        'newAuthority',
+        getOptionEncoder(getAddressEncoder(), {
+          prefix: getU32Encoder(),
+          fixed: true,
+        }),
+      ],
     ]),
     (value) => ({ ...value, discriminator: 6 })
   );
@@ -87,7 +100,13 @@ export function getSetAuthorityInstructionDataDecoder(): Decoder<SetAuthorityIns
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['authorityType', getAuthorityTypeDecoder()],
-    ['newAuthority', getOptionDecoder(getAddressDecoder())],
+    [
+      'newAuthority',
+      getOptionDecoder(getAddressDecoder(), {
+        prefix: getU32Decoder(),
+        fixed: true,
+      }),
+    ],
   ]);
 }
 
@@ -105,10 +124,13 @@ export type SetAuthorityInput<
   TAccountOwned extends string = string,
   TAccountOwner extends string = string,
 > = {
+  /** The mint or account to change the authority of. */
   owned: Address<TAccountOwned>;
+  /** The current authority or the multisignature account of the mint or account to update. */
   owner: Address<TAccountOwner> | TransactionSigner<TAccountOwner>;
   authorityType: SetAuthorityInstructionDataArgs['authorityType'];
   newAuthority: SetAuthorityInstructionDataArgs['newAuthority'];
+  multiSigners?: Array<TransactionSigner>;
 };
 
 export function getSetAuthorityInstruction<
@@ -139,9 +161,22 @@ export function getSetAuthorityInstruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
-    accounts: [getAccountMeta(accounts.owned), getAccountMeta(accounts.owner)],
+    accounts: [
+      getAccountMeta(accounts.owned),
+      getAccountMeta(accounts.owner),
+      ...remainingAccounts,
+    ],
     programAddress,
     data: getSetAuthorityInstructionDataEncoder().encode(
       args as SetAuthorityInstructionDataArgs
@@ -163,7 +198,9 @@ export type ParsedSetAuthorityInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The mint or account to change the authority of. */
     owned: TAccountMetas[0];
+    /** The current authority or the multisignature account of the mint or account to update. */
     owner: TAccountMetas[1];
   };
   data: SetAuthorityInstructionData;

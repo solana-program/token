@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -16,6 +17,7 @@ import {
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
+  ReadonlyAccount,
   ReadonlySignerAccount,
   TransactionSigner,
   WritableAccount,
@@ -31,7 +33,7 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type BurnTokenInstruction<
+export type BurnInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -48,21 +50,21 @@ export type BurnTokenInstruction<
         ? WritableAccount<TAccountMint>
         : TAccountMint,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            IAccountSignerMeta<TAccountAuthority>
+        ? ReadonlyAccount<TAccountAuthority>
         : TAccountAuthority,
       ...TRemainingAccounts,
     ]
   >;
 
-export type BurnTokenInstructionData = {
+export type BurnInstructionData = {
+  /** The amount of tokens to burn. */
   discriminator: number;
   amount: bigint;
 };
 
-export type BurnTokenInstructionDataArgs = { amount: number | bigint };
+export type BurnInstructionDataArgs = { amount: number | bigint };
 
-export function getBurnTokenInstructionDataEncoder(): Encoder<BurnTokenInstructionDataArgs> {
+export function getBurnInstructionDataEncoder(): Encoder<BurnInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
@@ -72,45 +74,52 @@ export function getBurnTokenInstructionDataEncoder(): Encoder<BurnTokenInstructi
   );
 }
 
-export function getBurnTokenInstructionDataDecoder(): Decoder<BurnTokenInstructionData> {
+export function getBurnInstructionDataDecoder(): Decoder<BurnInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['amount', getU64Decoder()],
   ]);
 }
 
-export function getBurnTokenInstructionDataCodec(): Codec<
-  BurnTokenInstructionDataArgs,
-  BurnTokenInstructionData
+export function getBurnInstructionDataCodec(): Codec<
+  BurnInstructionDataArgs,
+  BurnInstructionData
 > {
   return combineCodec(
-    getBurnTokenInstructionDataEncoder(),
-    getBurnTokenInstructionDataDecoder()
+    getBurnInstructionDataEncoder(),
+    getBurnInstructionDataDecoder()
   );
 }
 
-export type BurnTokenInput<
+export type BurnInput<
   TAccountAccount extends string = string,
   TAccountMint extends string = string,
   TAccountAuthority extends string = string,
 > = {
+  /** The account to burn from. */
   account: Address<TAccountAccount>;
+  /** The token mint. */
   mint: Address<TAccountMint>;
-  authority: TransactionSigner<TAccountAuthority>;
-  amount: BurnTokenInstructionDataArgs['amount'];
+  /** The account's owner/delegate or its multisignature account. */
+  authority: Address<TAccountAuthority> | TransactionSigner<TAccountAuthority>;
+  amount: BurnInstructionDataArgs['amount'];
+  multiSigners?: Array<TransactionSigner>;
 };
 
-export function getBurnTokenInstruction<
+export function getBurnInstruction<
   TAccountAccount extends string,
   TAccountMint extends string,
   TAccountAuthority extends string,
 >(
-  input: BurnTokenInput<TAccountAccount, TAccountMint, TAccountAuthority>
-): BurnTokenInstruction<
+  input: BurnInput<TAccountAccount, TAccountMint, TAccountAuthority>
+): BurnInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
   TAccountMint,
-  TAccountAuthority
+  (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
+    ? ReadonlySignerAccount<TAccountAuthority> &
+        IAccountSignerMeta<TAccountAuthority>
+    : TAccountAuthority
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -129,48 +138,64 @@ export function getBurnTokenInstruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.account),
       getAccountMeta(accounts.mint),
       getAccountMeta(accounts.authority),
+      ...remainingAccounts,
     ],
     programAddress,
-    data: getBurnTokenInstructionDataEncoder().encode(
-      args as BurnTokenInstructionDataArgs
+    data: getBurnInstructionDataEncoder().encode(
+      args as BurnInstructionDataArgs
     ),
-  } as BurnTokenInstruction<
+  } as BurnInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
     TAccountMint,
-    TAccountAuthority
+    (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
+      ? ReadonlySignerAccount<TAccountAuthority> &
+          IAccountSignerMeta<TAccountAuthority>
+      : TAccountAuthority
   >;
 
   return instruction;
 }
 
-export type ParsedBurnTokenInstruction<
+export type ParsedBurnInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to burn from. */
     account: TAccountMetas[0];
+    /** The token mint. */
     mint: TAccountMetas[1];
+    /** The account's owner/delegate or its multisignature account. */
     authority: TAccountMetas[2];
   };
-  data: BurnTokenInstructionData;
+  data: BurnInstructionData;
 };
 
-export function parseBurnTokenInstruction<
+export function parseBurnInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedBurnTokenInstruction<TProgram, TAccountMetas> {
+): ParsedBurnInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -188,6 +213,6 @@ export function parseBurnTokenInstruction<
       mint: getNextAccount(),
       authority: getNextAccount(),
     },
-    data: getBurnTokenInstructionDataDecoder().decode(instruction.data),
+    data: getBurnInstructionDataDecoder().decode(instruction.data),
   };
 }

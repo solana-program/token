@@ -7,19 +7,21 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
   Encoder,
   IAccountMeta,
+  IAccountSignerMeta,
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
   ReadonlyAccount,
+  ReadonlySignerAccount,
+  TransactionSigner,
   WritableAccount,
   combineCodec,
-  getAddressDecoder,
-  getAddressEncoder,
   getStructDecoder,
   getStructEncoder,
   getU8Decoder,
@@ -29,13 +31,11 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type InitializeToken2Instruction<
+export type FreezeAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
   TAccountMint extends string | IAccountMeta<string> = string,
-  TAccountRent extends
-    | string
-    | IAccountMeta<string> = 'SysvarRent111111111111111111111111111111111',
+  TAccountOwner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -47,69 +47,65 @@ export type InitializeToken2Instruction<
       TAccountMint extends string
         ? ReadonlyAccount<TAccountMint>
         : TAccountMint,
-      TAccountRent extends string
-        ? ReadonlyAccount<TAccountRent>
-        : TAccountRent,
+      TAccountOwner extends string
+        ? ReadonlyAccount<TAccountOwner>
+        : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
 
-export type InitializeToken2InstructionData = {
-  discriminator: number;
-  owner: Address;
-};
+export type FreezeAccountInstructionData = { discriminator: number };
 
-export type InitializeToken2InstructionDataArgs = { owner: Address };
+export type FreezeAccountInstructionDataArgs = {};
 
-export function getInitializeToken2InstructionDataEncoder(): Encoder<InitializeToken2InstructionDataArgs> {
+export function getFreezeAccountInstructionDataEncoder(): Encoder<FreezeAccountInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([
-      ['discriminator', getU8Encoder()],
-      ['owner', getAddressEncoder()],
-    ]),
-    (value) => ({ ...value, discriminator: 16 })
+    getStructEncoder([['discriminator', getU8Encoder()]]),
+    (value) => ({ ...value, discriminator: 10 })
   );
 }
 
-export function getInitializeToken2InstructionDataDecoder(): Decoder<InitializeToken2InstructionData> {
-  return getStructDecoder([
-    ['discriminator', getU8Decoder()],
-    ['owner', getAddressDecoder()],
-  ]);
+export function getFreezeAccountInstructionDataDecoder(): Decoder<FreezeAccountInstructionData> {
+  return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getInitializeToken2InstructionDataCodec(): Codec<
-  InitializeToken2InstructionDataArgs,
-  InitializeToken2InstructionData
+export function getFreezeAccountInstructionDataCodec(): Codec<
+  FreezeAccountInstructionDataArgs,
+  FreezeAccountInstructionData
 > {
   return combineCodec(
-    getInitializeToken2InstructionDataEncoder(),
-    getInitializeToken2InstructionDataDecoder()
+    getFreezeAccountInstructionDataEncoder(),
+    getFreezeAccountInstructionDataDecoder()
   );
 }
 
-export type InitializeToken2Input<
+export type FreezeAccountInput<
   TAccountAccount extends string = string,
   TAccountMint extends string = string,
-  TAccountRent extends string = string,
+  TAccountOwner extends string = string,
 > = {
+  /** The account to freeze. */
   account: Address<TAccountAccount>;
+  /** The token mint. */
   mint: Address<TAccountMint>;
-  rent?: Address<TAccountRent>;
-  owner: InitializeToken2InstructionDataArgs['owner'];
+  /** The mint freeze authority or its multisignature account. */
+  owner: Address<TAccountOwner> | TransactionSigner<TAccountOwner>;
+  multiSigners?: Array<TransactionSigner>;
 };
 
-export function getInitializeToken2Instruction<
+export function getFreezeAccountInstruction<
   TAccountAccount extends string,
   TAccountMint extends string,
-  TAccountRent extends string,
+  TAccountOwner extends string,
 >(
-  input: InitializeToken2Input<TAccountAccount, TAccountMint, TAccountRent>
-): InitializeToken2Instruction<
+  input: FreezeAccountInput<TAccountAccount, TAccountMint, TAccountOwner>
+): FreezeAccountInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
   TAccountMint,
-  TAccountRent
+  (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+    ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+    : TAccountOwner
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -118,64 +114,68 @@ export function getInitializeToken2Instruction<
   const originalAccounts = {
     account: { value: input.account ?? null, isWritable: true },
     mint: { value: input.mint ?? null, isWritable: false },
-    rent: { value: input.rent ?? null, isWritable: false },
+    owner: { value: input.owner ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
 
-  // Original args.
-  const args = { ...input };
-
-  // Resolve default values.
-  if (!accounts.rent.value) {
-    accounts.rent.value =
-      'SysvarRent111111111111111111111111111111111' as Address<'SysvarRent111111111111111111111111111111111'>;
-  }
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.account),
       getAccountMeta(accounts.mint),
-      getAccountMeta(accounts.rent),
+      getAccountMeta(accounts.owner),
+      ...remainingAccounts,
     ],
     programAddress,
-    data: getInitializeToken2InstructionDataEncoder().encode(
-      args as InitializeToken2InstructionDataArgs
-    ),
-  } as InitializeToken2Instruction<
+    data: getFreezeAccountInstructionDataEncoder().encode({}),
+  } as FreezeAccountInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
     TAccountMint,
-    TAccountRent
+    (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
+      ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
+      : TAccountOwner
   >;
 
   return instruction;
 }
 
-export type ParsedInitializeToken2Instruction<
+export type ParsedFreezeAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to freeze. */
     account: TAccountMetas[0];
+    /** The token mint. */
     mint: TAccountMetas[1];
-    rent: TAccountMetas[2];
+    /** The mint freeze authority or its multisignature account. */
+    owner: TAccountMetas[2];
   };
-  data: InitializeToken2InstructionData;
+  data: FreezeAccountInstructionData;
 };
 
-export function parseInitializeToken2Instruction<
+export function parseFreezeAccountInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedInitializeToken2Instruction<TProgram, TAccountMetas> {
+): ParsedFreezeAccountInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -191,8 +191,8 @@ export function parseInitializeToken2Instruction<
     accounts: {
       account: getNextAccount(),
       mint: getNextAccount(),
-      rent: getNextAccount(),
+      owner: getNextAccount(),
     },
-    data: getInitializeToken2InstructionDataDecoder().decode(instruction.data),
+    data: getFreezeAccountInstructionDataDecoder().decode(instruction.data),
   };
 }

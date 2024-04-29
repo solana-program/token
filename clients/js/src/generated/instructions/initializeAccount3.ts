@@ -12,15 +12,14 @@ import {
   Decoder,
   Encoder,
   IAccountMeta,
-  IAccountSignerMeta,
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
   ReadonlyAccount,
-  ReadonlySignerAccount,
-  TransactionSigner,
   WritableAccount,
   combineCodec,
+  getAddressDecoder,
+  getAddressEncoder,
   getStructDecoder,
   getStructEncoder,
   getU8Decoder,
@@ -30,11 +29,10 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type ThawTokenInstruction<
+export type InitializeAccount3Instruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
   TAccountMint extends string | IAccountMeta<string> = string,
-  TAccountOwner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -46,60 +44,62 @@ export type ThawTokenInstruction<
       TAccountMint extends string
         ? ReadonlyAccount<TAccountMint>
         : TAccountMint,
-      TAccountOwner extends string
-        ? ReadonlySignerAccount<TAccountOwner> &
-            IAccountSignerMeta<TAccountOwner>
-        : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
 
-export type ThawTokenInstructionData = { discriminator: number };
+export type InitializeAccount3InstructionData = {
+  discriminator: number;
+  owner: Address;
+};
 
-export type ThawTokenInstructionDataArgs = {};
+export type InitializeAccount3InstructionDataArgs = { owner: Address };
 
-export function getThawTokenInstructionDataEncoder(): Encoder<ThawTokenInstructionDataArgs> {
+export function getInitializeAccount3InstructionDataEncoder(): Encoder<InitializeAccount3InstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 11 })
+    getStructEncoder([
+      ['discriminator', getU8Encoder()],
+      ['owner', getAddressEncoder()],
+    ]),
+    (value) => ({ ...value, discriminator: 18 })
   );
 }
 
-export function getThawTokenInstructionDataDecoder(): Decoder<ThawTokenInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+export function getInitializeAccount3InstructionDataDecoder(): Decoder<InitializeAccount3InstructionData> {
+  return getStructDecoder([
+    ['discriminator', getU8Decoder()],
+    ['owner', getAddressDecoder()],
+  ]);
 }
 
-export function getThawTokenInstructionDataCodec(): Codec<
-  ThawTokenInstructionDataArgs,
-  ThawTokenInstructionData
+export function getInitializeAccount3InstructionDataCodec(): Codec<
+  InitializeAccount3InstructionDataArgs,
+  InitializeAccount3InstructionData
 > {
   return combineCodec(
-    getThawTokenInstructionDataEncoder(),
-    getThawTokenInstructionDataDecoder()
+    getInitializeAccount3InstructionDataEncoder(),
+    getInitializeAccount3InstructionDataDecoder()
   );
 }
 
-export type ThawTokenInput<
+export type InitializeAccount3Input<
   TAccountAccount extends string = string,
   TAccountMint extends string = string,
-  TAccountOwner extends string = string,
 > = {
   account: Address<TAccountAccount>;
   mint: Address<TAccountMint>;
-  owner: TransactionSigner<TAccountOwner>;
+  owner: InitializeAccount3InstructionDataArgs['owner'];
 };
 
-export function getThawTokenInstruction<
+export function getInitializeAccount3Instruction<
   TAccountAccount extends string,
   TAccountMint extends string,
-  TAccountOwner extends string,
 >(
-  input: ThawTokenInput<TAccountAccount, TAccountMint, TAccountOwner>
-): ThawTokenInstruction<
+  input: InitializeAccount3Input<TAccountAccount, TAccountMint>
+): InitializeAccount3Instruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
-  TAccountMint,
-  TAccountOwner
+  TAccountMint
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -108,33 +108,32 @@ export function getThawTokenInstruction<
   const originalAccounts = {
     account: { value: input.account ?? null, isWritable: true },
     mint: { value: input.mint ?? null, isWritable: false },
-    owner: { value: input.owner ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
-    accounts: [
-      getAccountMeta(accounts.account),
-      getAccountMeta(accounts.mint),
-      getAccountMeta(accounts.owner),
-    ],
+    accounts: [getAccountMeta(accounts.account), getAccountMeta(accounts.mint)],
     programAddress,
-    data: getThawTokenInstructionDataEncoder().encode({}),
-  } as ThawTokenInstruction<
+    data: getInitializeAccount3InstructionDataEncoder().encode(
+      args as InitializeAccount3InstructionDataArgs
+    ),
+  } as InitializeAccount3Instruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
-    TAccountMint,
-    TAccountOwner
+    TAccountMint
   >;
 
   return instruction;
 }
 
-export type ParsedThawTokenInstruction<
+export type ParsedInitializeAccount3Instruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
@@ -142,20 +141,19 @@ export type ParsedThawTokenInstruction<
   accounts: {
     account: TAccountMetas[0];
     mint: TAccountMetas[1];
-    owner: TAccountMetas[2];
   };
-  data: ThawTokenInstructionData;
+  data: InitializeAccount3InstructionData;
 };
 
-export function parseThawTokenInstruction<
+export function parseInitializeAccount3Instruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedThawTokenInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+): ParsedInitializeAccount3Instruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 2) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -170,8 +168,9 @@ export function parseThawTokenInstruction<
     accounts: {
       account: getNextAccount(),
       mint: getNextAccount(),
-      owner: getNextAccount(),
     },
-    data: getThawTokenInstructionDataDecoder().decode(instruction.data),
+    data: getInitializeAccount3InstructionDataDecoder().decode(
+      instruction.data
+    ),
   };
 }

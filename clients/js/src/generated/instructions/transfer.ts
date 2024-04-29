@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -32,10 +33,9 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type TransferTokensCheckedInstruction<
+export type TransferInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
-  TAccountMint extends string | IAccountMeta<string> = string,
   TAccountDestination extends string | IAccountMeta<string> = string,
   TAccountAuthority extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
@@ -46,92 +46,83 @@ export type TransferTokensCheckedInstruction<
       TAccountSource extends string
         ? WritableAccount<TAccountSource>
         : TAccountSource,
-      TAccountMint extends string
-        ? ReadonlyAccount<TAccountMint>
-        : TAccountMint,
       TAccountDestination extends string
         ? WritableAccount<TAccountDestination>
         : TAccountDestination,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            IAccountSignerMeta<TAccountAuthority>
+        ? ReadonlyAccount<TAccountAuthority>
         : TAccountAuthority,
       ...TRemainingAccounts,
     ]
   >;
 
-export type TransferTokensCheckedInstructionData = {
+export type TransferInstructionData = {
   discriminator: number;
+  /** The amount of tokens to transfer. */
   amount: bigint;
-  decimals: number;
 };
 
-export type TransferTokensCheckedInstructionDataArgs = {
+export type TransferInstructionDataArgs = {
+  /** The amount of tokens to transfer. */
   amount: number | bigint;
-  decimals: number;
 };
 
-export function getTransferTokensCheckedInstructionDataEncoder(): Encoder<TransferTokensCheckedInstructionDataArgs> {
+export function getTransferInstructionDataEncoder(): Encoder<TransferInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['amount', getU64Encoder()],
-      ['decimals', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 12 })
+    (value) => ({ ...value, discriminator: 3 })
   );
 }
 
-export function getTransferTokensCheckedInstructionDataDecoder(): Decoder<TransferTokensCheckedInstructionData> {
+export function getTransferInstructionDataDecoder(): Decoder<TransferInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['amount', getU64Decoder()],
-    ['decimals', getU8Decoder()],
   ]);
 }
 
-export function getTransferTokensCheckedInstructionDataCodec(): Codec<
-  TransferTokensCheckedInstructionDataArgs,
-  TransferTokensCheckedInstructionData
+export function getTransferInstructionDataCodec(): Codec<
+  TransferInstructionDataArgs,
+  TransferInstructionData
 > {
   return combineCodec(
-    getTransferTokensCheckedInstructionDataEncoder(),
-    getTransferTokensCheckedInstructionDataDecoder()
+    getTransferInstructionDataEncoder(),
+    getTransferInstructionDataDecoder()
   );
 }
 
-export type TransferTokensCheckedInput<
+export type TransferInput<
   TAccountSource extends string = string,
-  TAccountMint extends string = string,
   TAccountDestination extends string = string,
   TAccountAuthority extends string = string,
 > = {
+  /** The source account. */
   source: Address<TAccountSource>;
-  mint: Address<TAccountMint>;
+  /** The destination account. */
   destination: Address<TAccountDestination>;
-  authority: TransactionSigner<TAccountAuthority>;
-  amount: TransferTokensCheckedInstructionDataArgs['amount'];
-  decimals: TransferTokensCheckedInstructionDataArgs['decimals'];
+  /** The source account's owner/delegate or its multisignature account. */
+  authority: Address<TAccountAuthority> | TransactionSigner<TAccountAuthority>;
+  amount: TransferInstructionDataArgs['amount'];
+  multiSigners?: Array<TransactionSigner>;
 };
 
-export function getTransferTokensCheckedInstruction<
+export function getTransferInstruction<
   TAccountSource extends string,
-  TAccountMint extends string,
   TAccountDestination extends string,
   TAccountAuthority extends string,
 >(
-  input: TransferTokensCheckedInput<
-    TAccountSource,
-    TAccountMint,
-    TAccountDestination,
-    TAccountAuthority
-  >
-): TransferTokensCheckedInstruction<
+  input: TransferInput<TAccountSource, TAccountDestination, TAccountAuthority>
+): TransferInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource,
-  TAccountMint,
   TAccountDestination,
-  TAccountAuthority
+  (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
+    ? ReadonlySignerAccount<TAccountAuthority> &
+        IAccountSignerMeta<TAccountAuthority>
+    : TAccountAuthority
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -139,7 +130,6 @@ export function getTransferTokensCheckedInstruction<
   // Original accounts.
   const originalAccounts = {
     source: { value: input.source ?? null, isWritable: true },
-    mint: { value: input.mint ?? null, isWritable: false },
     destination: { value: input.destination ?? null, isWritable: true },
     authority: { value: input.authority ?? null, isWritable: false },
   };
@@ -151,52 +141,65 @@ export function getTransferTokensCheckedInstruction<
   // Original args.
   const args = { ...input };
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.multiSigners ?? []).map(
+    (signer) => ({
+      address: signer.address,
+      role: AccountRole.READONLY_SIGNER,
+      signer,
+    })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.source),
-      getAccountMeta(accounts.mint),
       getAccountMeta(accounts.destination),
       getAccountMeta(accounts.authority),
+      ...remainingAccounts,
     ],
     programAddress,
-    data: getTransferTokensCheckedInstructionDataEncoder().encode(
-      args as TransferTokensCheckedInstructionDataArgs
+    data: getTransferInstructionDataEncoder().encode(
+      args as TransferInstructionDataArgs
     ),
-  } as TransferTokensCheckedInstruction<
+  } as TransferInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountSource,
-    TAccountMint,
     TAccountDestination,
-    TAccountAuthority
+    (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
+      ? ReadonlySignerAccount<TAccountAuthority> &
+          IAccountSignerMeta<TAccountAuthority>
+      : TAccountAuthority
   >;
 
   return instruction;
 }
 
-export type ParsedTransferTokensCheckedInstruction<
+export type ParsedTransferInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The source account. */
     source: TAccountMetas[0];
-    mint: TAccountMetas[1];
-    destination: TAccountMetas[2];
-    authority: TAccountMetas[3];
+    /** The destination account. */
+    destination: TAccountMetas[1];
+    /** The source account's owner/delegate or its multisignature account. */
+    authority: TAccountMetas[2];
   };
-  data: TransferTokensCheckedInstructionData;
+  data: TransferInstructionData;
 };
 
-export function parseTransferTokensCheckedInstruction<
+export function parseTransferInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedTransferTokensCheckedInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 4) {
+): ParsedTransferInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -210,12 +213,9 @@ export function parseTransferTokensCheckedInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       source: getNextAccount(),
-      mint: getNextAccount(),
       destination: getNextAccount(),
       authority: getNextAccount(),
     },
-    data: getTransferTokensCheckedInstructionDataDecoder().decode(
-      instruction.data
-    ),
+    data: getTransferInstructionDataDecoder().decode(instruction.data),
   };
 }

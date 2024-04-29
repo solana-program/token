@@ -43,7 +43,7 @@ import {
   getTokenStateEncoder,
 } from '../types';
 
-export type Token = {
+export type Account = {
   mint: Address;
   owner: Address;
   amount: bigint;
@@ -54,7 +54,7 @@ export type Token = {
   closeAuthority: Option<Address>;
 };
 
-export type TokenArgs = {
+export type AccountArgs = {
   mint: Address;
   owner: Address;
   amount: number | bigint;
@@ -65,7 +65,7 @@ export type TokenArgs = {
   closeAuthority: OptionOrNullable<Address>;
 };
 
-export function getTokenEncoder(): Encoder<TokenArgs> {
+export function getAccountEncoder(): Encoder<AccountArgs> {
   return getStructEncoder([
     ['mint', getAddressEncoder()],
     ['owner', getAddressEncoder()],
@@ -96,7 +96,7 @@ export function getTokenEncoder(): Encoder<TokenArgs> {
   ]);
 }
 
-export function getTokenDecoder(): Decoder<Token> {
+export function getAccountDecoder(): Decoder<Account> {
   return getStructDecoder([
     ['mint', getAddressDecoder()],
     ['owner', getAddressDecoder()],
@@ -127,63 +127,63 @@ export function getTokenDecoder(): Decoder<Token> {
   ]);
 }
 
-export function getTokenCodec(): Codec<TokenArgs, Token> {
-  return combineCodec(getTokenEncoder(), getTokenDecoder());
+export function getAccountCodec(): Codec<AccountArgs, Account> {
+  return combineCodec(getAccountEncoder(), getAccountDecoder());
 }
 
-export function decodeToken<TAddress extends string = string>(
+export function decodeAccount<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress>
-): Account<Token, TAddress>;
-export function decodeToken<TAddress extends string = string>(
+): Account<Account, TAddress>;
+export function decodeAccount<TAddress extends string = string>(
   encodedAccount: MaybeEncodedAccount<TAddress>
-): MaybeAccount<Token, TAddress>;
-export function decodeToken<TAddress extends string = string>(
+): MaybeAccount<Account, TAddress>;
+export function decodeAccount<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>
-): Account<Token, TAddress> | MaybeAccount<Token, TAddress> {
+): Account<Account, TAddress> | MaybeAccount<Account, TAddress> {
   return decodeAccount(
     encodedAccount as MaybeEncodedAccount<TAddress>,
-    getTokenDecoder()
+    getAccountDecoder()
   );
 }
 
-export async function fetchToken<TAddress extends string = string>(
+export async function fetchAccount<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<Account<Token, TAddress>> {
-  const maybeAccount = await fetchMaybeToken(rpc, address, config);
+): Promise<Account<Account, TAddress>> {
+  const maybeAccount = await fetchMaybeAccount(rpc, address, config);
   assertAccountExists(maybeAccount);
   return maybeAccount;
 }
 
-export async function fetchMaybeToken<TAddress extends string = string>(
+export async function fetchMaybeAccount<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<MaybeAccount<Token, TAddress>> {
+): Promise<MaybeAccount<Account, TAddress>> {
   const maybeAccount = await fetchEncodedAccount(rpc, address, config);
-  return decodeToken(maybeAccount);
+  return decodeAccount(maybeAccount);
 }
 
-export async function fetchAllToken(
+export async function fetchAllAccount(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<Account<Token>[]> {
-  const maybeAccounts = await fetchAllMaybeToken(rpc, addresses, config);
+): Promise<Account<Account>[]> {
+  const maybeAccounts = await fetchAllMaybeAccount(rpc, addresses, config);
   assertAccountsExist(maybeAccounts);
   return maybeAccounts;
 }
 
-export async function fetchAllMaybeToken(
+export async function fetchAllMaybeAccount(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<MaybeAccount<Token>[]> {
+): Promise<MaybeAccount<Account>[]> {
   const maybeAccounts = await fetchEncodedAccounts(rpc, addresses, config);
-  return maybeAccounts.map((maybeAccount) => decodeToken(maybeAccount));
+  return maybeAccounts.map((maybeAccount) => decodeAccount(maybeAccount));
 }
 
-export function getTokenSize(): number {
+export function getAccountSize(): number {
   return 165;
 }

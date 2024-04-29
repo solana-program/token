@@ -31,7 +31,7 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type BurnTokenCheckedInstruction<
+export type BurnCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -55,18 +55,18 @@ export type BurnTokenCheckedInstruction<
     ]
   >;
 
-export type BurnTokenCheckedInstructionData = {
+export type BurnCheckedInstructionData = {
   discriminator: number;
   amount: bigint;
   decimals: number;
 };
 
-export type BurnTokenCheckedInstructionDataArgs = {
+export type BurnCheckedInstructionDataArgs = {
   amount: number | bigint;
   decimals: number;
 };
 
-export function getBurnTokenCheckedInstructionDataEncoder(): Encoder<BurnTokenCheckedInstructionDataArgs> {
+export function getBurnCheckedInstructionDataEncoder(): Encoder<BurnCheckedInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
@@ -77,7 +77,7 @@ export function getBurnTokenCheckedInstructionDataEncoder(): Encoder<BurnTokenCh
   );
 }
 
-export function getBurnTokenCheckedInstructionDataDecoder(): Decoder<BurnTokenCheckedInstructionData> {
+export function getBurnCheckedInstructionDataDecoder(): Decoder<BurnCheckedInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['amount', getU64Decoder()],
@@ -85,17 +85,17 @@ export function getBurnTokenCheckedInstructionDataDecoder(): Decoder<BurnTokenCh
   ]);
 }
 
-export function getBurnTokenCheckedInstructionDataCodec(): Codec<
-  BurnTokenCheckedInstructionDataArgs,
-  BurnTokenCheckedInstructionData
+export function getBurnCheckedInstructionDataCodec(): Codec<
+  BurnCheckedInstructionDataArgs,
+  BurnCheckedInstructionData
 > {
   return combineCodec(
-    getBurnTokenCheckedInstructionDataEncoder(),
-    getBurnTokenCheckedInstructionDataDecoder()
+    getBurnCheckedInstructionDataEncoder(),
+    getBurnCheckedInstructionDataDecoder()
   );
 }
 
-export type BurnTokenCheckedInput<
+export type BurnCheckedInput<
   TAccountAccount extends string = string,
   TAccountMint extends string = string,
   TAccountAuthority extends string = string,
@@ -103,17 +103,17 @@ export type BurnTokenCheckedInput<
   account: Address<TAccountAccount>;
   mint: Address<TAccountMint>;
   authority: TransactionSigner<TAccountAuthority>;
-  amount: BurnTokenCheckedInstructionDataArgs['amount'];
-  decimals: BurnTokenCheckedInstructionDataArgs['decimals'];
+  amount: BurnCheckedInstructionDataArgs['amount'];
+  decimals: BurnCheckedInstructionDataArgs['decimals'];
 };
 
-export function getBurnTokenCheckedInstruction<
+export function getBurnCheckedInstruction<
   TAccountAccount extends string,
   TAccountMint extends string,
   TAccountAuthority extends string,
 >(
-  input: BurnTokenCheckedInput<TAccountAccount, TAccountMint, TAccountAuthority>
-): BurnTokenCheckedInstruction<
+  input: BurnCheckedInput<TAccountAccount, TAccountMint, TAccountAuthority>
+): BurnCheckedInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
   TAccountMint,
@@ -144,10 +144,10 @@ export function getBurnTokenCheckedInstruction<
       getAccountMeta(accounts.authority),
     ],
     programAddress,
-    data: getBurnTokenCheckedInstructionDataEncoder().encode(
-      args as BurnTokenCheckedInstructionDataArgs
+    data: getBurnCheckedInstructionDataEncoder().encode(
+      args as BurnCheckedInstructionDataArgs
     ),
-  } as BurnTokenCheckedInstruction<
+  } as BurnCheckedInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
     TAccountMint,
@@ -157,7 +157,7 @@ export function getBurnTokenCheckedInstruction<
   return instruction;
 }
 
-export type ParsedBurnTokenCheckedInstruction<
+export type ParsedBurnCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
@@ -167,17 +167,17 @@ export type ParsedBurnTokenCheckedInstruction<
     mint: TAccountMetas[1];
     authority: TAccountMetas[2];
   };
-  data: BurnTokenCheckedInstructionData;
+  data: BurnCheckedInstructionData;
 };
 
-export function parseBurnTokenCheckedInstruction<
+export function parseBurnCheckedInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedBurnTokenCheckedInstruction<TProgram, TAccountMetas> {
+): ParsedBurnCheckedInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -195,6 +195,6 @@ export function parseBurnTokenCheckedInstruction<
       mint: getNextAccount(),
       authority: getNextAccount(),
     },
-    data: getBurnTokenCheckedInstructionDataDecoder().decode(instruction.data),
+    data: getBurnCheckedInstructionDataDecoder().decode(instruction.data),
   };
 }

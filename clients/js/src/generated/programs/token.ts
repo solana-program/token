@@ -9,29 +9,29 @@
 import { Address, containsBytes, getU8Encoder } from '@solana/web3.js';
 import {
   ParsedAmountToUiAmountInstruction,
-  ParsedApproveTokenDelegateCheckedInstruction,
-  ParsedApproveTokenDelegateInstruction,
-  ParsedBurnTokenCheckedInstruction,
-  ParsedBurnTokenInstruction,
-  ParsedCloseTokenInstruction,
-  ParsedFreezeTokenInstruction,
+  ParsedApproveCheckedInstruction,
+  ParsedApproveInstruction,
+  ParsedBurnCheckedInstruction,
+  ParsedBurnInstruction,
+  ParsedCloseAccountInstruction,
+  ParsedFreezeAccountInstruction,
   ParsedGetTokenDataSizeInstruction,
+  ParsedInitializeAccount2Instruction,
+  ParsedInitializeAccount3Instruction,
+  ParsedInitializeAccountInstruction,
   ParsedInitializeImmutableOwnerInstruction,
   ParsedInitializeMint2Instruction,
   ParsedInitializeMintInstruction,
   ParsedInitializeMultisig2Instruction,
   ParsedInitializeMultisigInstruction,
-  ParsedInitializeToken2Instruction,
-  ParsedInitializeToken3Instruction,
-  ParsedInitializeTokenInstruction,
+  ParsedMintToInstruction,
   ParsedMintTokensToCheckedInstruction,
-  ParsedMintTokensToInstruction,
-  ParsedRevokeTokenDelegateInstruction,
+  ParsedRevokeInstruction,
   ParsedSetAuthorityInstruction,
   ParsedSyncNativeInstruction,
-  ParsedThawTokenInstruction,
-  ParsedTransferTokensCheckedInstruction,
-  ParsedTransferTokensInstruction,
+  ParsedThawAccountInstruction,
+  ParsedTransferCheckedInstruction,
+  ParsedTransferInstruction,
   ParsedUiAmountToAmountInstruction,
 } from '../instructions';
 
@@ -40,30 +40,30 @@ export const TOKEN_PROGRAM_ADDRESS =
 
 export enum TokenAccount {
   Mint,
-  Token,
+  Account,
   Multisig,
 }
 
 export enum TokenInstruction {
   InitializeMint,
-  InitializeToken,
+  InitializeAccount,
   InitializeMultisig,
-  TransferTokens,
-  ApproveTokenDelegate,
-  RevokeTokenDelegate,
+  Transfer,
+  Approve,
+  Revoke,
   SetAuthority,
-  MintTokensTo,
-  BurnToken,
-  CloseToken,
-  FreezeToken,
-  ThawToken,
-  TransferTokensChecked,
-  ApproveTokenDelegateChecked,
+  MintTo,
+  Burn,
+  CloseAccount,
+  FreezeAccount,
+  ThawAccount,
+  TransferChecked,
+  ApproveChecked,
   MintTokensToChecked,
-  BurnTokenChecked,
-  InitializeToken2,
+  BurnChecked,
+  InitializeAccount2,
   SyncNative,
-  InitializeToken3,
+  InitializeAccount3,
   InitializeMultisig2,
   InitializeMint2,
   GetTokenDataSize,
@@ -81,58 +81,58 @@ export function identifyTokenInstruction(
     return TokenInstruction.InitializeMint;
   }
   if (containsBytes(data, getU8Encoder().encode(1), 0)) {
-    return TokenInstruction.InitializeToken;
+    return TokenInstruction.InitializeAccount;
   }
   if (containsBytes(data, getU8Encoder().encode(2), 0)) {
     return TokenInstruction.InitializeMultisig;
   }
   if (containsBytes(data, getU8Encoder().encode(3), 0)) {
-    return TokenInstruction.TransferTokens;
+    return TokenInstruction.Transfer;
   }
   if (containsBytes(data, getU8Encoder().encode(4), 0)) {
-    return TokenInstruction.ApproveTokenDelegate;
+    return TokenInstruction.Approve;
   }
   if (containsBytes(data, getU8Encoder().encode(5), 0)) {
-    return TokenInstruction.RevokeTokenDelegate;
+    return TokenInstruction.Revoke;
   }
   if (containsBytes(data, getU8Encoder().encode(6), 0)) {
     return TokenInstruction.SetAuthority;
   }
   if (containsBytes(data, getU8Encoder().encode(7), 0)) {
-    return TokenInstruction.MintTokensTo;
+    return TokenInstruction.MintTo;
   }
   if (containsBytes(data, getU8Encoder().encode(8), 0)) {
-    return TokenInstruction.BurnToken;
+    return TokenInstruction.Burn;
   }
   if (containsBytes(data, getU8Encoder().encode(9), 0)) {
-    return TokenInstruction.CloseToken;
+    return TokenInstruction.CloseAccount;
   }
   if (containsBytes(data, getU8Encoder().encode(10), 0)) {
-    return TokenInstruction.FreezeToken;
+    return TokenInstruction.FreezeAccount;
   }
   if (containsBytes(data, getU8Encoder().encode(11), 0)) {
-    return TokenInstruction.ThawToken;
+    return TokenInstruction.ThawAccount;
   }
   if (containsBytes(data, getU8Encoder().encode(12), 0)) {
-    return TokenInstruction.TransferTokensChecked;
+    return TokenInstruction.TransferChecked;
   }
   if (containsBytes(data, getU8Encoder().encode(13), 0)) {
-    return TokenInstruction.ApproveTokenDelegateChecked;
+    return TokenInstruction.ApproveChecked;
   }
   if (containsBytes(data, getU8Encoder().encode(14), 0)) {
     return TokenInstruction.MintTokensToChecked;
   }
   if (containsBytes(data, getU8Encoder().encode(15), 0)) {
-    return TokenInstruction.BurnTokenChecked;
+    return TokenInstruction.BurnChecked;
   }
   if (containsBytes(data, getU8Encoder().encode(16), 0)) {
-    return TokenInstruction.InitializeToken2;
+    return TokenInstruction.InitializeAccount2;
   }
   if (containsBytes(data, getU8Encoder().encode(17), 0)) {
     return TokenInstruction.SyncNative;
   }
   if (containsBytes(data, getU8Encoder().encode(18), 0)) {
-    return TokenInstruction.InitializeToken3;
+    return TokenInstruction.InitializeAccount3;
   }
   if (containsBytes(data, getU8Encoder().encode(19), 0)) {
     return TokenInstruction.InitializeMultisig2;
@@ -164,59 +164,59 @@ export type ParsedTokenInstruction<
       instructionType: TokenInstruction.InitializeMint;
     } & ParsedInitializeMintInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.InitializeToken;
-    } & ParsedInitializeTokenInstruction<TProgram>)
+      instructionType: TokenInstruction.InitializeAccount;
+    } & ParsedInitializeAccountInstruction<TProgram>)
   | ({
       instructionType: TokenInstruction.InitializeMultisig;
     } & ParsedInitializeMultisigInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.TransferTokens;
-    } & ParsedTransferTokensInstruction<TProgram>)
+      instructionType: TokenInstruction.Transfer;
+    } & ParsedTransferInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.ApproveTokenDelegate;
-    } & ParsedApproveTokenDelegateInstruction<TProgram>)
+      instructionType: TokenInstruction.Approve;
+    } & ParsedApproveInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.RevokeTokenDelegate;
-    } & ParsedRevokeTokenDelegateInstruction<TProgram>)
+      instructionType: TokenInstruction.Revoke;
+    } & ParsedRevokeInstruction<TProgram>)
   | ({
       instructionType: TokenInstruction.SetAuthority;
     } & ParsedSetAuthorityInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.MintTokensTo;
-    } & ParsedMintTokensToInstruction<TProgram>)
+      instructionType: TokenInstruction.MintTo;
+    } & ParsedMintToInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.BurnToken;
-    } & ParsedBurnTokenInstruction<TProgram>)
+      instructionType: TokenInstruction.Burn;
+    } & ParsedBurnInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.CloseToken;
-    } & ParsedCloseTokenInstruction<TProgram>)
+      instructionType: TokenInstruction.CloseAccount;
+    } & ParsedCloseAccountInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.FreezeToken;
-    } & ParsedFreezeTokenInstruction<TProgram>)
+      instructionType: TokenInstruction.FreezeAccount;
+    } & ParsedFreezeAccountInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.ThawToken;
-    } & ParsedThawTokenInstruction<TProgram>)
+      instructionType: TokenInstruction.ThawAccount;
+    } & ParsedThawAccountInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.TransferTokensChecked;
-    } & ParsedTransferTokensCheckedInstruction<TProgram>)
+      instructionType: TokenInstruction.TransferChecked;
+    } & ParsedTransferCheckedInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.ApproveTokenDelegateChecked;
-    } & ParsedApproveTokenDelegateCheckedInstruction<TProgram>)
+      instructionType: TokenInstruction.ApproveChecked;
+    } & ParsedApproveCheckedInstruction<TProgram>)
   | ({
       instructionType: TokenInstruction.MintTokensToChecked;
     } & ParsedMintTokensToCheckedInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.BurnTokenChecked;
-    } & ParsedBurnTokenCheckedInstruction<TProgram>)
+      instructionType: TokenInstruction.BurnChecked;
+    } & ParsedBurnCheckedInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.InitializeToken2;
-    } & ParsedInitializeToken2Instruction<TProgram>)
+      instructionType: TokenInstruction.InitializeAccount2;
+    } & ParsedInitializeAccount2Instruction<TProgram>)
   | ({
       instructionType: TokenInstruction.SyncNative;
     } & ParsedSyncNativeInstruction<TProgram>)
   | ({
-      instructionType: TokenInstruction.InitializeToken3;
-    } & ParsedInitializeToken3Instruction<TProgram>)
+      instructionType: TokenInstruction.InitializeAccount3;
+    } & ParsedInitializeAccount3Instruction<TProgram>)
   | ({
       instructionType: TokenInstruction.InitializeMultisig2;
     } & ParsedInitializeMultisig2Instruction<TProgram>)

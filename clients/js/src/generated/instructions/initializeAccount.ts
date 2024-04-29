@@ -27,7 +27,7 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type InitializeTokenInstruction<
+export type InitializeAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -56,56 +56,60 @@ export type InitializeTokenInstruction<
     ]
   >;
 
-export type InitializeTokenInstructionData = { discriminator: number };
+export type InitializeAccountInstructionData = { discriminator: number };
 
-export type InitializeTokenInstructionDataArgs = {};
+export type InitializeAccountInstructionDataArgs = {};
 
-export function getInitializeTokenInstructionDataEncoder(): Encoder<InitializeTokenInstructionDataArgs> {
+export function getInitializeAccountInstructionDataEncoder(): Encoder<InitializeAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
     (value) => ({ ...value, discriminator: 1 })
   );
 }
 
-export function getInitializeTokenInstructionDataDecoder(): Decoder<InitializeTokenInstructionData> {
+export function getInitializeAccountInstructionDataDecoder(): Decoder<InitializeAccountInstructionData> {
   return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getInitializeTokenInstructionDataCodec(): Codec<
-  InitializeTokenInstructionDataArgs,
-  InitializeTokenInstructionData
+export function getInitializeAccountInstructionDataCodec(): Codec<
+  InitializeAccountInstructionDataArgs,
+  InitializeAccountInstructionData
 > {
   return combineCodec(
-    getInitializeTokenInstructionDataEncoder(),
-    getInitializeTokenInstructionDataDecoder()
+    getInitializeAccountInstructionDataEncoder(),
+    getInitializeAccountInstructionDataDecoder()
   );
 }
 
-export type InitializeTokenInput<
+export type InitializeAccountInput<
   TAccountAccount extends string = string,
   TAccountMint extends string = string,
   TAccountOwner extends string = string,
   TAccountRent extends string = string,
 > = {
+  /** The account to initialize. */
   account: Address<TAccountAccount>;
+  /** The mint this account will be associated with. */
   mint: Address<TAccountMint>;
+  /** The new account's owner/multisignature. */
   owner: Address<TAccountOwner>;
+  /** Rent sysvar. */
   rent?: Address<TAccountRent>;
 };
 
-export function getInitializeTokenInstruction<
+export function getInitializeAccountInstruction<
   TAccountAccount extends string,
   TAccountMint extends string,
   TAccountOwner extends string,
   TAccountRent extends string,
 >(
-  input: InitializeTokenInput<
+  input: InitializeAccountInput<
     TAccountAccount,
     TAccountMint,
     TAccountOwner,
     TAccountRent
   >
-): InitializeTokenInstruction<
+): InitializeAccountInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount,
   TAccountMint,
@@ -142,8 +146,8 @@ export function getInitializeTokenInstruction<
       getAccountMeta(accounts.rent),
     ],
     programAddress,
-    data: getInitializeTokenInstructionDataEncoder().encode({}),
-  } as InitializeTokenInstruction<
+    data: getInitializeAccountInstructionDataEncoder().encode({}),
+  } as InitializeAccountInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountAccount,
     TAccountMint,
@@ -154,28 +158,32 @@ export function getInitializeTokenInstruction<
   return instruction;
 }
 
-export type ParsedInitializeTokenInstruction<
+export type ParsedInitializeAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The account to initialize. */
     account: TAccountMetas[0];
+    /** The mint this account will be associated with. */
     mint: TAccountMetas[1];
+    /** The new account's owner/multisignature. */
     owner: TAccountMetas[2];
+    /** Rent sysvar. */
     rent: TAccountMetas[3];
   };
-  data: InitializeTokenInstructionData;
+  data: InitializeAccountInstructionData;
 };
 
-export function parseInitializeTokenInstruction<
+export function parseInitializeAccountInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedInitializeTokenInstruction<TProgram, TAccountMetas> {
+): ParsedInitializeAccountInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 4) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -194,6 +202,6 @@ export function parseInitializeTokenInstruction<
       owner: getNextAccount(),
       rent: getNextAccount(),
     },
-    data: getInitializeTokenInstructionDataDecoder().decode(instruction.data),
+    data: getInitializeAccountInstructionDataDecoder().decode(instruction.data),
   };
 }

@@ -16,6 +16,7 @@ import {
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
+  ReadonlyAccount,
   ReadonlySignerAccount,
   TransactionSigner,
   WritableAccount,
@@ -31,11 +32,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
-export type TransferTokensInstruction<
+export type ApproveCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
-  TAccountDestination extends string | IAccountMeta<string> = string,
-  TAccountAuthority extends string | IAccountMeta<string> = string,
+  TAccountMint extends string | IAccountMeta<string> = string,
+  TAccountDelegate extends string | IAccountMeta<string> = string,
+  TAccountOwner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -44,77 +46,92 @@ export type TransferTokensInstruction<
       TAccountSource extends string
         ? WritableAccount<TAccountSource>
         : TAccountSource,
-      TAccountDestination extends string
-        ? WritableAccount<TAccountDestination>
-        : TAccountDestination,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            IAccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
+      TAccountMint extends string
+        ? ReadonlyAccount<TAccountMint>
+        : TAccountMint,
+      TAccountDelegate extends string
+        ? ReadonlyAccount<TAccountDelegate>
+        : TAccountDelegate,
+      TAccountOwner extends string
+        ? ReadonlySignerAccount<TAccountOwner> &
+            IAccountSignerMeta<TAccountOwner>
+        : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
 
-export type TransferTokensInstructionData = {
+export type ApproveCheckedInstructionData = {
   discriminator: number;
   amount: bigint;
+  decimals: number;
 };
 
-export type TransferTokensInstructionDataArgs = { amount: number | bigint };
+export type ApproveCheckedInstructionDataArgs = {
+  amount: number | bigint;
+  decimals: number;
+};
 
-export function getTransferTokensInstructionDataEncoder(): Encoder<TransferTokensInstructionDataArgs> {
+export function getApproveCheckedInstructionDataEncoder(): Encoder<ApproveCheckedInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['amount', getU64Encoder()],
+      ['decimals', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 3 })
+    (value) => ({ ...value, discriminator: 13 })
   );
 }
 
-export function getTransferTokensInstructionDataDecoder(): Decoder<TransferTokensInstructionData> {
+export function getApproveCheckedInstructionDataDecoder(): Decoder<ApproveCheckedInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['amount', getU64Decoder()],
+    ['decimals', getU8Decoder()],
   ]);
 }
 
-export function getTransferTokensInstructionDataCodec(): Codec<
-  TransferTokensInstructionDataArgs,
-  TransferTokensInstructionData
+export function getApproveCheckedInstructionDataCodec(): Codec<
+  ApproveCheckedInstructionDataArgs,
+  ApproveCheckedInstructionData
 > {
   return combineCodec(
-    getTransferTokensInstructionDataEncoder(),
-    getTransferTokensInstructionDataDecoder()
+    getApproveCheckedInstructionDataEncoder(),
+    getApproveCheckedInstructionDataDecoder()
   );
 }
 
-export type TransferTokensInput<
+export type ApproveCheckedInput<
   TAccountSource extends string = string,
-  TAccountDestination extends string = string,
-  TAccountAuthority extends string = string,
+  TAccountMint extends string = string,
+  TAccountDelegate extends string = string,
+  TAccountOwner extends string = string,
 > = {
   source: Address<TAccountSource>;
-  destination: Address<TAccountDestination>;
-  authority: TransactionSigner<TAccountAuthority>;
-  amount: TransferTokensInstructionDataArgs['amount'];
+  mint: Address<TAccountMint>;
+  delegate: Address<TAccountDelegate>;
+  owner: TransactionSigner<TAccountOwner>;
+  amount: ApproveCheckedInstructionDataArgs['amount'];
+  decimals: ApproveCheckedInstructionDataArgs['decimals'];
 };
 
-export function getTransferTokensInstruction<
+export function getApproveCheckedInstruction<
   TAccountSource extends string,
-  TAccountDestination extends string,
-  TAccountAuthority extends string,
+  TAccountMint extends string,
+  TAccountDelegate extends string,
+  TAccountOwner extends string,
 >(
-  input: TransferTokensInput<
+  input: ApproveCheckedInput<
     TAccountSource,
-    TAccountDestination,
-    TAccountAuthority
+    TAccountMint,
+    TAccountDelegate,
+    TAccountOwner
   >
-): TransferTokensInstruction<
+): ApproveCheckedInstruction<
   typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource,
-  TAccountDestination,
-  TAccountAuthority
+  TAccountMint,
+  TAccountDelegate,
+  TAccountOwner
 > {
   // Program address.
   const programAddress = TOKEN_PROGRAM_ADDRESS;
@@ -122,8 +139,9 @@ export function getTransferTokensInstruction<
   // Original accounts.
   const originalAccounts = {
     source: { value: input.source ?? null, isWritable: true },
-    destination: { value: input.destination ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
+    mint: { value: input.mint ?? null, isWritable: false },
+    delegate: { value: input.delegate ?? null, isWritable: false },
+    owner: { value: input.owner ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -137,45 +155,48 @@ export function getTransferTokensInstruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.source),
-      getAccountMeta(accounts.destination),
-      getAccountMeta(accounts.authority),
+      getAccountMeta(accounts.mint),
+      getAccountMeta(accounts.delegate),
+      getAccountMeta(accounts.owner),
     ],
     programAddress,
-    data: getTransferTokensInstructionDataEncoder().encode(
-      args as TransferTokensInstructionDataArgs
+    data: getApproveCheckedInstructionDataEncoder().encode(
+      args as ApproveCheckedInstructionDataArgs
     ),
-  } as TransferTokensInstruction<
+  } as ApproveCheckedInstruction<
     typeof TOKEN_PROGRAM_ADDRESS,
     TAccountSource,
-    TAccountDestination,
-    TAccountAuthority
+    TAccountMint,
+    TAccountDelegate,
+    TAccountOwner
   >;
 
   return instruction;
 }
 
-export type ParsedTransferTokensInstruction<
+export type ParsedApproveCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     source: TAccountMetas[0];
-    destination: TAccountMetas[1];
-    authority: TAccountMetas[2];
+    mint: TAccountMetas[1];
+    delegate: TAccountMetas[2];
+    owner: TAccountMetas[3];
   };
-  data: TransferTokensInstructionData;
+  data: ApproveCheckedInstructionData;
 };
 
-export function parseTransferTokensInstruction<
+export function parseApproveCheckedInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedTransferTokensInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+): ParsedApproveCheckedInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 4) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -189,9 +210,10 @@ export function parseTransferTokensInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       source: getNextAccount(),
-      destination: getNextAccount(),
-      authority: getNextAccount(),
+      mint: getNextAccount(),
+      delegate: getNextAccount(),
+      owner: getNextAccount(),
     },
-    data: getTransferTokensInstructionDataDecoder().decode(instruction.data),
+    data: getApproveCheckedInstructionDataDecoder().decode(instruction.data),
   };
 }

@@ -241,7 +241,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["Token mint account."]
           },
           {
             "kind": "instructionAccountNode",
@@ -249,7 +249,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": [],
+            "docs": ["Rent sysvar."],
             "defaultValue": {
               "kind": "publicKeyValueNode",
               "publicKey": "SysvarRent111111111111111111111111111111111"
@@ -277,13 +277,13 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["Number of decimals in token account amounts."]
           },
           {
             "kind": "instructionArgumentNode",
             "name": "mintAuthority",
             "type": { "kind": "publicKeyTypeNode" },
-            "docs": []
+            "docs": ["Minting authority."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -293,12 +293,12 @@
               "item": { "kind": "publicKeyTypeNode" },
               "prefix": {
                 "kind": "numberTypeNode",
-                "format": "u8",
+                "format": "u32",
                 "endian": "le"
               },
-              "fixed": false
+              "fixed": true
             },
-            "docs": []
+            "docs": ["Optional authority that can freeze token accounts."]
           }
         ],
         "discriminators": [
@@ -309,7 +309,15 @@
           }
         ],
         "name": "initializeMint",
-        "docs": [],
+        "docs": [
+          "Initializes a new mint and optionally deposits all the newly minted",
+          "tokens in an account.",
+          "",
+          "The `InitializeMint` instruction requires no signers and MUST be",
+          "included within the same Transaction as the system program's",
+          "`CreateAccount` instruction that creates the account being initialized.",
+          "Otherwise another party can acquire ownership of the uninitialized account."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -321,7 +329,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to initialize."]
           },
           {
             "kind": "instructionAccountNode",
@@ -329,7 +337,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint this account will be associated with."]
           },
           {
             "kind": "instructionAccountNode",
@@ -337,7 +345,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The new account's owner/multisignature."]
           },
           {
             "kind": "instructionAccountNode",
@@ -345,7 +353,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": [],
+            "docs": ["Rent sysvar."],
             "defaultValue": {
               "kind": "publicKeyValueNode",
               "publicKey": "SysvarRent111111111111111111111111111111111"
@@ -373,8 +381,19 @@
             "offset": 0
           }
         ],
-        "name": "initializeToken",
-        "docs": [],
+        "name": "initializeAccount",
+        "docs": [
+          "Initializes a new account to hold tokens.  If this account is associated",
+          "with the native mint then the token balance of the initialized account",
+          "will be equal to the amount of SOL in the account. If this account is",
+          "associated with another mint, that mint must be initialized before this",
+          "command can succeed.",
+          "",
+          "The `InitializeAccount` instruction requires no signers and MUST be",
+          "included within the same Transaction as the system program's",
+          "`CreateAccount` instruction that creates the account being initialized.",
+          "Otherwise another party can acquire ownership of the uninitialized account."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -386,7 +405,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The multisignature account to initialize."]
           },
           {
             "kind": "instructionAccountNode",
@@ -394,7 +413,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": [],
+            "docs": ["Rent sysvar."],
             "defaultValue": {
               "kind": "publicKeyValueNode",
               "publicKey": "SysvarRent111111111111111111111111111111111"
@@ -422,7 +441,9 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "The number of signers (M) required to validate this multisignature account."
+            ]
           }
         ],
         "discriminators": [
@@ -432,8 +453,30 @@
             "offset": 0
           }
         ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "signers"
+            },
+            "isOptional": true
+          }
+        ],
         "name": "initializeMultisig",
-        "docs": [],
+        "docs": [
+          "Initializes a multisignature account with N provided signers.",
+          "",
+          "Multisignature accounts can used in place of any single owner/delegate",
+          "accounts in any token instruction that require an owner/delegate to be",
+          "present.  The variant field represents the number of signers (M)",
+          "required to validate this multisignature account.",
+          "",
+          "The `InitializeMultisig` instruction requires no signers and MUST be",
+          "included within the same Transaction as the system program's",
+          "`CreateAccount` instruction that creates the account being initialized.",
+          "Otherwise another party can acquire ownership of the uninitialized account."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -445,7 +488,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account."]
           },
           {
             "kind": "instructionAccountNode",
@@ -453,15 +496,17 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The destination account."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "authority",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": [],
+            "docs": [
+              "The source account's owner/delegate or its multisignature account."
+            ],
             "defaultValue": { "kind": "identityValueNode" }
           }
         ],
@@ -486,7 +531,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of tokens to transfer."]
           }
         ],
         "discriminators": [
@@ -496,8 +541,23 @@
             "offset": 0
           }
         ],
-        "name": "transferTokens",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "transfer",
+        "docs": [
+          "Transfers tokens from one account to another either directly or via a delegate.",
+          "If this account is associated with the native mint then equal amounts",
+          "of SOL and Tokens will be transferred to the destination account."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -509,7 +569,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account."]
           },
           {
             "kind": "instructionAccountNode",
@@ -517,15 +577,15 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The delegate."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "owner",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account owner or its multisignature account."]
           }
         ],
         "arguments": [
@@ -549,7 +609,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of tokens the delegate is approved for."]
           }
         ],
         "discriminators": [
@@ -559,8 +619,22 @@
             "offset": 0
           }
         ],
-        "name": "approveTokenDelegate",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "approve",
+        "docs": [
+          "Approves a delegate. A delegate is given the authority over tokens on",
+          "behalf of the source account's owner."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -572,15 +646,15 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "owner",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account owner or its multisignature."]
           }
         ],
         "arguments": [
@@ -604,8 +678,19 @@
             "offset": 0
           }
         ],
-        "name": "revokeTokenDelegate",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "revoke",
+        "docs": ["Revokes the delegate's authority."],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -617,7 +702,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint or account to change the authority of."]
           },
           {
             "kind": "instructionAccountNode",
@@ -625,7 +710,9 @@
             "isWritable": false,
             "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": [
+              "The current authority or the multisignature account of the mint or account to update."
+            ]
           }
         ],
         "arguments": [
@@ -645,7 +732,7 @@
             "kind": "instructionArgumentNode",
             "name": "authorityType",
             "type": { "kind": "definedTypeLinkNode", "name": "authorityType" },
-            "docs": []
+            "docs": ["The type of authority to update."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -655,12 +742,12 @@
               "item": { "kind": "publicKeyTypeNode" },
               "prefix": {
                 "kind": "numberTypeNode",
-                "format": "u8",
+                "format": "u32",
                 "endian": "le"
               },
-              "fixed": false
+              "fixed": true
             },
-            "docs": []
+            "docs": ["The new authority"]
           }
         ],
         "discriminators": [
@@ -670,8 +757,19 @@
             "offset": 0
           }
         ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
         "name": "setAuthority",
-        "docs": [],
+        "docs": ["Sets a new authority of a mint or account."],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -683,7 +781,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint account."]
           },
           {
             "kind": "instructionAccountNode",
@@ -691,15 +789,17 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to mint tokens to."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "mintAuthority",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": [
+              "The mint's minting authority or its multisignature account."
+            ]
           }
         ],
         "arguments": [
@@ -723,7 +823,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of new tokens to mint."]
           }
         ],
         "discriminators": [
@@ -733,8 +833,21 @@
             "offset": 0
           }
         ],
-        "name": "mintTokensTo",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "mintTo",
+        "docs": [
+          "Mints new tokens to an account. The native mint does not support minting."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -746,7 +859,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to burn from."]
           },
           {
             "kind": "instructionAccountNode",
@@ -754,15 +867,17 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The token mint."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "authority",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": [],
+            "docs": [
+              "The account's owner/delegate or its multisignature account."
+            ],
             "defaultValue": { "kind": "identityValueNode" }
           }
         ],
@@ -775,7 +890,7 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": [],
+            "docs": ["The amount of tokens to burn."],
             "defaultValue": { "kind": "numberValueNode", "number": 8 },
             "defaultValueStrategy": "omitted"
           },
@@ -797,8 +912,22 @@
             "offset": 0
           }
         ],
-        "name": "burnToken",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "burn",
+        "docs": [
+          "Burns tokens by removing them from an account. `Burn` does not support",
+          "accounts associated with the native mint, use `CloseAccount` instead."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -810,7 +939,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to close."]
           },
           {
             "kind": "instructionAccountNode",
@@ -818,15 +947,15 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The destination account."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "owner",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": ["The account's owner or its multisignature account."]
           }
         ],
         "arguments": [
@@ -850,8 +979,22 @@
             "offset": 0
           }
         ],
-        "name": "closeToken",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "closeAccount",
+        "docs": [
+          "Close an account by transferring all its SOL to the destination account.",
+          "Non-native accounts may only be closed if its token amount is zero."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -863,7 +1006,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to freeze."]
           },
           {
             "kind": "instructionAccountNode",
@@ -871,15 +1014,15 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The token mint."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "owner",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint freeze authority or its multisignature account."]
           }
         ],
         "arguments": [
@@ -903,8 +1046,21 @@
             "offset": 0
           }
         ],
-        "name": "freezeToken",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "freezeAccount",
+        "docs": [
+          "Freeze an Initialized account using the Mint's freeze_authority (if set)."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -916,7 +1072,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The account to thaw."]
           },
           {
             "kind": "instructionAccountNode",
@@ -924,15 +1080,15 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The token mint."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "owner",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": []
+            "docs": ["The mint freeze authority or its multisignature account."]
           }
         ],
         "arguments": [
@@ -956,8 +1112,21 @@
             "offset": 0
           }
         ],
-        "name": "thawToken",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "thawAccount",
+        "docs": [
+          "Thaw a Frozen account using the Mint's freeze_authority (if set)."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -969,7 +1138,7 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The source account."]
           },
           {
             "kind": "instructionAccountNode",
@@ -977,7 +1146,7 @@
             "isWritable": false,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The token mint."]
           },
           {
             "kind": "instructionAccountNode",
@@ -985,15 +1154,17 @@
             "isWritable": true,
             "isSigner": false,
             "isOptional": false,
-            "docs": []
+            "docs": ["The destination account."]
           },
           {
             "kind": "instructionAccountNode",
             "name": "authority",
             "isWritable": false,
-            "isSigner": true,
+            "isSigner": "either",
             "isOptional": false,
-            "docs": [],
+            "docs": [
+              "The source account's owner/delegate or its multisignature account."
+            ],
             "defaultValue": { "kind": "identityValueNode" }
           }
         ],
@@ -1018,7 +1189,7 @@
               "format": "u64",
               "endian": "le"
             },
-            "docs": []
+            "docs": ["The amount of tokens to transfer."]
           },
           {
             "kind": "instructionArgumentNode",
@@ -1028,7 +1199,9 @@
               "format": "u8",
               "endian": "le"
             },
-            "docs": []
+            "docs": [
+              "Expected number of base 10 digits to the right of the decimal place."
+            ]
           }
         ],
         "discriminators": [
@@ -1038,8 +1211,27 @@
             "offset": 0
           }
         ],
-        "name": "transferTokensChecked",
-        "docs": [],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "transferChecked",
+        "docs": [
+          "Transfers tokens from one account to another either directly or via a",
+          "delegate. If this account is associated with the native mint then equal",
+          "amounts of SOL and Tokens will be transferred to the destination account.",
+          "",
+          "This instruction differs from Transfer in that the token mint and",
+          "decimals value is checked by the caller. This may be useful when",
+          "creating transactions offline or within a hardware wallet."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
@@ -1119,7 +1311,7 @@
             "offset": 0
           }
         ],
-        "name": "approveTokenDelegateChecked",
+        "name": "approveChecked",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1266,7 +1458,7 @@
             "offset": 0
           }
         ],
-        "name": "burnTokenChecked",
+        "name": "burnChecked",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1329,7 +1521,7 @@
             "offset": 0
           }
         ],
-        "name": "initializeToken2",
+        "name": "initializeAccount2",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },
@@ -1417,7 +1609,7 @@
             "offset": 0
           }
         ],
-        "name": "initializeToken3",
+        "name": "initializeAccount3",
         "docs": [],
         "optionalAccountStrategy": "programId"
       },

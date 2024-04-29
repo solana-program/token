@@ -7,6 +7,7 @@
  */
 
 import {
+  AccountRole,
   Address,
   Codec,
   Decoder,
@@ -50,10 +51,14 @@ export type InitializeMultisigInstruction<
 
 export type InitializeMultisigInstructionData = {
   discriminator: number;
+  /** The number of signers (M) required to validate this multisignature account. */
   m: number;
 };
 
-export type InitializeMultisigInstructionDataArgs = { m: number };
+export type InitializeMultisigInstructionDataArgs = {
+  /** The number of signers (M) required to validate this multisignature account. */
+  m: number;
+};
 
 export function getInitializeMultisigInstructionDataEncoder(): Encoder<InitializeMultisigInstructionDataArgs> {
   return transformEncoder(
@@ -86,9 +91,12 @@ export type InitializeMultisigInput<
   TAccountMultisig extends string = string,
   TAccountRent extends string = string,
 > = {
+  /** The multisignature account to initialize. */
   multisig: Address<TAccountMultisig>;
+  /** Rent sysvar. */
   rent?: Address<TAccountRent>;
   m: InitializeMultisigInstructionDataArgs['m'];
+  signers?: Array<Address>;
 };
 
 export function getInitializeMultisigInstruction<
@@ -123,11 +131,17 @@ export function getInitializeMultisigInstruction<
       'SysvarRent111111111111111111111111111111111' as Address<'SysvarRent111111111111111111111111111111111'>;
   }
 
+  // Remaining accounts.
+  const remainingAccounts: IAccountMeta[] = (args.signers ?? []).map(
+    (address) => ({ address, role: AccountRole.READONLY })
+  );
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.multisig),
       getAccountMeta(accounts.rent),
+      ...remainingAccounts,
     ],
     programAddress,
     data: getInitializeMultisigInstructionDataEncoder().encode(
@@ -148,7 +162,9 @@ export type ParsedInitializeMultisigInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
+    /** The multisignature account to initialize. */
     multisig: TAccountMetas[0];
+    /** Rent sysvar. */
     rent: TAccountMetas[1];
   };
   data: InitializeMultisigInstructionData;
