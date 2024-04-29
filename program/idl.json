@@ -330,6 +330,9 @@
               },
               "fixed": true
             },
+            "defaultValue": {
+              "kind": "noneValueNode"
+            },
             "docs": ["Optional authority that can freeze token accounts."]
           }
         ],
@@ -1837,6 +1840,9 @@
                 "endian": "le"
               },
               "fixed": false
+            },
+            "defaultValue": {
+              "kind": "noneValueNode"
             },
             "docs": [
               "The optional freeze authority/multisignature of the mint."

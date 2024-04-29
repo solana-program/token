@@ -27,6 +27,7 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  none,
   transformEncoder,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
@@ -63,7 +64,7 @@ export type InitializeMint2InstructionDataArgs = {
   /** The authority/multisignature to mint tokens. */
   mintAuthority: Address;
   /** The optional freeze authority/multisignature of the mint. */
-  freezeAuthority: OptionOrNullable<Address>;
+  freezeAuthority?: OptionOrNullable<Address>;
 };
 
 export function getInitializeMint2InstructionDataEncoder(): Encoder<InitializeMint2InstructionDataArgs> {
@@ -74,7 +75,11 @@ export function getInitializeMint2InstructionDataEncoder(): Encoder<InitializeMi
       ['mintAuthority', getAddressEncoder()],
       ['freezeAuthority', getOptionEncoder(getAddressEncoder())],
     ]),
-    (value) => ({ ...value, discriminator: 20 })
+    (value) => ({
+      ...value,
+      discriminator: 20,
+      freezeAuthority: value.freezeAuthority ?? none(),
+    })
   );
 }
 
@@ -102,7 +107,7 @@ export type InitializeMint2Input<TAccountMint extends string = string> = {
   mint: Address<TAccountMint>;
   decimals: InitializeMint2InstructionDataArgs['decimals'];
   mintAuthority: InitializeMint2InstructionDataArgs['mintAuthority'];
-  freezeAuthority: InitializeMint2InstructionDataArgs['freezeAuthority'];
+  freezeAuthority?: InitializeMint2InstructionDataArgs['freezeAuthority'];
 };
 
 export function getInitializeMint2Instruction<TAccountMint extends string>(

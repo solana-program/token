@@ -30,6 +30,7 @@ import {
   getU32Encoder,
   getU8Decoder,
   getU8Encoder,
+  none,
   transformEncoder,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
@@ -72,7 +73,7 @@ export type InitializeMintInstructionDataArgs = {
   /** Minting authority. */
   mintAuthority: Address;
   /** Optional authority that can freeze token accounts. */
-  freezeAuthority: OptionOrNullable<Address>;
+  freezeAuthority?: OptionOrNullable<Address>;
 };
 
 export function getInitializeMintInstructionDataEncoder(): Encoder<InitializeMintInstructionDataArgs> {
@@ -89,7 +90,11 @@ export function getInitializeMintInstructionDataEncoder(): Encoder<InitializeMin
         }),
       ],
     ]),
-    (value) => ({ ...value, discriminator: 0 })
+    (value) => ({
+      ...value,
+      discriminator: 0,
+      freezeAuthority: value.freezeAuthority ?? none(),
+    })
   );
 }
 
@@ -128,7 +133,7 @@ export type InitializeMintInput<
   rent?: Address<TAccountRent>;
   decimals: InitializeMintInstructionDataArgs['decimals'];
   mintAuthority: InitializeMintInstructionDataArgs['mintAuthority'];
-  freezeAuthority: InitializeMintInstructionDataArgs['freezeAuthority'];
+  freezeAuthority?: InitializeMintInstructionDataArgs['freezeAuthority'];
 };
 
 export function getInitializeMintInstruction<

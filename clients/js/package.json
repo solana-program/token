@@ -1,6 +1,6 @@
 {
   "name": "@solana-program/token",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "JavaScript client for the Token program",
   "sideEffects": false,
   "module": "./dist/src/index.js",
@@ -25,7 +25,8 @@
     "lint": "eslint --ext js,ts,tsx src",
     "lint:fix": "eslint --fix --ext js,ts,tsx src",
     "format": "prettier --check src test",
-    "format:fix": "prettier --write src test"
+    "format:fix": "prettier --write src test",
+    "prepublishOnly": "pnpm build"
   },
   "publishConfig": {
     "access": "public",
@@ -33,13 +34,14 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@solana/web3.js": "tp3"
+    "@solana/web3.js": "2.0.0-preview.3"
   },
   "devDependencies": {
     "@ava/typescript": "^4.1.0",
     "@solana/eslint-config-solana": "^3.0.0",
     "@solana/web3.js": "tp3",
     "@solana/webcrypto-ed25519-polyfill": "tp3",
+    "@solana-program/system": "^0.3.1",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "ava": "^6.1.2",
