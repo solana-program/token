@@ -42,18 +42,36 @@ import {
 } from '@solana/web3.js';
 
 export type Mint = {
+  /**
+   * Optional authority used to mint new tokens. The mint authority may only
+   * be provided during mint creation. If no mint authority is present
+   * then the mint has a fixed supply and no further tokens may be minted.
+   */
   mintAuthority: Option<Address>;
+  /** Total supply of tokens. */
   supply: bigint;
+  /** Number of base 10 digits to the right of the decimal place. */
   decimals: number;
+  /** Is `true` if this structure has been initialized. */
   isInitialized: boolean;
+  /** Optional authority to freeze token accounts. */
   freezeAuthority: Option<Address>;
 };
 
 export type MintArgs = {
+  /**
+   * Optional authority used to mint new tokens. The mint authority may only
+   * be provided during mint creation. If no mint authority is present
+   * then the mint has a fixed supply and no further tokens may be minted.
+   */
   mintAuthority: OptionOrNullable<Address>;
+  /** Total supply of tokens. */
   supply: number | bigint;
+  /** Number of base 10 digits to the right of the decimal place. */
   decimals: number;
+  /** Is `true` if this structure has been initialized. */
   isInitialized: boolean;
+  /** Optional authority to freeze token accounts. */
   freezeAuthority: OptionOrNullable<Address>;
 };
 

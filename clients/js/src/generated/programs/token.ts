@@ -40,8 +40,26 @@ export const TOKEN_PROGRAM_ADDRESS =
 
 export enum TokenAccount {
   Mint,
-  Account,
+  Token,
   Multisig,
+}
+
+export function identifyTokenAccount(
+  account: { data: Uint8Array } | Uint8Array
+): TokenAccount {
+  const data = account instanceof Uint8Array ? account : account.data;
+  if (data.length === 82) {
+    return TokenAccount.Mint;
+  }
+  if (data.length === 165) {
+    return TokenAccount.Token;
+  }
+  if (data.length === 355) {
+    return TokenAccount.Multisig;
+  }
+  throw new Error(
+    'The provided account could not be identified as a token account.'
+  );
 }
 
 export enum TokenInstruction {

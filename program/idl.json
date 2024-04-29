@@ -22,7 +22,11 @@
                 },
                 "fixed": true
               },
-              "docs": []
+              "docs": [
+                "Optional authority used to mint new tokens. The mint authority may only",
+                "be provided during mint creation. If no mint authority is present",
+                "then the mint has a fixed supply and no further tokens may be minted."
+              ]
             },
             {
               "kind": "structFieldTypeNode",
@@ -32,7 +36,7 @@
                 "format": "u64",
                 "endian": "le"
               },
-              "docs": []
+              "docs": ["Total supply of tokens."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -42,7 +46,9 @@
                 "format": "u8",
                 "endian": "le"
               },
-              "docs": []
+              "docs": [
+                "Number of base 10 digits to the right of the decimal place."
+              ]
             },
             {
               "kind": "structFieldTypeNode",
@@ -55,7 +61,7 @@
                   "endian": "le"
                 }
               },
-              "docs": []
+              "docs": ["Is `true` if this structure has been initialized."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -70,10 +76,16 @@
                 },
                 "fixed": true
               },
-              "docs": []
+              "docs": ["Optional authority to freeze token accounts."]
             }
           ]
         },
+        "discriminators": [
+          {
+            "kind": "sizeDiscriminatorNode",
+            "size": 82
+          }
+        ],
         "name": "mint",
         "docs": [],
         "size": 82
@@ -87,13 +99,13 @@
               "kind": "structFieldTypeNode",
               "name": "mint",
               "type": { "kind": "publicKeyTypeNode" },
-              "docs": []
+              "docs": ["The mint associated with this account."]
             },
             {
               "kind": "structFieldTypeNode",
               "name": "owner",
               "type": { "kind": "publicKeyTypeNode" },
-              "docs": []
+              "docs": ["The owner of this account."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -103,7 +115,7 @@
                 "format": "u64",
                 "endian": "le"
               },
-              "docs": []
+              "docs": ["The amount of tokens this account holds."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -118,13 +130,16 @@
                 },
                 "fixed": true
               },
-              "docs": []
+              "docs": [
+                "If `delegate` is `Some` then `delegated_amount` represents",
+                "the amount authorized by the delegate."
+              ]
             },
             {
               "kind": "structFieldTypeNode",
               "name": "state",
-              "type": { "kind": "definedTypeLinkNode", "name": "tokenState" },
-              "docs": []
+              "type": { "kind": "definedTypeLinkNode", "name": "accountState" },
+              "docs": ["The account's state."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -143,7 +158,12 @@
                 },
                 "fixed": true
               },
-              "docs": []
+              "docs": [
+                "If is_native.is_some, this is a native token, and the value logs the",
+                "rent-exempt reserve. An Account is required to be rent-exempt, so",
+                "the value is used by the Processor to ensure that wrapped SOL",
+                "accounts do not drop below this threshold."
+              ]
             },
             {
               "kind": "structFieldTypeNode",
@@ -153,7 +173,7 @@
                 "format": "u64",
                 "endian": "le"
               },
-              "docs": []
+              "docs": ["The amount delegated."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -168,11 +188,17 @@
                 },
                 "fixed": true
               },
-              "docs": []
+              "docs": ["Optional authority to close the account."]
             }
           ]
         },
-        "name": "account",
+        "discriminators": [
+          {
+            "kind": "sizeDiscriminatorNode",
+            "size": 165
+          }
+        ],
+        "name": "token",
         "docs": [],
         "size": 165
       },
@@ -189,7 +215,7 @@
                 "format": "u8",
                 "endian": "le"
               },
-              "docs": []
+              "docs": ["Number of signers required."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -199,7 +225,7 @@
                 "format": "u8",
                 "endian": "le"
               },
-              "docs": []
+              "docs": ["Number of valid signers."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -212,7 +238,7 @@
                   "endian": "le"
                 }
               },
-              "docs": []
+              "docs": ["Is `true` if this structure has been initialized."]
             },
             {
               "kind": "structFieldTypeNode",
@@ -222,10 +248,16 @@
                 "item": { "kind": "publicKeyTypeNode" },
                 "count": { "kind": "fixedCountNode", "value": 11 }
               },
-              "docs": []
+              "docs": ["Signer public keys."]
             }
           ]
         },
+        "discriminators": [
+          {
+            "kind": "sizeDiscriminatorNode",
+            "size": 355
+          }
+        ],
         "name": "multisig",
         "docs": [],
         "size": 355
@@ -2025,7 +2057,7 @@
     "definedTypes": [
       {
         "kind": "definedTypeNode",
-        "name": "tokenState",
+        "name": "accountState",
         "type": {
           "kind": "enumTypeNode",
           "variants": [

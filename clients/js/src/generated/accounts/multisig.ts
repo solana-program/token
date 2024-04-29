@@ -36,9 +36,13 @@ import {
 } from '@solana/web3.js';
 
 export type Multisig = {
+  /** Number of signers required. */
   m: number;
+  /** Number of valid signers. */
   n: number;
+  /** Is `true` if this structure has been initialized. */
   isInitialized: boolean;
+  /** Signer public keys. */
   signers: Array<Address>;
 };
 

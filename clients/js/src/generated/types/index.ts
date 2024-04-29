@@ -6,5 +6,5 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+export * from './accountState';
 export * from './authorityType';
-export * from './tokenState';
