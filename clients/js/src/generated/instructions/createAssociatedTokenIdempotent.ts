@@ -17,8 +17,13 @@ import {
   WritableAccount,
   WritableSignerAccount,
 } from '@solana/web3.js';
+import { findAssociatedTokenPda } from '../pdas';
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programs';
-import { ResolvedAccount, getAccountMetaFactory } from '../shared';
+import {
+  ResolvedAccount,
+  expectAddress,
+  getAccountMetaFactory,
+} from '../shared';
 
 export type CreateAssociatedTokenIdempotentInstruction<
   TProgram extends string = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
@@ -56,6 +61,113 @@ export type CreateAssociatedTokenIdempotentInstruction<
       ...TRemainingAccounts,
     ]
   >;
+
+export type CreateAssociatedTokenIdempotentAsyncInput<
+  TAccountPayer extends string = string,
+  TAccountAta extends string = string,
+  TAccountOwner extends string = string,
+  TAccountMint extends string = string,
+  TAccountSystemProgram extends string = string,
+  TAccountTokenProgram extends string = string,
+> = {
+  /** Funding account (must be a system account). */
+  payer: TransactionSigner<TAccountPayer>;
+  /** Associated token account address to be created. */
+  ata?: Address<TAccountAta>;
+  /** Wallet address for the new associated token account. */
+  owner: Address<TAccountOwner>;
+  /** The token mint for the new associated token account. */
+  mint: Address<TAccountMint>;
+  /** System program. */
+  systemProgram?: Address<TAccountSystemProgram>;
+  /** SPL Token program. */
+  tokenProgram?: Address<TAccountTokenProgram>;
+};
+
+export async function getCreateAssociatedTokenIdempotentInstructionAsync<
+  TAccountPayer extends string,
+  TAccountAta extends string,
+  TAccountOwner extends string,
+  TAccountMint extends string,
+  TAccountSystemProgram extends string,
+  TAccountTokenProgram extends string,
+>(
+  input: CreateAssociatedTokenIdempotentAsyncInput<
+    TAccountPayer,
+    TAccountAta,
+    TAccountOwner,
+    TAccountMint,
+    TAccountSystemProgram,
+    TAccountTokenProgram
+  >
+): Promise<
+  CreateAssociatedTokenIdempotentInstruction<
+    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TAccountPayer,
+    TAccountAta,
+    TAccountOwner,
+    TAccountMint,
+    TAccountSystemProgram,
+    TAccountTokenProgram
+  >
+> {
+  // Program address.
+  const programAddress = ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
+
+  // Original accounts.
+  const originalAccounts = {
+    payer: { value: input.payer ?? null, isWritable: true },
+    ata: { value: input.ata ?? null, isWritable: true },
+    owner: { value: input.owner ?? null, isWritable: false },
+    mint: { value: input.mint ?? null, isWritable: false },
+    systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
+  };
+  const accounts = originalAccounts as Record<
+    keyof typeof originalAccounts,
+    ResolvedAccount
+  >;
+
+  // Resolve default values.
+  if (!accounts.tokenProgram.value) {
+    accounts.tokenProgram.value =
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+  }
+  if (!accounts.ata.value) {
+    accounts.ata.value = await findAssociatedTokenPda({
+      owner: expectAddress(accounts.owner.value),
+      tokenProgram: expectAddress(accounts.tokenProgram.value),
+      mint: expectAddress(accounts.mint.value),
+    });
+  }
+  if (!accounts.systemProgram.value) {
+    accounts.systemProgram.value =
+      '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+
+  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+  const instruction = {
+    accounts: [
+      getAccountMeta(accounts.payer),
+      getAccountMeta(accounts.ata),
+      getAccountMeta(accounts.owner),
+      getAccountMeta(accounts.mint),
+      getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.tokenProgram),
+    ],
+    programAddress,
+  } as CreateAssociatedTokenIdempotentInstruction<
+    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TAccountPayer,
+    TAccountAta,
+    TAccountOwner,
+    TAccountMint,
+    TAccountSystemProgram,
+    TAccountTokenProgram
+  >;
+
+  return instruction;
+}
 
 export type CreateAssociatedTokenIdempotentInput<
   TAccountPayer extends string = string,
@@ -122,13 +234,13 @@ export function getCreateAssociatedTokenIdempotentInstruction<
   >;
 
   // Resolve default values.
-  if (!accounts.systemProgram.value) {
-    accounts.systemProgram.value =
-      '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
-  }
   if (!accounts.tokenProgram.value) {
     accounts.tokenProgram.value =
       'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+  }
+  if (!accounts.systemProgram.value) {
+    accounts.systemProgram.value =
+      '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

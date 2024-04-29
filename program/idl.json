@@ -2250,7 +2250,38 @@
   "additionalPrograms": [
     {
       "kind": "programNode",
-      "pdas": [],
+      "pdas": [
+        {
+          "kind": "pdaNode",
+          "name": "associatedToken",
+          "seeds": [
+            {
+              "kind": "variablePdaSeedNode",
+              "name": "owner",
+              "docs": ["The wallet address of the associated token account."],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "variablePdaSeedNode",
+              "name": "tokenProgram",
+              "docs": ["The address of the token program to use."],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "variablePdaSeedNode",
+              "name": "mint",
+              "docs": ["The mint address of the associated token account."],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            }
+          ]
+        }
+      ],
       "accounts": [],
       "instructions": [
         {
@@ -2271,7 +2302,40 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": ["Associated token account address to be created."]
+              "docs": ["Associated token account address to be created."],
+              "defaultValue": {
+                "kind": "pdaValueNode",
+                "pda": {
+                  "kind": "pdaLinkNode",
+                  "name": "associatedToken"
+                },
+                "seeds": [
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "owner",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "owner"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "tokenProgram",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "tokenProgram"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "mint",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "mint"
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "instructionAccountNode",
@@ -2340,7 +2404,40 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": ["Associated token account address to be created."]
+              "docs": ["Associated token account address to be created."],
+              "defaultValue": {
+                "kind": "pdaValueNode",
+                "pda": {
+                  "kind": "pdaLinkNode",
+                  "name": "associatedToken"
+                },
+                "seeds": [
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "owner",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "owner"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "tokenProgram",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "tokenProgram"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "mint",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "mint"
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "instructionAccountNode",
@@ -2403,7 +2500,40 @@
               "isOptional": false,
               "docs": [
                 "Nested associated token account, must be owned by `ownerAssociatedAccountAddress`."
-              ]
+              ],
+              "defaultValue": {
+                "kind": "pdaValueNode",
+                "pda": {
+                  "kind": "pdaLinkNode",
+                  "name": "associatedToken"
+                },
+                "seeds": [
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "owner",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "ownerAssociatedAccountAddress"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "tokenProgram",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "tokenProgram"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "mint",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "nestedTokenMintAddress"
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "instructionAccountNode",
@@ -2419,7 +2549,40 @@
               "isWritable": true,
               "isSigner": false,
               "isOptional": false,
-              "docs": ["Wallet's associated token account."]
+              "docs": ["Wallet's associated token account."],
+              "defaultValue": {
+                "kind": "pdaValueNode",
+                "pda": {
+                  "kind": "pdaLinkNode",
+                  "name": "associatedToken"
+                },
+                "seeds": [
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "owner",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "walletAddress"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "tokenProgram",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "tokenProgram"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "mint",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "nestedTokenMintAddress"
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "instructionAccountNode",
@@ -2429,7 +2592,40 @@
               "isOptional": false,
               "docs": [
                 "Owner associated token account address, must be owned by `walletAddress`."
-              ]
+              ],
+              "defaultValue": {
+                "kind": "pdaValueNode",
+                "pda": {
+                  "kind": "pdaLinkNode",
+                  "name": "associatedToken"
+                },
+                "seeds": [
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "owner",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "walletAddress"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "tokenProgram",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "tokenProgram"
+                    }
+                  },
+                  {
+                    "kind": "pdaSeedValueNode",
+                    "name": "mint",
+                    "value": {
+                      "kind": "accountValueNode",
+                      "name": "ownerTokenMintAddress"
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "instructionAccountNode",

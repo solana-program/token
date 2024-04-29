@@ -17,8 +17,13 @@ import {
   WritableAccount,
   WritableSignerAccount,
 } from '@solana/web3.js';
+import { findAssociatedTokenPda } from '../pdas';
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programs';
-import { ResolvedAccount, getAccountMetaFactory } from '../shared';
+import {
+  ResolvedAccount,
+  expectAddress,
+  getAccountMetaFactory,
+} from '../shared';
 
 export type RecoverNestedAssociatedTokenInstruction<
   TProgram extends string = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
@@ -66,6 +71,151 @@ export type RecoverNestedAssociatedTokenInstruction<
       ...TRemainingAccounts,
     ]
   >;
+
+export type RecoverNestedAssociatedTokenAsyncInput<
+  TAccountNestedAssociatedAccountAddress extends string = string,
+  TAccountNestedTokenMintAddress extends string = string,
+  TAccountDestinationAssociatedAccountAddress extends string = string,
+  TAccountOwnerAssociatedAccountAddress extends string = string,
+  TAccountOwnerTokenMintAddress extends string = string,
+  TAccountWalletAddress extends string = string,
+  TAccountTokenProgram extends string = string,
+> = {
+  /** Nested associated token account, must be owned by `ownerAssociatedAccountAddress`. */
+  nestedAssociatedAccountAddress?: Address<TAccountNestedAssociatedAccountAddress>;
+  /** Token mint for the nested associated token account. */
+  nestedTokenMintAddress: Address<TAccountNestedTokenMintAddress>;
+  /** Wallet's associated token account. */
+  destinationAssociatedAccountAddress?: Address<TAccountDestinationAssociatedAccountAddress>;
+  /** Owner associated token account address, must be owned by `walletAddress`. */
+  ownerAssociatedAccountAddress?: Address<TAccountOwnerAssociatedAccountAddress>;
+  /** Token mint for the owner associated token account. */
+  ownerTokenMintAddress: Address<TAccountOwnerTokenMintAddress>;
+  /** Wallet address for the owner associated token account. */
+  walletAddress: TransactionSigner<TAccountWalletAddress>;
+  /** SPL Token program. */
+  tokenProgram?: Address<TAccountTokenProgram>;
+};
+
+export async function getRecoverNestedAssociatedTokenInstructionAsync<
+  TAccountNestedAssociatedAccountAddress extends string,
+  TAccountNestedTokenMintAddress extends string,
+  TAccountDestinationAssociatedAccountAddress extends string,
+  TAccountOwnerAssociatedAccountAddress extends string,
+  TAccountOwnerTokenMintAddress extends string,
+  TAccountWalletAddress extends string,
+  TAccountTokenProgram extends string,
+>(
+  input: RecoverNestedAssociatedTokenAsyncInput<
+    TAccountNestedAssociatedAccountAddress,
+    TAccountNestedTokenMintAddress,
+    TAccountDestinationAssociatedAccountAddress,
+    TAccountOwnerAssociatedAccountAddress,
+    TAccountOwnerTokenMintAddress,
+    TAccountWalletAddress,
+    TAccountTokenProgram
+  >
+): Promise<
+  RecoverNestedAssociatedTokenInstruction<
+    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TAccountNestedAssociatedAccountAddress,
+    TAccountNestedTokenMintAddress,
+    TAccountDestinationAssociatedAccountAddress,
+    TAccountOwnerAssociatedAccountAddress,
+    TAccountOwnerTokenMintAddress,
+    TAccountWalletAddress,
+    TAccountTokenProgram
+  >
+> {
+  // Program address.
+  const programAddress = ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
+
+  // Original accounts.
+  const originalAccounts = {
+    nestedAssociatedAccountAddress: {
+      value: input.nestedAssociatedAccountAddress ?? null,
+      isWritable: true,
+    },
+    nestedTokenMintAddress: {
+      value: input.nestedTokenMintAddress ?? null,
+      isWritable: false,
+    },
+    destinationAssociatedAccountAddress: {
+      value: input.destinationAssociatedAccountAddress ?? null,
+      isWritable: true,
+    },
+    ownerAssociatedAccountAddress: {
+      value: input.ownerAssociatedAccountAddress ?? null,
+      isWritable: false,
+    },
+    ownerTokenMintAddress: {
+      value: input.ownerTokenMintAddress ?? null,
+      isWritable: false,
+    },
+    walletAddress: { value: input.walletAddress ?? null, isWritable: true },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
+  };
+  const accounts = originalAccounts as Record<
+    keyof typeof originalAccounts,
+    ResolvedAccount
+  >;
+
+  // Resolve default values.
+  if (!accounts.tokenProgram.value) {
+    accounts.tokenProgram.value =
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+  }
+  if (!accounts.ownerAssociatedAccountAddress.value) {
+    accounts.ownerAssociatedAccountAddress.value = await findAssociatedTokenPda(
+      {
+        owner: expectAddress(accounts.walletAddress.value),
+        tokenProgram: expectAddress(accounts.tokenProgram.value),
+        mint: expectAddress(accounts.ownerTokenMintAddress.value),
+      }
+    );
+  }
+  if (!accounts.nestedAssociatedAccountAddress.value) {
+    accounts.nestedAssociatedAccountAddress.value =
+      await findAssociatedTokenPda({
+        owner: expectAddress(accounts.ownerAssociatedAccountAddress.value),
+        tokenProgram: expectAddress(accounts.tokenProgram.value),
+        mint: expectAddress(accounts.nestedTokenMintAddress.value),
+      });
+  }
+  if (!accounts.destinationAssociatedAccountAddress.value) {
+    accounts.destinationAssociatedAccountAddress.value =
+      await findAssociatedTokenPda({
+        owner: expectAddress(accounts.walletAddress.value),
+        tokenProgram: expectAddress(accounts.tokenProgram.value),
+        mint: expectAddress(accounts.nestedTokenMintAddress.value),
+      });
+  }
+
+  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+  const instruction = {
+    accounts: [
+      getAccountMeta(accounts.nestedAssociatedAccountAddress),
+      getAccountMeta(accounts.nestedTokenMintAddress),
+      getAccountMeta(accounts.destinationAssociatedAccountAddress),
+      getAccountMeta(accounts.ownerAssociatedAccountAddress),
+      getAccountMeta(accounts.ownerTokenMintAddress),
+      getAccountMeta(accounts.walletAddress),
+      getAccountMeta(accounts.tokenProgram),
+    ],
+    programAddress,
+  } as RecoverNestedAssociatedTokenInstruction<
+    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TAccountNestedAssociatedAccountAddress,
+    TAccountNestedTokenMintAddress,
+    TAccountDestinationAssociatedAccountAddress,
+    TAccountOwnerAssociatedAccountAddress,
+    TAccountOwnerTokenMintAddress,
+    TAccountWalletAddress,
+    TAccountTokenProgram
+  >;
+
+  return instruction;
+}
 
 export type RecoverNestedAssociatedTokenInput<
   TAccountNestedAssociatedAccountAddress extends string = string,
