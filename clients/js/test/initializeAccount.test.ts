@@ -27,19 +27,20 @@ test('it creates and initializes a new token account', async (t) => {
   // Given a mint account, its mint authority and two generated keypairs
   // for the token to be created and its owner.
   const client = createDefaultSolanaClient();
-  const [mintAuthority, token, owner] = await Promise.all([
+  const [payer, mintAuthority, token, owner] = await Promise.all([
     generateKeyPairSignerWithSol(client),
     generateKeyPairSigner(),
     generateKeyPairSigner(),
+    generateKeyPairSigner(),
   ]);
-  const mint = await createMint(client, mintAuthority);
+  const mint = await createMint(client, payer, mintAuthority.address);
 
   // When we create and initialize a token account at this address.
   const space = BigInt(getTokenSize());
   const rent = await client.rpc.getMinimumBalanceForRentExemption(space).send();
   const instructions = [
     getCreateAccountInstruction({
-      payer: mintAuthority,
+      payer,
       newAccount: token,
       lamports: rent,
       space,
@@ -52,7 +53,7 @@ test('it creates and initializes a new token account', async (t) => {
     }),
   ];
   await pipe(
-    await createDefaultTransaction(client, mintAuthority),
+    await createDefaultTransaction(client, payer),
     (tx) => appendTransactionMessageInstructions(instructions, tx),
     (tx) => signAndSendTransaction(client, tx)
   );

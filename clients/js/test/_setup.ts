@@ -1,3 +1,4 @@
+import { getCreateAccountInstruction } from '@solana-program/system';
 import {
   Address,
   Commitment,
@@ -24,10 +25,11 @@ import {
 } from '@solana/web3.js';
 import {
   TOKEN_PROGRAM_ADDRESS,
+  getInitializeAccountInstruction,
   getInitializeMintInstruction,
   getMintSize,
+  getTokenSize,
 } from '../src/index.js';
-import { getCreateAccountInstruction } from '@solana-program/system';
 
 type Client = {
   rpc: Rpc<SolanaRpcApi>;
@@ -88,17 +90,19 @@ export const getBalance = async (client: Client, address: Address) =>
 
 export const createMint = async (
   client: Client,
-  authority: TransactionSigner
+  payer: TransactionSigner,
+  mintAuthority: Address,
+  decimals: number = 0
 ): Promise<Address> => {
   const space = BigInt(getMintSize());
   const [transactionMessage, rent, mint] = await Promise.all([
-    createDefaultTransaction(client, authority),
+    createDefaultTransaction(client, payer),
     client.rpc.getMinimumBalanceForRentExemption(space).send(),
     generateKeyPairSigner(),
   ]);
   const instructions = [
     getCreateAccountInstruction({
-      payer: authority,
+      payer,
       newAccount: mint,
       lamports: rent,
       space,
@@ -106,8 +110,8 @@ export const createMint = async (
     }),
     getInitializeMintInstruction({
       mint: mint.address,
-      decimals: 2,
-      mintAuthority: authority.address,
+      decimals,
+      mintAuthority,
     }),
   ];
   await pipe(
@@ -117,4 +121,35 @@ export const createMint = async (
   );
 
   return mint.address;
+};
+
+export const createToken = async (
+  client: Client,
+  payer: TransactionSigner,
+  mint: Address,
+  owner: Address
+): Promise<Address> => {
+  const space = BigInt(getTokenSize());
+  const [transactionMessage, rent, token] = await Promise.all([
+    createDefaultTransaction(client, payer),
+    client.rpc.getMinimumBalanceForRentExemption(space).send(),
+    generateKeyPairSigner(),
+  ]);
+  const instructions = [
+    getCreateAccountInstruction({
+      payer,
+      newAccount: token,
+      lamports: rent,
+      space,
+      programAddress: TOKEN_PROGRAM_ADDRESS,
+    }),
+    getInitializeAccountInstruction({ account: token.address, mint, owner }),
+  ];
+  await pipe(
+    transactionMessage,
+    (tx) => appendTransactionMessageInstructions(instructions, tx),
+    (tx) => signAndSendTransaction(client, tx)
+  );
+
+  return token.address;
 };
