@@ -28,6 +28,7 @@ import {
   getInitializeAccountInstruction,
   getInitializeMintInstruction,
   getMintSize,
+  getMintToInstruction,
   getTokenSize,
 } from '../src/index.js';
 
@@ -144,6 +145,40 @@ export const createToken = async (
       programAddress: TOKEN_PROGRAM_ADDRESS,
     }),
     getInitializeAccountInstruction({ account: token.address, mint, owner }),
+  ];
+  await pipe(
+    transactionMessage,
+    (tx) => appendTransactionMessageInstructions(instructions, tx),
+    (tx) => signAndSendTransaction(client, tx)
+  );
+
+  return token.address;
+};
+
+export const createTokenWithAmount = async (
+  client: Client,
+  payer: TransactionSigner,
+  mintAuthority: TransactionSigner,
+  mint: Address,
+  owner: Address,
+  amount: bigint
+): Promise<Address> => {
+  const space = BigInt(getTokenSize());
+  const [transactionMessage, rent, token] = await Promise.all([
+    createDefaultTransaction(client, payer),
+    client.rpc.getMinimumBalanceForRentExemption(space).send(),
+    generateKeyPairSigner(),
+  ]);
+  const instructions = [
+    getCreateAccountInstruction({
+      payer,
+      newAccount: token,
+      lamports: rent,
+      space,
+      programAddress: TOKEN_PROGRAM_ADDRESS,
+    }),
+    getInitializeAccountInstruction({ account: token.address, mint, owner }),
+    getMintToInstruction({ mint, token: token.address, mintAuthority, amount }),
   ];
   await pipe(
     transactionMessage,

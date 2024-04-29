@@ -30,7 +30,6 @@ test('it mints tokens to a token account', async (t) => {
   ]);
   const mint = await createMint(client, payer, mintAuthority.address);
   const token = await createToken(client, payer, mint, owner.address);
-  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // When the mint authority mints tokens to the token account.
   const mintTo = getMintToInstruction({
