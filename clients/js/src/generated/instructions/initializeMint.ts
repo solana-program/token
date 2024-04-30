@@ -26,8 +26,6 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU32Decoder,
-  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
   none,
@@ -82,13 +80,7 @@ export function getInitializeMintInstructionDataEncoder(): Encoder<InitializeMin
       ['discriminator', getU8Encoder()],
       ['decimals', getU8Encoder()],
       ['mintAuthority', getAddressEncoder()],
-      [
-        'freezeAuthority',
-        getOptionEncoder(getAddressEncoder(), {
-          prefix: getU32Encoder(),
-          fixed: true,
-        }),
-      ],
+      ['freezeAuthority', getOptionEncoder(getAddressEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -103,13 +95,7 @@ export function getInitializeMintInstructionDataDecoder(): Decoder<InitializeMin
     ['discriminator', getU8Decoder()],
     ['decimals', getU8Decoder()],
     ['mintAuthority', getAddressDecoder()],
-    [
-      'freezeAuthority',
-      getOptionDecoder(getAddressDecoder(), {
-        prefix: getU32Decoder(),
-        fixed: true,
-      }),
-    ],
+    ['freezeAuthority', getOptionDecoder(getAddressDecoder())],
   ]);
 }
 

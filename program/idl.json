@@ -325,10 +325,10 @@
               "item": { "kind": "publicKeyTypeNode" },
               "prefix": {
                 "kind": "numberTypeNode",
-                "format": "u32",
+                "format": "u8",
                 "endian": "le"
               },
-              "fixed": true
+              "fixed": false
             },
             "defaultValue": {
               "kind": "noneValueNode"
@@ -776,10 +776,10 @@
               "item": { "kind": "publicKeyTypeNode" },
               "prefix": {
                 "kind": "numberTypeNode",
-                "format": "u32",
+                "format": "u8",
                 "endian": "le"
               },
-              "fixed": true
+              "fixed": false
             },
             "docs": ["The new authority"]
           }

@@ -30,8 +30,6 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU32Decoder,
-  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
   transformEncoder,
@@ -84,13 +82,7 @@ export function getSetAuthorityInstructionDataEncoder(): Encoder<SetAuthorityIns
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['authorityType', getAuthorityTypeEncoder()],
-      [
-        'newAuthority',
-        getOptionEncoder(getAddressEncoder(), {
-          prefix: getU32Encoder(),
-          fixed: true,
-        }),
-      ],
+      ['newAuthority', getOptionEncoder(getAddressEncoder())],
     ]),
     (value) => ({ ...value, discriminator: 6 })
   );
@@ -100,13 +92,7 @@ export function getSetAuthorityInstructionDataDecoder(): Decoder<SetAuthorityIns
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['authorityType', getAuthorityTypeDecoder()],
-    [
-      'newAuthority',
-      getOptionDecoder(getAddressDecoder(), {
-        prefix: getU32Decoder(),
-        fixed: true,
-      }),
-    ],
+    ['newAuthority', getOptionDecoder(getAddressDecoder())],
   ]);
 }
 
