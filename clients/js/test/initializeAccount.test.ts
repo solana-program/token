@@ -14,14 +14,14 @@ import {
   fetchToken,
   getInitializeAccountInstruction,
   getTokenSize,
-} from '../src/index.js';
+} from '../src';
 import {
   createDefaultSolanaClient,
   createDefaultTransaction,
   createMint,
   generateKeyPairSignerWithSol,
   signAndSendTransaction,
-} from './_setup.js';
+} from './_setup';
 
 test('it creates and initializes a new token account', async (t) => {
   // Given a mint account, its mint authority and two generated keypairs

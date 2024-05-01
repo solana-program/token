@@ -14,13 +14,13 @@ import {
   fetchMint,
   getInitializeMintInstruction,
   getMintSize,
-} from '../src/index.js';
+} from '../src';
 import {
   createDefaultSolanaClient,
   createDefaultTransaction,
   generateKeyPairSignerWithSol,
   signAndSendTransaction,
-} from './_setup.js';
+} from './_setup';
 
 test('it creates and initializes a new mint account', async (t) => {
   // Given an authority and a mint account.

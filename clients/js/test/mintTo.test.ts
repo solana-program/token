@@ -10,7 +10,7 @@ import {
   fetchMint,
   fetchToken,
   getMintToInstruction,
-} from '../src/index.js';
+} from '../src';
 import {
   createDefaultSolanaClient,
   createDefaultTransaction,
@@ -18,7 +18,7 @@ import {
   createToken,
   generateKeyPairSignerWithSol,
   signAndSendTransaction,
-} from './_setup.js';
+} from './_setup';
 
 test('it mints tokens to a token account', async (t) => {
   // Given a mint account and a token account.

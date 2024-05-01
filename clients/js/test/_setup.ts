@@ -30,7 +30,7 @@ import {
   getMintSize,
   getMintToInstruction,
   getTokenSize,
-} from '../src/index.js';
+} from '../src';
 
 type Client = {
   rpc: Rpc<SolanaRpcApi>;
