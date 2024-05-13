@@ -32,7 +32,7 @@
     "access": "public",
     "registry": "https://registry.npmjs.org"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "peerDependencies": {
     "@solana/web3.js": "2.0.0-preview.3"
   },
