@@ -11,6 +11,9 @@ importers:
       '@ava/typescript':
         specifier: ^4.1.0
         version: 4.1.0
+      '@solana-program/system':
+        specifier: ^0.4.1
+        version: 0.4.1(@solana/web3.js@2.0.0-rc.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0))
       '@solana/eslint-config-solana':
         specifier: ^3.0.3
         version: 3.0.3(@typescript-eslint/eslint-plugin@7.16.1(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint-plugin-jest@27.9.0(@typescript-eslint/eslint-plugin@7.16.1(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(eslint-plugin-react-hooks@4.6.2(eslint@8.57.0))(eslint-plugin-simple-import-sort@10.0.0(eslint@8.57.0))(eslint-plugin-sort-keys-fix@1.1.2)(eslint-plugin-typescript-sort-keys@3.2.0(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3)
@@ -365,6 +368,11 @@ packages:
   '@sindresorhus/merge-streams@2.3.0':
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
     engines: {node: '>=18'}
+
+  '@solana-program/system@0.4.1':
+    resolution: {integrity: sha512-9TyqkaKk6NJLECfewLW96sP4Oaw6YW/wzyxzt5Kn3h13i71Fo0mHlnMqw/D4VX1mn0LxM2fsZAaz4vazjRTCYQ==}
+    peerDependencies:
+      '@solana/web3.js': 2.0.0-preview.4
 
   '@solana/accounts@2.0.0-rc.0':
     resolution: {integrity: sha512-Xun9ASXuJd3njGgc8q32Ra2f2r5J4KNhVZn6g5G//uQVpc+8QpBrTqS0lV+q7f6i0+um8WD4Q7OYOtnRb6mBiA==}
@@ -2213,6 +2221,10 @@ snapshots:
     optional: true
 
   '@sindresorhus/merge-streams@2.3.0': {}
+
+  '@solana-program/system@0.4.1(@solana/web3.js@2.0.0-rc.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0))':
+    dependencies:
+      '@solana/web3.js': 2.0.0-rc.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0)
 
   '@solana/accounts@2.0.0-rc.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)':
     dependencies:
