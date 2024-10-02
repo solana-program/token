@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const TRANSFER_CHECKED_DISCRIMINATOR = 12;
+
+export function getTransferCheckedDiscriminatorBytes() {
+  return getU8Encoder().encode(TRANSFER_CHECKED_DISCRIMINATOR);
+}
+
 export type TransferCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
@@ -82,7 +88,7 @@ export function getTransferCheckedInstructionDataEncoder(): Encoder<TransferChec
       ['amount', getU64Encoder()],
       ['decimals', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 12 })
+    (value) => ({ ...value, discriminator: TRANSFER_CHECKED_DISCRIMINATOR })
   );
 }
 
@@ -128,15 +134,17 @@ export function getTransferCheckedInstruction<
   TAccountMint extends string,
   TAccountDestination extends string,
   TAccountAuthority extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
   input: TransferCheckedInput<
     TAccountSource,
     TAccountMint,
     TAccountDestination,
     TAccountAuthority
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): TransferCheckedInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSource,
   TAccountMint,
   TAccountDestination,
@@ -146,7 +154,7 @@ export function getTransferCheckedInstruction<
     : TAccountAuthority
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -186,7 +194,7 @@ export function getTransferCheckedInstruction<
       args as TransferCheckedInstructionDataArgs
     ),
   } as TransferCheckedInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSource,
     TAccountMint,
     TAccountDestination,

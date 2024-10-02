@@ -43,6 +43,12 @@ import {
   type AuthorityTypeArgs,
 } from '../types';
 
+export const SET_AUTHORITY_DISCRIMINATOR = 6;
+
+export function getSetAuthorityDiscriminatorBytes() {
+  return getU8Encoder().encode(SET_AUTHORITY_DISCRIMINATOR);
+}
+
 export type SetAuthorityInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountOwned extends string | IAccountMeta<string> = string,
@@ -84,7 +90,7 @@ export function getSetAuthorityInstructionDataEncoder(): Encoder<SetAuthorityIns
       ['authorityType', getAuthorityTypeEncoder()],
       ['newAuthority', getOptionEncoder(getAddressEncoder())],
     ]),
-    (value) => ({ ...value, discriminator: 6 })
+    (value) => ({ ...value, discriminator: SET_AUTHORITY_DISCRIMINATOR })
   );
 }
 
@@ -122,17 +128,19 @@ export type SetAuthorityInput<
 export function getSetAuthorityInstruction<
   TAccountOwned extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: SetAuthorityInput<TAccountOwned, TAccountOwner>
+  input: SetAuthorityInput<TAccountOwned, TAccountOwner>,
+  config?: { programAddress?: TProgramAddress }
 ): SetAuthorityInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountOwned,
   (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
     ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
     : TAccountOwner
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -168,7 +176,7 @@ export function getSetAuthorityInstruction<
       args as SetAuthorityInstructionDataArgs
     ),
   } as SetAuthorityInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountOwned,
     (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
       ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>

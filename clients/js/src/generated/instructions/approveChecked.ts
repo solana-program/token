@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const APPROVE_CHECKED_DISCRIMINATOR = 13;
+
+export function getApproveCheckedDiscriminatorBytes() {
+  return getU8Encoder().encode(APPROVE_CHECKED_DISCRIMINATOR);
+}
+
 export type ApproveCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
@@ -82,7 +88,7 @@ export function getApproveCheckedInstructionDataEncoder(): Encoder<ApproveChecke
       ['amount', getU64Encoder()],
       ['decimals', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 13 })
+    (value) => ({ ...value, discriminator: APPROVE_CHECKED_DISCRIMINATOR })
   );
 }
 
@@ -128,15 +134,17 @@ export function getApproveCheckedInstruction<
   TAccountMint extends string,
   TAccountDelegate extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
   input: ApproveCheckedInput<
     TAccountSource,
     TAccountMint,
     TAccountDelegate,
     TAccountOwner
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): ApproveCheckedInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSource,
   TAccountMint,
   TAccountDelegate,
@@ -145,7 +153,7 @@ export function getApproveCheckedInstruction<
     : TAccountOwner
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -185,7 +193,7 @@ export function getApproveCheckedInstruction<
       args as ApproveCheckedInstructionDataArgs
     ),
   } as ApproveCheckedInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSource,
     TAccountMint,
     TAccountDelegate,

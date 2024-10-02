@@ -31,6 +31,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const CLOSE_ACCOUNT_DISCRIMINATOR = 9;
+
+export function getCloseAccountDiscriminatorBytes() {
+  return getU8Encoder().encode(CLOSE_ACCOUNT_DISCRIMINATOR);
+}
+
 export type CloseAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
@@ -61,7 +67,7 @@ export type CloseAccountInstructionDataArgs = {};
 export function getCloseAccountInstructionDataEncoder(): Encoder<CloseAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 9 })
+    (value) => ({ ...value, discriminator: CLOSE_ACCOUNT_DISCRIMINATOR })
   );
 }
 
@@ -97,10 +103,12 @@ export function getCloseAccountInstruction<
   TAccountAccount extends string,
   TAccountDestination extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: CloseAccountInput<TAccountAccount, TAccountDestination, TAccountOwner>
+  input: CloseAccountInput<TAccountAccount, TAccountDestination, TAccountOwner>,
+  config?: { programAddress?: TProgramAddress }
 ): CloseAccountInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountAccount,
   TAccountDestination,
   (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
@@ -108,7 +116,7 @@ export function getCloseAccountInstruction<
     : TAccountOwner
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -144,7 +152,7 @@ export function getCloseAccountInstruction<
     programAddress,
     data: getCloseAccountInstructionDataEncoder().encode({}),
   } as CloseAccountInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountAccount,
     TAccountDestination,
     (typeof input)['owner'] extends TransactionSigner<TAccountOwner>

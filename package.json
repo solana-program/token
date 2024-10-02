@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
-    "@kinobi-so/renderers-js": "^0.21.2",
-    "@kinobi-so/renderers-rust": "^0.21.0",
-    "kinobi": "^0.21.0",
+    "@kinobi-so/renderers-js": "^0.21.9",
+    "@kinobi-so/renderers-rust": "^0.21.7",
+    "kinobi": "^0.21.5",
     "typescript": "^5.5.2",
     "zx": "^7.2.3"
   },

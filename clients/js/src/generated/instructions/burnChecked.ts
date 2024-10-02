@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const BURN_CHECKED_DISCRIMINATOR = 15;
+
+export function getBurnCheckedDiscriminatorBytes() {
+  return getU8Encoder().encode(BURN_CHECKED_DISCRIMINATOR);
+}
+
 export type BurnCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
@@ -78,7 +84,7 @@ export function getBurnCheckedInstructionDataEncoder(): Encoder<BurnCheckedInstr
       ['amount', getU64Encoder()],
       ['decimals', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 15 })
+    (value) => ({ ...value, discriminator: BURN_CHECKED_DISCRIMINATOR })
   );
 }
 
@@ -120,10 +126,12 @@ export function getBurnCheckedInstruction<
   TAccountAccount extends string,
   TAccountMint extends string,
   TAccountAuthority extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: BurnCheckedInput<TAccountAccount, TAccountMint, TAccountAuthority>
+  input: BurnCheckedInput<TAccountAccount, TAccountMint, TAccountAuthority>,
+  config?: { programAddress?: TProgramAddress }
 ): BurnCheckedInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountAccount,
   TAccountMint,
   (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
@@ -132,7 +140,7 @@ export function getBurnCheckedInstruction<
     : TAccountAuthority
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -170,7 +178,7 @@ export function getBurnCheckedInstruction<
       args as BurnCheckedInstructionDataArgs
     ),
   } as BurnCheckedInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountAccount,
     TAccountMint,
     (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>

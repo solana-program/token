@@ -34,6 +34,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const INITIALIZE_MINT_DISCRIMINATOR = 0;
+
+export function getInitializeMintDiscriminatorBytes() {
+  return getU8Encoder().encode(INITIALIZE_MINT_DISCRIMINATOR);
+}
+
 export type InitializeMintInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -84,7 +90,7 @@ export function getInitializeMintInstructionDataEncoder(): Encoder<InitializeMin
     ]),
     (value) => ({
       ...value,
-      discriminator: 0,
+      discriminator: INITIALIZE_MINT_DISCRIMINATOR,
       freezeAuthority: value.freezeAuthority ?? none(),
     })
   );
@@ -125,15 +131,13 @@ export type InitializeMintInput<
 export function getInitializeMintInstruction<
   TAccountMint extends string,
   TAccountRent extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: InitializeMintInput<TAccountMint, TAccountRent>
-): InitializeMintInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
-  TAccountMint,
-  TAccountRent
-> {
+  input: InitializeMintInput<TAccountMint, TAccountRent>,
+  config?: { programAddress?: TProgramAddress }
+): InitializeMintInstruction<TProgramAddress, TAccountMint, TAccountRent> {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -161,11 +165,7 @@ export function getInitializeMintInstruction<
     data: getInitializeMintInstructionDataEncoder().encode(
       args as InitializeMintInstructionDataArgs
     ),
-  } as InitializeMintInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
-    TAccountMint,
-    TAccountRent
-  >;
+  } as InitializeMintInstruction<TProgramAddress, TAccountMint, TAccountRent>;
 
   return instruction;
 }

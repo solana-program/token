@@ -28,6 +28,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const INITIALIZE_MULTISIG_DISCRIMINATOR = 2;
+
+export function getInitializeMultisigDiscriminatorBytes() {
+  return getU8Encoder().encode(INITIALIZE_MULTISIG_DISCRIMINATOR);
+}
+
 export type InitializeMultisigInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMultisig extends string | IAccountMeta<string> = string,
@@ -66,7 +72,7 @@ export function getInitializeMultisigInstructionDataEncoder(): Encoder<Initializ
       ['discriminator', getU8Encoder()],
       ['m', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 2 })
+    (value) => ({ ...value, discriminator: INITIALIZE_MULTISIG_DISCRIMINATOR })
   );
 }
 
@@ -102,15 +108,17 @@ export type InitializeMultisigInput<
 export function getInitializeMultisigInstruction<
   TAccountMultisig extends string,
   TAccountRent extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: InitializeMultisigInput<TAccountMultisig, TAccountRent>
+  input: InitializeMultisigInput<TAccountMultisig, TAccountRent>,
+  config?: { programAddress?: TProgramAddress }
 ): InitializeMultisigInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountMultisig,
   TAccountRent
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -149,7 +157,7 @@ export function getInitializeMultisigInstruction<
       args as InitializeMultisigInstructionDataArgs
     ),
   } as InitializeMultisigInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountMultisig,
     TAccountRent
   >;
