@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const INITIALIZE_MINT2_DISCRIMINATOR = 20;
+
+export function getInitializeMint2DiscriminatorBytes() {
+  return getU8Encoder().encode(INITIALIZE_MINT2_DISCRIMINATOR);
+}
+
 export type InitializeMint2Instruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -77,7 +83,7 @@ export function getInitializeMint2InstructionDataEncoder(): Encoder<InitializeMi
     ]),
     (value) => ({
       ...value,
-      discriminator: 20,
+      discriminator: INITIALIZE_MINT2_DISCRIMINATOR,
       freezeAuthority: value.freezeAuthority ?? none(),
     })
   );
@@ -110,11 +116,15 @@ export type InitializeMint2Input<TAccountMint extends string = string> = {
   freezeAuthority?: InitializeMint2InstructionDataArgs['freezeAuthority'];
 };
 
-export function getInitializeMint2Instruction<TAccountMint extends string>(
-  input: InitializeMint2Input<TAccountMint>
-): InitializeMint2Instruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint> {
+export function getInitializeMint2Instruction<
+  TAccountMint extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
+>(
+  input: InitializeMint2Input<TAccountMint>,
+  config?: { programAddress?: TProgramAddress }
+): InitializeMint2Instruction<TProgramAddress, TAccountMint> {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -135,7 +145,7 @@ export function getInitializeMint2Instruction<TAccountMint extends string>(
     data: getInitializeMint2InstructionDataEncoder().encode(
       args as InitializeMint2InstructionDataArgs
     ),
-  } as InitializeMint2Instruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint>;
+  } as InitializeMint2Instruction<TProgramAddress, TAccountMint>;
 
   return instruction;
 }

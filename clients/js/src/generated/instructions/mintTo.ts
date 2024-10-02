@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const MINT_TO_DISCRIMINATOR = 7;
+
+export function getMintToDiscriminatorBytes() {
+  return getU8Encoder().encode(MINT_TO_DISCRIMINATOR);
+}
+
 export type MintToInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -73,7 +79,7 @@ export function getMintToInstructionDataEncoder(): Encoder<MintToInstructionData
       ['discriminator', getU8Encoder()],
       ['amount', getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 7 })
+    (value) => ({ ...value, discriminator: MINT_TO_DISCRIMINATOR })
   );
 }
 
@@ -115,10 +121,12 @@ export function getMintToInstruction<
   TAccountMint extends string,
   TAccountToken extends string,
   TAccountMintAuthority extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: MintToInput<TAccountMint, TAccountToken, TAccountMintAuthority>
+  input: MintToInput<TAccountMint, TAccountToken, TAccountMintAuthority>,
+  config?: { programAddress?: TProgramAddress }
 ): MintToInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountMint,
   TAccountToken,
   (typeof input)['mintAuthority'] extends TransactionSigner<TAccountMintAuthority>
@@ -127,7 +135,7 @@ export function getMintToInstruction<
     : TAccountMintAuthority
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -165,7 +173,7 @@ export function getMintToInstruction<
       args as MintToInstructionDataArgs
     ),
   } as MintToInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountMint,
     TAccountToken,
     (typeof input)['mintAuthority'] extends TransactionSigner<TAccountMintAuthority>

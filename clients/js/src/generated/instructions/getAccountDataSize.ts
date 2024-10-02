@@ -26,6 +26,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const GET_ACCOUNT_DATA_SIZE_DISCRIMINATOR = 21;
+
+export function getGetAccountDataSizeDiscriminatorBytes() {
+  return getU8Encoder().encode(GET_ACCOUNT_DATA_SIZE_DISCRIMINATOR);
+}
+
 export type GetAccountDataSizeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -48,7 +54,10 @@ export type GetAccountDataSizeInstructionDataArgs = {};
 export function getGetAccountDataSizeInstructionDataEncoder(): Encoder<GetAccountDataSizeInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 21 })
+    (value) => ({
+      ...value,
+      discriminator: GET_ACCOUNT_DATA_SIZE_DISCRIMINATOR,
+    })
   );
 }
 
@@ -71,11 +80,15 @@ export type GetAccountDataSizeInput<TAccountMint extends string = string> = {
   mint: Address<TAccountMint>;
 };
 
-export function getGetAccountDataSizeInstruction<TAccountMint extends string>(
-  input: GetAccountDataSizeInput<TAccountMint>
-): GetAccountDataSizeInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint> {
+export function getGetAccountDataSizeInstruction<
+  TAccountMint extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
+>(
+  input: GetAccountDataSizeInput<TAccountMint>,
+  config?: { programAddress?: TProgramAddress }
+): GetAccountDataSizeInstruction<TProgramAddress, TAccountMint> {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -91,10 +104,7 @@ export function getGetAccountDataSizeInstruction<TAccountMint extends string>(
     accounts: [getAccountMeta(accounts.mint)],
     programAddress,
     data: getGetAccountDataSizeInstructionDataEncoder().encode({}),
-  } as GetAccountDataSizeInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
-    TAccountMint
-  >;
+  } as GetAccountDataSizeInstruction<TProgramAddress, TAccountMint>;
 
   return instruction;
 }

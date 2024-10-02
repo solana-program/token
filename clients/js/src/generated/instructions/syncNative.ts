@@ -26,6 +26,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const SYNC_NATIVE_DISCRIMINATOR = 17;
+
+export function getSyncNativeDiscriminatorBytes() {
+  return getU8Encoder().encode(SYNC_NATIVE_DISCRIMINATOR);
+}
+
 export type SyncNativeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
@@ -48,7 +54,7 @@ export type SyncNativeInstructionDataArgs = {};
 export function getSyncNativeInstructionDataEncoder(): Encoder<SyncNativeInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 17 })
+    (value) => ({ ...value, discriminator: SYNC_NATIVE_DISCRIMINATOR })
   );
 }
 
@@ -71,11 +77,15 @@ export type SyncNativeInput<TAccountAccount extends string = string> = {
   account: Address<TAccountAccount>;
 };
 
-export function getSyncNativeInstruction<TAccountAccount extends string>(
-  input: SyncNativeInput<TAccountAccount>
-): SyncNativeInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountAccount> {
+export function getSyncNativeInstruction<
+  TAccountAccount extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
+>(
+  input: SyncNativeInput<TAccountAccount>,
+  config?: { programAddress?: TProgramAddress }
+): SyncNativeInstruction<TProgramAddress, TAccountAccount> {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -91,7 +101,7 @@ export function getSyncNativeInstruction<TAccountAccount extends string>(
     accounts: [getAccountMeta(accounts.account)],
     programAddress,
     data: getSyncNativeInstructionDataEncoder().encode({}),
-  } as SyncNativeInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountAccount>;
+  } as SyncNativeInstruction<TProgramAddress, TAccountAccount>;
 
   return instruction;
 }

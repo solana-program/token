@@ -31,6 +31,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const REVOKE_DISCRIMINATOR = 5;
+
+export function getRevokeDiscriminatorBytes() {
+  return getU8Encoder().encode(REVOKE_DISCRIMINATOR);
+}
+
 export type RevokeInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
@@ -57,7 +63,7 @@ export type RevokeInstructionDataArgs = {};
 export function getRevokeInstructionDataEncoder(): Encoder<RevokeInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 5 })
+    (value) => ({ ...value, discriminator: REVOKE_DISCRIMINATOR })
   );
 }
 
@@ -89,17 +95,19 @@ export type RevokeInput<
 export function getRevokeInstruction<
   TAccountSource extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: RevokeInput<TAccountSource, TAccountOwner>
+  input: RevokeInput<TAccountSource, TAccountOwner>,
+  config?: { programAddress?: TProgramAddress }
 ): RevokeInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSource,
   (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
     ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>
     : TAccountOwner
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -133,7 +141,7 @@ export function getRevokeInstruction<
     programAddress,
     data: getRevokeInstructionDataEncoder().encode({}),
   } as RevokeInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSource,
     (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
       ? ReadonlySignerAccount<TAccountOwner> & IAccountSignerMeta<TAccountOwner>

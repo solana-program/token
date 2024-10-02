@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const TRANSFER_DISCRIMINATOR = 3;
+
+export function getTransferDiscriminatorBytes() {
+  return getU8Encoder().encode(TRANSFER_DISCRIMINATOR);
+}
+
 export type TransferInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountSource extends string | IAccountMeta<string> = string,
@@ -73,7 +79,7 @@ export function getTransferInstructionDataEncoder(): Encoder<TransferInstruction
       ['discriminator', getU8Encoder()],
       ['amount', getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 3 })
+    (value) => ({ ...value, discriminator: TRANSFER_DISCRIMINATOR })
   );
 }
 
@@ -113,10 +119,12 @@ export function getTransferInstruction<
   TAccountSource extends string,
   TAccountDestination extends string,
   TAccountAuthority extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: TransferInput<TAccountSource, TAccountDestination, TAccountAuthority>
+  input: TransferInput<TAccountSource, TAccountDestination, TAccountAuthority>,
+  config?: { programAddress?: TProgramAddress }
 ): TransferInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSource,
   TAccountDestination,
   (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>
@@ -125,7 +133,7 @@ export function getTransferInstruction<
     : TAccountAuthority
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -163,7 +171,7 @@ export function getTransferInstruction<
       args as TransferInstructionDataArgs
     ),
   } as TransferInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSource,
     TAccountDestination,
     (typeof input)['authority'] extends TransactionSigner<TAccountAuthority>

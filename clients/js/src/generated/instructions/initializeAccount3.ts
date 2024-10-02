@@ -29,6 +29,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const INITIALIZE_ACCOUNT3_DISCRIMINATOR = 18;
+
+export function getInitializeAccount3DiscriminatorBytes() {
+  return getU8Encoder().encode(INITIALIZE_ACCOUNT3_DISCRIMINATOR);
+}
+
 export type InitializeAccount3Instruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
@@ -65,7 +71,7 @@ export function getInitializeAccount3InstructionDataEncoder(): Encoder<Initializ
       ['discriminator', getU8Encoder()],
       ['owner', getAddressEncoder()],
     ]),
-    (value) => ({ ...value, discriminator: 18 })
+    (value) => ({ ...value, discriminator: INITIALIZE_ACCOUNT3_DISCRIMINATOR })
   );
 }
 
@@ -100,15 +106,17 @@ export type InitializeAccount3Input<
 export function getInitializeAccount3Instruction<
   TAccountAccount extends string,
   TAccountMint extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: InitializeAccount3Input<TAccountAccount, TAccountMint>
+  input: InitializeAccount3Input<TAccountAccount, TAccountMint>,
+  config?: { programAddress?: TProgramAddress }
 ): InitializeAccount3Instruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountAccount,
   TAccountMint
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -131,7 +139,7 @@ export function getInitializeAccount3Instruction<
       args as InitializeAccount3InstructionDataArgs
     ),
   } as InitializeAccount3Instruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountAccount,
     TAccountMint
   >;

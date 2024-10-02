@@ -33,6 +33,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const MINT_TO_CHECKED_DISCRIMINATOR = 14;
+
+export function getMintToCheckedDiscriminatorBytes() {
+  return getU8Encoder().encode(MINT_TO_CHECKED_DISCRIMINATOR);
+}
+
 export type MintToCheckedInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -78,7 +84,7 @@ export function getMintToCheckedInstructionDataEncoder(): Encoder<MintToCheckedI
       ['amount', getU64Encoder()],
       ['decimals', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 14 })
+    (value) => ({ ...value, discriminator: MINT_TO_CHECKED_DISCRIMINATOR })
   );
 }
 
@@ -122,10 +128,12 @@ export function getMintToCheckedInstruction<
   TAccountMint extends string,
   TAccountToken extends string,
   TAccountMintAuthority extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: MintToCheckedInput<TAccountMint, TAccountToken, TAccountMintAuthority>
+  input: MintToCheckedInput<TAccountMint, TAccountToken, TAccountMintAuthority>,
+  config?: { programAddress?: TProgramAddress }
 ): MintToCheckedInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountMint,
   TAccountToken,
   (typeof input)['mintAuthority'] extends TransactionSigner<TAccountMintAuthority>
@@ -134,7 +142,7 @@ export function getMintToCheckedInstruction<
     : TAccountMintAuthority
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -172,7 +180,7 @@ export function getMintToCheckedInstruction<
       args as MintToCheckedInstructionDataArgs
     ),
   } as MintToCheckedInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountMint,
     TAccountToken,
     (typeof input)['mintAuthority'] extends TransactionSigner<TAccountMintAuthority>

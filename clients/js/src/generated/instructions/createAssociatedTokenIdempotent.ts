@@ -35,6 +35,14 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
+export const CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR = 1;
+
+export function getCreateAssociatedTokenIdempotentDiscriminatorBytes() {
+  return getU8Encoder().encode(
+    CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR
+  );
+}
+
 export type CreateAssociatedTokenIdempotentInstruction<
   TProgram extends string = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   TAccountPayer extends string | IAccountMeta<string> = string,
@@ -82,7 +90,10 @@ export type CreateAssociatedTokenIdempotentInstructionDataArgs = {};
 export function getCreateAssociatedTokenIdempotentInstructionDataEncoder(): Encoder<CreateAssociatedTokenIdempotentInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 1 })
+    (value) => ({
+      ...value,
+      discriminator: CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR,
+    })
   );
 }
 
@@ -129,6 +140,7 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
   TAccountMint extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
+  TProgramAddress extends Address = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
 >(
   input: CreateAssociatedTokenIdempotentAsyncInput<
     TAccountPayer,
@@ -137,10 +149,11 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
     TAccountMint,
     TAccountSystemProgram,
     TAccountTokenProgram
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): Promise<
   CreateAssociatedTokenIdempotentInstruction<
-    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountPayer,
     TAccountAta,
     TAccountOwner,
@@ -150,7 +163,8 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
   >
 > {
   // Program address.
-  const programAddress = ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
+  const programAddress =
+    config?.programAddress ?? ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -196,7 +210,7 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
     programAddress,
     data: getCreateAssociatedTokenIdempotentInstructionDataEncoder().encode({}),
   } as CreateAssociatedTokenIdempotentInstruction<
-    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountPayer,
     TAccountAta,
     TAccountOwner,
@@ -237,6 +251,7 @@ export function getCreateAssociatedTokenIdempotentInstruction<
   TAccountMint extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
+  TProgramAddress extends Address = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
 >(
   input: CreateAssociatedTokenIdempotentInput<
     TAccountPayer,
@@ -245,9 +260,10 @@ export function getCreateAssociatedTokenIdempotentInstruction<
     TAccountMint,
     TAccountSystemProgram,
     TAccountTokenProgram
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): CreateAssociatedTokenIdempotentInstruction<
-  typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountPayer,
   TAccountAta,
   TAccountOwner,
@@ -256,7 +272,8 @@ export function getCreateAssociatedTokenIdempotentInstruction<
   TAccountTokenProgram
 > {
   // Program address.
-  const programAddress = ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
+  const programAddress =
+    config?.programAddress ?? ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -295,7 +312,7 @@ export function getCreateAssociatedTokenIdempotentInstruction<
     programAddress,
     data: getCreateAssociatedTokenIdempotentInstructionDataEncoder().encode({}),
   } as CreateAssociatedTokenIdempotentInstruction<
-    typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountPayer,
     TAccountAta,
     TAccountOwner,

@@ -31,6 +31,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const THAW_ACCOUNT_DISCRIMINATOR = 11;
+
+export function getThawAccountDiscriminatorBytes() {
+  return getU8Encoder().encode(THAW_ACCOUNT_DISCRIMINATOR);
+}
+
 export type ThawAccountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountAccount extends string | IAccountMeta<string> = string,
@@ -61,7 +67,7 @@ export type ThawAccountInstructionDataArgs = {};
 export function getThawAccountInstructionDataEncoder(): Encoder<ThawAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: 11 })
+    (value) => ({ ...value, discriminator: THAW_ACCOUNT_DISCRIMINATOR })
   );
 }
 
@@ -97,10 +103,12 @@ export function getThawAccountInstruction<
   TAccountAccount extends string,
   TAccountMint extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
 >(
-  input: ThawAccountInput<TAccountAccount, TAccountMint, TAccountOwner>
+  input: ThawAccountInput<TAccountAccount, TAccountMint, TAccountOwner>,
+  config?: { programAddress?: TProgramAddress }
 ): ThawAccountInstruction<
-  typeof TOKEN_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountAccount,
   TAccountMint,
   (typeof input)['owner'] extends TransactionSigner<TAccountOwner>
@@ -108,7 +116,7 @@ export function getThawAccountInstruction<
     : TAccountOwner
 > {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -144,7 +152,7 @@ export function getThawAccountInstruction<
     programAddress,
     data: getThawAccountInstructionDataEncoder().encode({}),
   } as ThawAccountInstruction<
-    typeof TOKEN_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountAccount,
     TAccountMint,
     (typeof input)['owner'] extends TransactionSigner<TAccountOwner>

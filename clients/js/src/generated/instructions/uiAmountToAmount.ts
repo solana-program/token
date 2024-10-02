@@ -28,6 +28,12 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const UI_AMOUNT_TO_AMOUNT_DISCRIMINATOR = 24;
+
+export function getUiAmountToAmountDiscriminatorBytes() {
+  return getU8Encoder().encode(UI_AMOUNT_TO_AMOUNT_DISCRIMINATOR);
+}
+
 export type UiAmountToAmountInstruction<
   TProgram extends string = typeof TOKEN_PROGRAM_ADDRESS,
   TAccountMint extends string | IAccountMeta<string> = string,
@@ -60,7 +66,7 @@ export function getUiAmountToAmountInstructionDataEncoder(): Encoder<UiAmountToA
       ['discriminator', getU8Encoder()],
       ['uiAmount', getUtf8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 24 })
+    (value) => ({ ...value, discriminator: UI_AMOUNT_TO_AMOUNT_DISCRIMINATOR })
   );
 }
 
@@ -87,11 +93,15 @@ export type UiAmountToAmountInput<TAccountMint extends string = string> = {
   uiAmount: UiAmountToAmountInstructionDataArgs['uiAmount'];
 };
 
-export function getUiAmountToAmountInstruction<TAccountMint extends string>(
-  input: UiAmountToAmountInput<TAccountMint>
-): UiAmountToAmountInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint> {
+export function getUiAmountToAmountInstruction<
+  TAccountMint extends string,
+  TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS,
+>(
+  input: UiAmountToAmountInput<TAccountMint>,
+  config?: { programAddress?: TProgramAddress }
+): UiAmountToAmountInstruction<TProgramAddress, TAccountMint> {
   // Program address.
-  const programAddress = TOKEN_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -112,7 +122,7 @@ export function getUiAmountToAmountInstruction<TAccountMint extends string>(
     data: getUiAmountToAmountInstructionDataEncoder().encode(
       args as UiAmountToAmountInstructionDataArgs
     ),
-  } as UiAmountToAmountInstruction<typeof TOKEN_PROGRAM_ADDRESS, TAccountMint>;
+  } as UiAmountToAmountInstruction<TProgramAddress, TAccountMint>;
 
   return instruction;
 }
