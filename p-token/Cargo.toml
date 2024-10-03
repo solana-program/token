@@ -1,0 +1,29 @@
+[package]
+name = "token-program"
+version = "0.0.0"
+edition = "2021"
+readme = "./README.md"
+license-file = "../LICENSE"
+publish = false
+
+[package.metadata.solana]
+program-id = "TokenLight111111111111111111111111111111111"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+logging = []
+test-sbf = []
+
+[dependencies]
+bytemuck = { version="1.18.0", features=["derive"] }
+pinocchio = { version="0.2", path="/Users/febo/Developer/febo/pinocchio/sdk/pinocchio" }
+pinocchio-pubkey = "0.1"
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+solana-program-test = "~1.18"
+solana-sdk = "~1.18"
+spl-token = { version="^4", features=["no-entrypoint"] }
+test-case = "3.3.1"
