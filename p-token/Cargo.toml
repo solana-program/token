@@ -18,7 +18,7 @@ test-sbf = []
 
 [dependencies]
 bytemuck = { version="1.18.0", features=["derive"] }
-pinocchio = { version="0.2", path="/Users/febo/Developer/febo/pinocchio/sdk/pinocchio" }
+pinocchio = "0.2"
 pinocchio-pubkey = "0.1"
 
 [dev-dependencies]
