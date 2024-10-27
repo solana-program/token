@@ -1,9 +1,7 @@
 use pinocchio::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
-
-use crate::{
+use token_interface::{
     error::TokenError,
     native_mint::is_native_mint,
     state::{account::Account, mint::Mint, PodCOption},
@@ -56,11 +54,13 @@ pub fn process_transfer(
 
     // Validates source and destination accounts.
 
-    let source_account_data = unsafe { source_account_info.unchecked_borrow_mut_data() };
-    let source_account = bytemuck::from_bytes_mut::<Account>(source_account_data);
+    let source_account_data = unsafe { source_account_info.borrow_mut_data_unchecked() };
+    let source_account = bytemuck::try_from_bytes_mut::<Account>(source_account_data)
+        .map_err(|_error| ProgramError::InvalidAccountData)?;
 
-    let destination_account_data = unsafe { destination_account_info.unchecked_borrow_mut_data() };
-    let destination_account = bytemuck::from_bytes_mut::<Account>(destination_account_data);
+    let destination_account_data = unsafe { destination_account_info.borrow_mut_data_unchecked() };
+    let destination_account = bytemuck::try_from_bytes_mut::<Account>(destination_account_data)
+        .map_err(|_error| ProgramError::InvalidAccountData)?;
 
     if source_account.is_frozen() || destination_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());

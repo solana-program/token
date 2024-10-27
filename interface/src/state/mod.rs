@@ -36,10 +36,14 @@ impl<T: Default + PartialEq + Pod + Sized> From<Option<T>> for PodCOption<T> {
 }
 
 impl<T: Default + PartialEq + Pod + Sized> PodCOption<T> {
+    pub const NONE: [u8; 4] = [0, 0, 0, 0];
+
+    pub const SOME: [u8; 4] = [1, 0, 0, 0];
+
     /// Returns `true` if the option is a `None` value.
     #[inline]
     pub fn is_none(&self) -> bool {
-        self.tag == [0, 0, 0, 0]
+        self.tag == Self::NONE
     }
 
     /// Returns `true` if the option is a `Some` value.
@@ -76,6 +80,19 @@ impl<T: Default + PartialEq + Pod + Sized> PodCOption<T> {
         } else {
             Some(&mut self.value)
         }
+    }
+
+    #[inline]
+    pub fn set(&mut self, value: T) {
+        self.tag = Self::SOME;
+        self.value = value;
+    }
+
+    #[inline]
+    pub fn clear(&mut self) {
+        self.tag = Self::NONE;
+        // we don't need to zero the value since the tag
+        // indicates it is a `None` value
     }
 }
 

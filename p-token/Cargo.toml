@@ -18,8 +18,9 @@ test-sbf = []
 
 [dependencies]
 bytemuck = { version="1.18.0", features=["derive"] }
-pinocchio = "0.2"
-pinocchio-pubkey = "0.1"
+pinocchio = "0.6"
+pinocchio-pubkey = "0.2"
+token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"

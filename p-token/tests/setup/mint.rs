@@ -5,7 +5,7 @@ use solana_sdk::{
     program_error::ProgramError, pubkey::Pubkey, signature::Keypair, signer::Signer,
     system_instruction, transaction::Transaction,
 };
-use token_program::state::mint::Mint;
+use token_interface::state::mint::Mint;
 
 pub async fn initialize(
     context: &mut ProgramTestContext,
