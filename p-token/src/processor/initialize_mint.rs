@@ -1,14 +1,12 @@
-use std::mem::size_of;
-
 use bytemuck::{Pod, Zeroable};
 use pinocchio::{
     account_info::AccountInfo,
-    entrypoint::ProgramResult,
     program_error::ProgramError,
     pubkey::{Pubkey, PUBKEY_BYTES},
+    ProgramResult,
 };
-
-use crate::{
+use std::mem::size_of;
+use token_interface::{
     error::TokenError,
     state::{mint::Mint, PodCOption},
 };
@@ -18,32 +16,31 @@ pub fn process_initialize_mint(
     args: &InitializeMint,
     _rent_sysvar_account: bool,
 ) -> ProgramResult {
+    // Validate the mint account.
+
     let [mint_info, _remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    let mint_data = &mut mint_info.try_borrow_mut_data()?;
-    let mint = bytemuck::from_bytes_mut::<Mint>(mint_data);
+    let mint_data = unsafe { mint_info.borrow_mut_data_unchecked() };
+    let mint = bytemuck::try_from_bytes_mut::<Mint>(mint_data)
+        .map_err(|_error| ProgramError::InvalidAccountData)?;
 
     if mint.is_initialized.into() {
         return Err(TokenError::AlreadyInUse.into());
     }
 
-    // FEBO: ~408 CU can be saved by removing the rent check (is_exempt seems to
-    // be very expensive).
-    //
-    // The transaction will naturally fail if the account is not rent exempt with
-    // a TransactionError::InsufficientFundsForRent error.
-    /*
+    // Check rent-exempt status of the mint account.
+
+    /* TODO: Implement rent exemption
     let rent = Rent::get()?;
 
-    if !rent.is_exempt(
-        unsafe { *mint_info.unchecked_borrow_lamports() },
-        size_of::<Mint>(),
-    ) {
-        return Err(TokenError::NotRentExempt);
+    if !rent.is_exempt_scaled(mint_info.lamports(), size_of::<Mint>()) {
+        return Err(TokenError::NotRentExempt.into());
     }
     */
+
+    // Initialize the mint.
 
     mint.mint_authority = PodCOption::from(Some(args.data.mint_authority));
     mint.decimals = args.data.decimals;
@@ -90,6 +87,7 @@ impl<'a> InitializeMint<'a> {
     }
 }
 
+/// Base information for the mint.
 #[repr(C)]
 #[derive(Clone, Copy, Default, Pod, Zeroable)]
 pub struct MintData {

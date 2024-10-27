@@ -11,7 +11,7 @@ use solana_sdk::{
     system_instruction,
     transaction::Transaction,
 };
-use token_program::state::mint::Mint;
+use token_interface::state::mint::Mint;
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "token-light")]

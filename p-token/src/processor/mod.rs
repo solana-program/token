@@ -1,11 +1,7 @@
 use pinocchio::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    program_error::ProgramError,
-    pubkey::{self, Pubkey},
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
-
-use crate::{
+use token_interface::{
     error::TokenError,
     state::multisignature::{Multisig, MAX_SIGNERS},
 };
@@ -46,7 +42,7 @@ pub fn validate_owner(
 
         for signer in signers.iter() {
             for (position, key) in multisig.signers[0..multisig.n as usize].iter().enumerate() {
-                if pubkey::compare(key, signer.key()) && !matched[position] {
+                if key == signer.key() && !matched[position] {
                     if !signer.is_signer() {
                         return Err(ProgramError::MissingRequiredSignature);
                     }
