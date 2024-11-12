@@ -133,3 +133,23 @@ impl From<PodBool> for bool {
         b.0 != 0
     }
 }
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+#[repr(C)]
+pub struct PodU64(pub [u8; 8]);
+
+impl PodU64 {
+    pub const fn from_primitive(n: u64) -> Self {
+        Self(n.to_le_bytes())
+    }
+}
+impl From<u64> for PodU64 {
+    fn from(n: u64) -> Self {
+        Self::from_primitive(n)
+    }
+}
+impl From<PodU64> for u64 {
+    fn from(pod: PodU64) -> Self {
+        Self::from_le_bytes(pod.0)
+    }
+}

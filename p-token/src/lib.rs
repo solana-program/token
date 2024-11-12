@@ -3,4 +3,4 @@
 mod entrypoint;
 mod processor;
 
-pinocchio_pubkey::declare_id!("TokenLight111111111111111111111111111111111");
+pinocchio_pubkey::declare_id!("Tokenocchio11111111111111111111111111111111");

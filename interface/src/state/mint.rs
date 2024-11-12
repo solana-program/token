@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use pinocchio::pubkey::Pubkey;
 
-use super::{PodBool, PodCOption};
+use super::{PodBool, PodCOption, PodU64};
 
 /// Mint data.
 #[repr(C)]
@@ -14,7 +14,7 @@ pub struct Mint {
     pub mint_authority: PodCOption<Pubkey>,
 
     /// Total supply of tokens.
-    pub supply: [u8; 8],
+    pub supply: PodU64,
 
     /// Number of base 10 digits to the right of the decimal place.
     pub decimals: u8,

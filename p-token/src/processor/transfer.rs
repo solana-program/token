@@ -69,7 +69,7 @@ pub fn process_transfer(
     // FEBO: Implicitly validates that the account has enough tokens by calculating the
     // remaining amount. The amount is only updated on the account if the transfer
     // is successful.
-    let remaining_amount = u64::from_le_bytes(source_account.amount)
+    let remaining_amount = u64::from(source_account.amount)
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
@@ -99,12 +99,12 @@ pub fn process_transfer(
     if source_account.delegate.as_ref() == Some(authority_info.key()) {
         validate_owner(program_id, authority_info.key(), authority_info, remaning)?;
 
-        let delegated_amount = u64::from_le_bytes(source_account.delegated_amount)
+        let delegated_amount = u64::from(source_account.delegated_amount)
             .checked_sub(amount)
             .ok_or(TokenError::InsufficientFunds)?;
 
         if !self_transfer {
-            source_account.delegated_amount = delegated_amount.to_le_bytes();
+            source_account.delegated_amount = delegated_amount.into();
 
             if delegated_amount == 0 {
                 source_account.delegate = PodCOption::from(None);
@@ -135,12 +135,12 @@ pub fn process_transfer(
 
     // Moves the tokens.
 
-    source_account.amount = remaining_amount.to_le_bytes();
+    source_account.amount = remaining_amount.into();
 
-    let destination_amount = u64::from_le_bytes(destination_account.amount)
+    let destination_amount = u64::from(destination_account.amount)
         .checked_add(amount)
         .ok_or(TokenError::Overflow)?;
-    destination_account.amount = destination_amount.to_le_bytes();
+    destination_account.amount = destination_amount.into();
 
     if is_native_mint(&source_account.mint) {
         let mut source_lamports = source_account_info.try_borrow_mut_lamports()?;

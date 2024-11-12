@@ -1,12 +1,13 @@
 [package]
 name = "token-interface"
 version = "0.0.0"
-edition = "2021"
+edition = { workspace = true }
 readme = "./README.md"
-license-file = "../LICENSE"
+license = { workspace = true }
+repository = { workspace = true }
 publish = false
 
 [dependencies]
-bytemuck = { version="1.18.0", features=["derive"] }
-pinocchio = "0.6"
-pinocchio-pubkey = "0.2"
+bytemuck = { workspace = true }
+pinocchio = { workspace = true }
+pinocchio-pubkey = { workspace = true }
