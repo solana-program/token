@@ -8,7 +8,7 @@ repository = { workspace = true }
 publish = false
 
 [package.metadata.solana]
-program-id = "Tokenocchio11111111111111111111111111111111"
+program-id = "PToken1111111111111111111111111111111111111"
 
 [lib]
 crate-type = ["cdylib", "lib"]

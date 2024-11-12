@@ -1,3 +1,3 @@
-# Token
+# `p-token`
 
-Your generated Solana program. Have fun!
+A `pinocchio`-based Token program.

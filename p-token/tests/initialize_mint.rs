@@ -14,7 +14,7 @@ use solana_sdk::{
 use token_interface::state::mint::Mint;
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
-#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "tokenocchio")]
+#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
 #[tokio::test]
 async fn initialize_mint(token_program: Pubkey) {
     let program_id = Pubkey::new_from_array(token_program::ID);
