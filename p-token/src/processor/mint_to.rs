@@ -57,15 +57,15 @@ pub fn process_mint_to(
         check_account_owner(program_id, destination_account_info)?;
     }
 
-    let destination_amount = u64::from_le_bytes(destination_account.amount)
+    let destination_amount = u64::from(destination_account.amount)
         .checked_add(amount)
         .ok_or(ProgramError::InvalidAccountData)?;
-    destination_account.amount = destination_amount.to_le_bytes();
+    destination_account.amount = destination_amount.into();
 
-    let mint_supply = u64::from_le_bytes(mint.supply)
+    let mint_supply = u64::from(mint.supply)
         .checked_add(amount)
         .ok_or(ProgramError::InvalidAccountData)?;
-    mint.supply = mint_supply.to_le_bytes();
+    mint.supply = mint_supply.into();
 
     Ok(())
 }

@@ -70,24 +70,24 @@ pub fn process_initialize_account(
     account.owner = *owner;
     account.close_authority.clear();
     account.delegate.clear();
-    account.delegated_amount = 0u64.to_le_bytes();
+    account.delegated_amount = 0u64.into();
     account.state = AccountState::Initialized as u8;
 
     if is_native_mint {
         let rent = Rent::get()?;
         let rent_exempt_reserve = rent.minimum_balance(size_of::<Account>());
 
-        account.is_native = PodCOption::from(Some(rent_exempt_reserve.to_le_bytes()));
+        account.is_native = PodCOption::from(Some(rent_exempt_reserve.into()));
         unsafe {
             account.amount = new_account_info
                 .borrow_lamports_unchecked()
                 .checked_sub(rent_exempt_reserve)
                 .ok_or(TokenError::Overflow)?
-                .to_le_bytes()
+                .into()
         }
     } else {
         account.is_native.clear();
-        account.amount = 0u64.to_le_bytes();
+        account.amount = 0u64.into();
     };
 
     Ok(())

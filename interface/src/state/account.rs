@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use pinocchio::pubkey::Pubkey;
 
-use super::PodCOption;
+use super::{PodCOption, PodU64};
 
 /// Account data.
 #[repr(C)]
@@ -14,7 +14,7 @@ pub struct Account {
     pub owner: Pubkey,
 
     /// The amount of tokens this account holds.
-    pub amount: [u8; 8],
+    pub amount: PodU64,
 
     /// If `delegate` is `Some` then `delegated_amount` represents
     /// the amount authorized by the delegate
@@ -27,10 +27,10 @@ pub struct Account {
     /// rent-exempt reserve. An Account is required to be rent-exempt, so
     /// the value is used by the Processor to ensure that wrapped SOL
     /// accounts do not drop below this threshold.
-    pub is_native: PodCOption<[u8; 8]>,
+    pub is_native: PodCOption<PodU64>,
 
     /// The amount delegated
-    pub delegated_amount: [u8; 8],
+    pub delegated_amount: PodU64,
 
     /// Optional authority to close the account.
     pub close_authority: PodCOption<Pubkey>,
@@ -45,6 +45,10 @@ impl Account {
     #[inline]
     pub fn is_frozen(&self) -> bool {
         self.state == AccountState::Frozen as u8
+    }
+
+    pub fn amount(&self) -> u64 {
+        self.amount.into()
     }
 }
 
