@@ -3,6 +3,7 @@ use pinocchio::{
     account_info::AccountInfo,
     program_error::ProgramError,
     pubkey::{Pubkey, PUBKEY_BYTES},
+    sysvars::{rent::Rent, Sysvar},
     ProgramResult,
 };
 use std::mem::size_of;
@@ -31,14 +32,16 @@ pub fn process_initialize_mint(
     }
 
     // Check rent-exempt status of the mint account.
+    //
+    // WIP: This is an expensive check (~400 CU) since it involves floating-point
+    // operations. Currently we are using a 'scaled' version, which is faster but
+    // not as precise as the `f64` version when there are decimal places.
 
-    /* TODO: Implement rent exemption
     let rent = Rent::get()?;
 
     if !rent.is_exempt_scaled(mint_info.lamports(), size_of::<Mint>()) {
         return Err(TokenError::NotRentExempt.into());
     }
-    */
 
     // Initialize the mint.
 

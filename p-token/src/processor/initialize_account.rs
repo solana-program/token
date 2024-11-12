@@ -36,13 +36,17 @@ pub fn process_initialize_account(
         (new_account_info, mint_info, owner_info.key())
     };
 
-    /* TODO: Implement rent exemption
+    // Check rent-exempt status of the token account.
+    //
+    // WIP: This is an expensive check (~400 CU) since it involves floating-point
+    // operations. Currently we are using a 'scaled' version, which is faster but
+    // not as precise as the `f64` version when there are decimal places.
+
     let rent = Rent::get()?;
 
     if !rent.is_exempt_scaled(new_account_info.lamports(), size_of::<Account>()) {
         return Err(TokenError::NotRentExempt.into());
     }
-    */
 
     let account_data = unsafe { new_account_info.borrow_mut_data_unchecked() };
     let account = bytemuck::try_from_bytes_mut::<Account>(account_data)
