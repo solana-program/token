@@ -497,7 +497,7 @@ pub enum AuthorityType {
 }
 
 impl AuthorityType {
-    fn into(&self) -> u8 {
+    pub fn into(&self) -> u8 {
         match self {
             AuthorityType::MintTokens => 0,
             AuthorityType::FreezeAccount => 1,
@@ -506,7 +506,7 @@ impl AuthorityType {
         }
     }
 
-    fn from(index: u8) -> Result<Self, ProgramError> {
+    pub fn from(index: u8) -> Result<Self, ProgramError> {
         match index {
             0 => Ok(AuthorityType::MintTokens),
             1 => Ok(AuthorityType::FreezeAccount),
