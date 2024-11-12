@@ -13,7 +13,7 @@ use solana_sdk::{
 };
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
-#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "token-light")]
+#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "tokenocchio")]
 #[tokio::test]
 async fn initialize_account(token_program: Pubkey) {
     let program_id = Pubkey::new_from_array(token_program::ID);
