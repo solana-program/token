@@ -15,31 +15,38 @@ use token_interface::{
 pub fn process_initialize_mint(
     accounts: &[AccountInfo],
     args: &InitializeMint,
-    _rent_sysvar_account: bool,
+    rent_sysvar_account: bool,
 ) -> ProgramResult {
-    // Validate the mint account.
-
-    let [mint_info, _remaining @ ..] = accounts else {
-        return Err(ProgramError::NotEnoughAccountKeys);
+    let (mint_info, rent_sysvar_info) = if rent_sysvar_account {
+        let [mint_info, rent_sysvar_info, _remaining @ ..] = accounts else {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        };
+        (mint_info, Some(rent_sysvar_info))
+    } else {
+        let [mint_info, _remaining @ ..] = accounts else {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        };
+        (mint_info, None)
     };
 
-    let mint_data = unsafe { mint_info.borrow_mut_data_unchecked() };
-    let mint = bytemuck::try_from_bytes_mut::<Mint>(mint_data)
-        .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let mint =
+        bytemuck::try_from_bytes_mut::<Mint>(unsafe { mint_info.borrow_mut_data_unchecked() })
+            .map_err(|_error| ProgramError::InvalidAccountData)?;
 
     if mint.is_initialized.into() {
         return Err(TokenError::AlreadyInUse.into());
     }
 
     // Check rent-exempt status of the mint account.
-    //
-    // WIP: This is an expensive check (~400 CU) since it involves floating-point
-    // operations. Currently we are using a 'scaled' version, which is faster but
-    // not as precise as the `f64` version when there are decimal places.
 
-    let rent = Rent::get()?;
+    let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
+        let rent = unsafe { Rent::from_bytes(rent_sysvar_info.borrow_data_unchecked()) };
+        rent.is_exempt(mint_info.lamports(), size_of::<Mint>())
+    } else {
+        Rent::get()?.is_exempt(mint_info.lamports(), size_of::<Mint>())
+    };
 
-    if !rent.is_exempt_scaled(mint_info.lamports(), size_of::<Mint>()) {
+    if !is_exempt {
         return Err(TokenError::NotRentExempt.into());
     }
 

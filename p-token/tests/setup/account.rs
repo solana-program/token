@@ -1,7 +1,7 @@
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    program_error::ProgramError, pubkey::Pubkey, signature::Keypair, signer::Signer,
-    system_instruction, transaction::Transaction,
+    pubkey::Pubkey, signature::Keypair, signer::Signer, system_instruction,
+    transaction::Transaction,
 };
 
 pub async fn initialize(
@@ -9,7 +9,7 @@ pub async fn initialize(
     mint: &Pubkey,
     owner: &Pubkey,
     program_id: &Pubkey,
-) -> Result<Pubkey, ProgramError> {
+) -> Pubkey {
     let account = Keypair::new();
 
     let account_size = 165;
@@ -39,5 +39,59 @@ pub async fn initialize(
     );
     context.banks_client.process_transaction(tx).await.unwrap();
 
-    Ok(account.pubkey())
+    account.pubkey()
+}
+
+pub async fn approve(
+    context: &mut ProgramTestContext,
+    account: &Pubkey,
+    delegate: &Pubkey,
+    owner: &Keypair,
+    amount: u64,
+    program_id: &Pubkey,
+) {
+    let mut approve_ix = spl_token::instruction::approve(
+        &spl_token::ID,
+        account,
+        delegate,
+        &owner.pubkey(),
+        &[],
+        amount,
+    )
+    .unwrap();
+    approve_ix.program_id = *program_id;
+
+    let tx = Transaction::new_signed_with_payer(
+        &[approve_ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, owner],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+}
+
+pub async fn freeze(
+    context: &mut ProgramTestContext,
+    account: &Pubkey,
+    mint: &Pubkey,
+    freeze_authority: &Keypair,
+    program_id: &Pubkey,
+) {
+    let mut freeze_account_ix = spl_token::instruction::freeze_account(
+        &spl_token::ID,
+        account,
+        mint,
+        &freeze_authority.pubkey(),
+        &[],
+    )
+    .unwrap();
+    freeze_account_ix.program_id = *program_id;
+
+    let tx = Transaction::new_signed_with_payer(
+        &[freeze_account_ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, freeze_authority],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
 }

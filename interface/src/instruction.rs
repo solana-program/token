@@ -1,8 +1,8 @@
 //! Instruction types
 
-use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
+use pinocchio::pubkey::Pubkey;
 
-use crate::{error::TokenError, state::PodCOption};
+use crate::state::PodCOption;
 
 /// Instructions supported by the token program.
 #[repr(C)]
@@ -506,13 +506,13 @@ impl AuthorityType {
         }
     }
 
-    pub fn from(index: u8) -> Result<Self, ProgramError> {
+    pub fn from(index: u8) -> Self {
         match index {
-            0 => Ok(AuthorityType::MintTokens),
-            1 => Ok(AuthorityType::FreezeAccount),
-            2 => Ok(AuthorityType::AccountOwner),
-            3 => Ok(AuthorityType::CloseAccount),
-            _ => Err(TokenError::InvalidInstruction.into()),
+            0 => AuthorityType::MintTokens,
+            1 => AuthorityType::FreezeAccount,
+            2 => AuthorityType::AccountOwner,
+            3 => AuthorityType::CloseAccount,
+            _ => panic!("invalid authority type: {index}"),
         }
     }
 }

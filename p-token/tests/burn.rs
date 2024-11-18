@@ -14,7 +14,7 @@ use solana_sdk::{
 #[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
 #[tokio::test]
-async fn transfer(token_program: Pubkey) {
+async fn burn(token_program: Pubkey) {
     let program_id = Pubkey::new_from_array(token_program::ID);
     let mut context = ProgramTest::new("token_program", program_id, None)
         .start_with_context()
@@ -51,33 +51,22 @@ async fn transfer(token_program: Pubkey) {
     .await
     .unwrap();
 
-    // When we transfer the tokens.
+    // When we burn 50 tokens.
 
-    let destination = Pubkey::new_unique();
-
-    let destination_account =
-        account::initialize(&mut context, &mint, &destination, &token_program).await;
-
-    let mut transfer_ix = spl_token::instruction::transfer(
-        &spl_token::ID,
-        &account,
-        &destination_account,
-        &owner.pubkey(),
-        &[],
-        100,
-    )
-    .unwrap();
-    transfer_ix.program_id = token_program;
+    let mut burn_ix =
+        spl_token::instruction::burn(&spl_token::ID, &account, &mint, &owner.pubkey(), &[], 50)
+            .unwrap();
+    burn_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
-        &[transfer_ix],
+        &[burn_ix],
         Some(&context.payer.pubkey()),
         &[&context.payer, &owner],
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
 
-    // Then an account has the correct data.
+    // Then the account should have 50 tokens remaining.
 
     let account = context.banks_client.get_account(account).await.unwrap();
 
@@ -86,5 +75,5 @@ async fn transfer(token_program: Pubkey) {
     let account = account.unwrap();
     let account = spl_token::state::Account::unpack(&account.data).unwrap();
 
-    assert!(account.amount == 0);
+    assert!(account.amount == 50);
 }

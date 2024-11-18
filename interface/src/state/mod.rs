@@ -4,7 +4,7 @@ use bytemuck::{Pod, Zeroable};
 
 pub mod account;
 pub mod mint;
-pub mod multisignature;
+pub mod multisig;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -39,6 +39,13 @@ impl<T: Default + PartialEq + Pod + Sized> PodCOption<T> {
     pub const NONE: [u8; 4] = [0, 0, 0, 0];
 
     pub const SOME: [u8; 4] = [1, 0, 0, 0];
+
+    pub fn some(value: T) -> Self {
+        Self {
+            tag: [1, 0, 0, 0],
+            value,
+        }
+    }
 
     /// Returns `true` if the option is a `None` value.
     #[inline]

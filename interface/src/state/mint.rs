@@ -25,3 +25,8 @@ pub struct Mint {
     /// Optional authority to freeze token accounts.
     pub freeze_authority: PodCOption<Pubkey>,
 }
+
+impl Mint {
+    /// Size of the `Mint` account.
+    pub const LEN: usize = core::mem::size_of::<Self>();
+}
