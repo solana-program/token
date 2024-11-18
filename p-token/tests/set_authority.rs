@@ -2,19 +2,21 @@
 
 mod setup;
 
-use setup::{account, mint};
+use setup::mint;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
+    program_option::COption,
     program_pack::Pack,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+use spl_token::instruction::AuthorityType;
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
 #[tokio::test]
-async fn mint_to(token_program: Pubkey) {
+async fn set_authority(token_program: Pubkey) {
     let program_id = Pubkey::new_from_array(token_program::ID);
     let mut context = ProgramTest::new("token_program", program_id, None)
         .start_with_context()
@@ -23,53 +25,48 @@ async fn mint_to(token_program: Pubkey) {
     // Given a mint account.
 
     let mint_authority = Keypair::new();
-    let freeze_authority = Pubkey::new_unique();
+    let freeze_authority = Keypair::new();
 
     let mint = mint::initialize(
         &mut context,
         mint_authority.pubkey(),
-        Some(freeze_authority),
+        Some(freeze_authority.pubkey()),
         &token_program,
     )
     .await
     .unwrap();
 
-    // And a token account.
+    // When we set a new freeze authority.
 
-    let owner = Keypair::new();
+    let new_authority = Pubkey::new_unique();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
-
-    // When we mint tokens to it.
-
-    let mut mint_ix = spl_token::instruction::mint_to(
+    let mut set_authority_ix = spl_token::instruction::set_authority(
         &spl_token::ID,
         &mint,
-        &account,
-        &mint_authority.pubkey(),
+        Some(&new_authority),
+        AuthorityType::FreezeAccount,
+        &freeze_authority.pubkey(),
         &[],
-        100,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    mint_ix.program_id = token_program;
+    set_authority_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
-        &[mint_ix],
+        &[set_authority_ix],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &mint_authority],
+        &[&context.payer, &freeze_authority],
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
 
-    // Then an account has the correct data.
+    // Then the account should have the delegate and delegated amount.
 
-    let account = context.banks_client.get_account(account).await.unwrap();
+    let account = context.banks_client.get_account(mint).await.unwrap();
 
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let mint = spl_token::state::Mint::unpack(&account.data).unwrap();
 
-    assert!(account.amount == 100);
+    assert!(mint.freeze_authority == COption::Some(new_authority));
 }

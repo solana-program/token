@@ -24,4 +24,9 @@ pub struct Multisig {
 
 impl Multisig {
     pub const LEN: usize = core::mem::size_of::<Multisig>();
+
+    /// Utility function that checks index is between [`MIN_SIGNERS`] and [`MAX_SIGNERS`].
+    pub fn is_valid_signer_index(index: usize) -> bool {
+        (MIN_SIGNERS..=MAX_SIGNERS).contains(&index)
+    }
 }

@@ -37,6 +37,9 @@ pub struct Account {
 }
 
 impl Account {
+    /// Size of the `Account` account.
+    pub const LEN: usize = core::mem::size_of::<Self>();
+
     #[inline]
     pub fn is_initialized(&self) -> bool {
         self.state != AccountState::Uninitialized as u8

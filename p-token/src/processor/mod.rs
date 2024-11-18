@@ -3,13 +3,36 @@ use pinocchio::{
 };
 use token_interface::{
     error::TokenError,
-    state::multisignature::{Multisig, MAX_SIGNERS},
+    state::multisig::{Multisig, MAX_SIGNERS},
 };
 
+pub mod approve;
+pub mod burn;
+pub mod close_account;
+pub mod freeze_account;
 pub mod initialize_account;
 pub mod initialize_mint;
+pub mod initialize_multisig;
 pub mod mint_to;
+pub mod revoke;
+pub mod set_authority;
+pub mod thaw_account;
 pub mod transfer;
+// Private processor to toggle the account state. This logic is reused by the
+// freeze and thaw account instructions.
+mod toggle_account_state;
+
+/// Incinerator address.
+const INCINERATOR_ID: Pubkey =
+    pinocchio_pubkey::pubkey!("1nc1nerator11111111111111111111111111111111");
+
+/// System program id.
+const SYSTEM_PROGRAM_ID: Pubkey = pinocchio_pubkey::pubkey!("11111111111111111111111111111111");
+
+#[inline(always)]
+pub fn is_owned_by_system_program_or_incinerator(owner: &Pubkey) -> bool {
+    SYSTEM_PROGRAM_ID == *owner || INCINERATOR_ID == *owner
+}
 
 /// Checks that the account is owned by the expected program.
 #[inline(always)]

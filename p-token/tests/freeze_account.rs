@@ -10,11 +10,12 @@ use solana_sdk::{
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+use spl_token::state::AccountState;
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
 #[tokio::test]
-async fn transfer(token_program: Pubkey) {
+async fn freeze_account(token_program: Pubkey) {
     let program_id = Pubkey::new_from_array(token_program::ID);
     let mut context = ProgramTest::new("token_program", program_id, None)
         .start_with_context()
@@ -23,68 +24,53 @@ async fn transfer(token_program: Pubkey) {
     // Given a mint account.
 
     let mint_authority = Keypair::new();
-    let freeze_authority = Pubkey::new_unique();
+    let freeze_authority = Keypair::new();
 
     let mint = mint::initialize(
         &mut context,
         mint_authority.pubkey(),
-        Some(freeze_authority),
+        Some(freeze_authority.pubkey()),
         &token_program,
     )
     .await
     .unwrap();
 
-    // And a token account with 100 tokens.
+    // And a token account.
 
     let owner = Keypair::new();
 
     let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
 
-    mint::mint(
-        &mut context,
-        &mint,
-        &account,
-        &mint_authority,
-        100,
-        &token_program,
-    )
-    .await
-    .unwrap();
+    let token_account = context.banks_client.get_account(account).await.unwrap();
+    assert!(token_account.is_some());
 
-    // When we transfer the tokens.
+    // When we freeze the account.
 
-    let destination = Pubkey::new_unique();
-
-    let destination_account =
-        account::initialize(&mut context, &mint, &destination, &token_program).await;
-
-    let mut transfer_ix = spl_token::instruction::transfer(
+    let mut freeze_account_ix = spl_token::instruction::freeze_account(
         &spl_token::ID,
         &account,
-        &destination_account,
-        &owner.pubkey(),
+        &mint,
+        &freeze_authority.pubkey(),
         &[],
-        100,
     )
     .unwrap();
-    transfer_ix.program_id = token_program;
+    freeze_account_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
-        &[transfer_ix],
+        &[freeze_account_ix],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &owner],
+        &[&context.payer, &freeze_authority],
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
 
-    // Then an account has the correct data.
+    // Then the account is frozen.
 
-    let account = context.banks_client.get_account(account).await.unwrap();
+    let token_account = context.banks_client.get_account(account).await.unwrap();
+    assert!(token_account.is_some());
 
-    assert!(account.is_some());
+    let token_account = token_account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&token_account.data).unwrap();
 
-    let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
-
-    assert!(account.amount == 0);
+    assert_eq!(token_account.state, AccountState::Frozen);
 }

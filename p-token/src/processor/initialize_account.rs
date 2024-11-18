@@ -22,29 +22,31 @@ pub fn process_initialize_account(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     owner: Option<&Pubkey>,
-    _rent_sysvar_account: bool,
+    rent_sysvar_account: bool,
 ) -> ProgramResult {
-    let (new_account_info, mint_info, owner) = if let Some(owner) = owner {
-        let [new_account_info, mint_info, _remaning @ ..] = accounts else {
+    let (new_account_info, mint_info, owner, remaning) = if let Some(owner) = owner {
+        let [new_account_info, mint_info, remaning @ ..] = accounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
-        (new_account_info, mint_info, owner)
+        (new_account_info, mint_info, owner, remaning)
     } else {
-        let [new_account_info, mint_info, owner_info, _remaning @ ..] = accounts else {
+        let [new_account_info, mint_info, owner_info, remaning @ ..] = accounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
-        (new_account_info, mint_info, owner_info.key())
+        (new_account_info, mint_info, owner_info.key(), remaning)
     };
 
     // Check rent-exempt status of the token account.
-    //
-    // WIP: This is an expensive check (~400 CU) since it involves floating-point
-    // operations. Currently we are using a 'scaled' version, which is faster but
-    // not as precise as the `f64` version when there are decimal places.
 
-    let rent = Rent::get()?;
+    let is_exempt = if rent_sysvar_account {
+        let rent_sysvar_info = remaning.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
+        let rent = unsafe { Rent::from_bytes(rent_sysvar_info.borrow_data_unchecked()) };
+        rent.is_exempt(new_account_info.lamports(), size_of::<Account>())
+    } else {
+        Rent::get()?.is_exempt(new_account_info.lamports(), size_of::<Account>())
+    };
 
-    if !rent.is_exempt_scaled(new_account_info.lamports(), size_of::<Account>()) {
+    if !is_exempt {
         return Err(TokenError::NotRentExempt.into());
     }
 

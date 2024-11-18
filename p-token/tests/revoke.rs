@@ -14,7 +14,7 @@ use solana_sdk::{
 #[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
 #[tokio::test]
-async fn transfer(token_program: Pubkey) {
+async fn revoke(token_program: Pubkey) {
     let program_id = Pubkey::new_from_array(token_program::ID);
     let mut context = ProgramTest::new("token_program", program_id, None)
         .start_with_context()
@@ -51,33 +51,35 @@ async fn transfer(token_program: Pubkey) {
     .await
     .unwrap();
 
-    // When we transfer the tokens.
+    // And 50 tokens delegated.
 
-    let destination = Pubkey::new_unique();
+    let delegate = Pubkey::new_unique();
 
-    let destination_account =
-        account::initialize(&mut context, &mint, &destination, &token_program).await;
-
-    let mut transfer_ix = spl_token::instruction::transfer(
-        &spl_token::ID,
+    account::approve(
+        &mut context,
         &account,
-        &destination_account,
-        &owner.pubkey(),
-        &[],
-        100,
+        &delegate,
+        &owner,
+        50,
+        &token_program,
     )
-    .unwrap();
-    transfer_ix.program_id = token_program;
+    .await;
+
+    // When we revoke the delegation.
+
+    let mut revoke_ix =
+        spl_token::instruction::revoke(&spl_token::ID, &account, &owner.pubkey(), &[]).unwrap();
+    revoke_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
-        &[transfer_ix],
+        &[revoke_ix],
         Some(&context.payer.pubkey()),
         &[&context.payer, &owner],
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
 
-    // Then an account has the correct data.
+    // Then the account should not have a delegate nor delegated amount.
 
     let account = context.banks_client.get_account(account).await.unwrap();
 
@@ -86,5 +88,6 @@ async fn transfer(token_program: Pubkey) {
     let account = account.unwrap();
     let account = spl_token::state::Account::unpack(&account.data).unwrap();
 
-    assert!(account.amount == 0);
+    assert!(account.delegate.is_none());
+    assert!(account.delegated_amount == 0);
 }
