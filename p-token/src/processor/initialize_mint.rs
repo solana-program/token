@@ -1,12 +1,11 @@
-use bytemuck::{Pod, Zeroable};
 use pinocchio::{
     account_info::AccountInfo,
     program_error::ProgramError,
-    pubkey::{Pubkey, PUBKEY_BYTES},
+    pubkey::Pubkey,
     sysvars::{rent::Rent, Sysvar},
     ProgramResult,
 };
-use std::mem::size_of;
+use std::{marker::PhantomData, mem::size_of};
 use token_interface::{
     error::TokenError,
     state::{mint::Mint, PodCOption},
@@ -52,17 +51,18 @@ pub fn process_initialize_mint(
 
     // Initialize the mint.
 
-    mint.mint_authority = PodCOption::from(Some(args.data.mint_authority));
-    mint.decimals = args.data.decimals;
+    mint.mint_authority = PodCOption::from(Some(*args.mint_authority()));
+    mint.decimals = args.decimals();
     mint.is_initialized = true.into();
 
-    if let Some(freeze_authority) = args.freeze_authority {
+    if let Some(freeze_authority) = args.freeze_authority() {
         mint.freeze_authority = PodCOption::from(Some(*freeze_authority));
     }
 
     Ok(())
 }
 
+/*
 /// Instruction data for the `InitializeMint` instruction.
 pub struct InitializeMint<'a> {
     pub data: &'a MintData,
@@ -106,4 +106,46 @@ pub struct MintData {
 
     /// The authority/multisignature to mint tokens.
     pub mint_authority: Pubkey,
+}
+*/
+/// Instruction data for the `InitializeMint2` instruction.
+pub struct InitializeMint<'a> {
+    raw: *const u8,
+
+    _data: PhantomData<&'a [u8]>,
+}
+
+impl InitializeMint<'_> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<InitializeMint, ProgramError> {
+        // The minimum expected size of the instruction data.
+        // - decimals (1 byte)
+        // - mint_authority (32 bytes)
+        // - option + freeze_authority (1 byte + 32 bytes)
+        if bytes.len() < 34 {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+
+        Ok(InitializeMint {
+            raw: bytes.as_ptr(),
+            _data: PhantomData,
+        })
+    }
+
+    pub fn decimals(&self) -> u8 {
+        unsafe { *self.raw }
+    }
+
+    pub fn mint_authority(&self) -> &Pubkey {
+        unsafe { &*(self.raw.add(1) as *const Pubkey) }
+    }
+
+    pub fn freeze_authority(&self) -> Option<&Pubkey> {
+        unsafe {
+            if *self.raw.add(33) == 0 {
+                Option::None
+            } else {
+                Option::Some(&*(self.raw.add(34) as *const Pubkey))
+            }
+        }
+    }
 }
