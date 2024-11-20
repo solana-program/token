@@ -7,17 +7,25 @@ use token_interface::{
 };
 
 pub mod approve;
+pub mod approve_checked;
 pub mod burn;
+pub mod burn_checked;
 pub mod close_account;
 pub mod freeze_account;
 pub mod initialize_account;
+pub mod initialize_account2;
+pub mod initialize_account3;
 pub mod initialize_mint;
+pub mod initialize_mint2;
 pub mod initialize_multisig;
+pub mod initialize_multisig2;
 pub mod mint_to;
+pub mod mint_to_checked;
 pub mod revoke;
 pub mod set_authority;
 pub mod thaw_account;
 pub mod transfer;
+pub mod transfer_checked;
 // Private processor to toggle the account state. This logic is reused by the
 // freeze and thaw account instructions.
 mod toggle_account_state;

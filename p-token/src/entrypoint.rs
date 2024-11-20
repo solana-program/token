@@ -5,17 +5,25 @@ use pinocchio::{
 
 use crate::processor::{
     approve::process_approve,
+    approve_checked::{process_approve_checked, ApproveChecked},
     burn::process_burn,
+    burn_checked::{process_burn_checked, BurnChecked},
     close_account::process_close_account,
     freeze_account::process_freeze_account,
     initialize_account::process_initialize_account,
+    initialize_account2::process_initialize_account2,
+    initialize_account3::process_initialize_account3,
     initialize_mint::{process_initialize_mint, InitializeMint},
+    initialize_mint2::process_initialize_mint2,
     initialize_multisig::process_initialize_multisig,
+    initialize_multisig2::process_initialize_multisig2,
     mint_to::process_mint_to,
+    mint_to_checked::{process_mint_to_checked, MintToChecked},
     revoke::process_revoke,
     set_authority::{process_set_authority, SetAuthority},
     thaw_account::process_thaw_account,
     transfer::process_transfer,
+    transfer_checked::{process_transfer_checked, TransferChecked},
 };
 
 entrypoint!(process_instruction);
@@ -33,6 +41,7 @@ pub fn process_instruction(
             pinocchio::msg!("Instruction: InitializeMint");
 
             let instruction = InitializeMint::try_from_bytes(data)?;
+
             process_initialize_mint(accounts, &instruction, true)
         }
         // 1 - InitializeAccount
@@ -133,12 +142,84 @@ pub fn process_instruction(
 
             process_freeze_account(program_id, accounts)
         }
-        // 10 - ThawAccount
+        // 11 - ThawAccount
         Some((&11, _)) => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: ThawAccount");
 
             process_thaw_account(program_id, accounts)
+        }
+        // 12 - TransferChecked
+        Some((&12, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: TransferChecked");
+
+            let args = TransferChecked::try_from_bytes(data)?;
+
+            process_transfer_checked(program_id, accounts, args.amount(), args.decimals())
+        }
+        // 13 - ApproveChecked
+        Some((&13, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: ApproveChecked");
+
+            let args = ApproveChecked::try_from_bytes(data)?;
+
+            process_approve_checked(program_id, accounts, args.amount(), args.decimals())
+        }
+        // 14 - MintToChecked
+        Some((&14, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: MintToChecked");
+
+            let args = MintToChecked::try_from_bytes(data)?;
+
+            process_mint_to_checked(program_id, accounts, args.amount(), args.decimals())
+        }
+        // 15 - BurnChecked
+        Some((&15, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: BurnChecked");
+
+            let args = BurnChecked::try_from_bytes(data)?;
+
+            process_burn_checked(program_id, accounts, args.amount(), args.decimals())
+        }
+        // 16 - InitializeAccount2
+        Some((&16, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeAccount2");
+
+            let owner = unsafe { &*(data.as_ptr() as *const Pubkey) };
+
+            process_initialize_account2(program_id, accounts, owner)
+        }
+        // 18 - InitializeAccount3
+        Some((&18, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeAccount3");
+
+            let owner = unsafe { &*(data.as_ptr() as *const Pubkey) };
+
+            process_initialize_account3(program_id, accounts, owner)
+        }
+        // 19 - InitializeMultisig2
+        Some((&19, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeMultisig2");
+
+            let m = data.first().ok_or(ProgramError::InvalidInstructionData)?;
+
+            process_initialize_multisig2(accounts, *m)
+        }
+        // 20 - InitializeMint2
+        Some((&20, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeMint2");
+
+            let instruction = InitializeMint::try_from_bytes(data)?;
+
+            process_initialize_mint2(accounts, &instruction)
         }
         _ => Err(ProgramError::InvalidInstructionData),
     }

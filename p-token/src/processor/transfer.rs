@@ -54,13 +54,15 @@ pub fn process_transfer(
 
     // Validates source and destination accounts.
 
-    let source_account_data = unsafe { source_account_info.borrow_mut_data_unchecked() };
-    let source_account = bytemuck::try_from_bytes_mut::<Account>(source_account_data)
-        .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let source_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
+        source_account_info.borrow_mut_data_unchecked()
+    })
+    .map_err(|_error| ProgramError::InvalidAccountData)?;
 
-    let destination_account_data = unsafe { destination_account_info.borrow_mut_data_unchecked() };
-    let destination_account = bytemuck::try_from_bytes_mut::<Account>(destination_account_data)
-        .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let destination_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
+        destination_account_info.borrow_mut_data_unchecked()
+    })
+    .map_err(|_error| ProgramError::InvalidAccountData)?;
 
     if source_account.is_frozen() || destination_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
@@ -84,8 +86,9 @@ pub fn process_transfer(
             return Err(TokenError::MintMismatch.into());
         }
 
-        let mint_data = mint_info.try_borrow_data()?;
-        let mint = bytemuck::from_bytes::<Mint>(&mint_data);
+        let mint =
+            bytemuck::try_from_bytes_mut::<Mint>(unsafe { mint_info.borrow_mut_data_unchecked() })
+                .map_err(|_error| ProgramError::InvalidAccountData)?;
 
         if decimals != mint.decimals {
             return Err(TokenError::MintDecimalsMismatch.into());
