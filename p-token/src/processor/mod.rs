@@ -31,9 +31,8 @@ pub mod thaw_account;
 pub mod transfer;
 pub mod transfer_checked;
 pub mod ui_amount_to_amount;
-// Private processor to toggle the account state. This logic is reused by the
-// freeze and thaw account instructions.
-mod toggle_account_state;
+// Shared processors.
+pub mod shared;
 
 /// Incinerator address.
 const INCINERATOR_ID: Pubkey =

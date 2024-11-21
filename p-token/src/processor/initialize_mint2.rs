@@ -1,8 +1,8 @@
 use pinocchio::{account_info::AccountInfo, ProgramResult};
 
-use super::initialize_mint::{process_initialize_mint, InitializeMint};
+use super::shared::{self, initialize_mint::InitializeMint};
 
 #[inline(always)]
 pub fn process_initialize_mint2(accounts: &[AccountInfo], args: &InitializeMint) -> ProgramResult {
-    process_initialize_mint(accounts, args, false)
+    shared::initialize_mint::process_initialize_mint(accounts, args, false)
 }

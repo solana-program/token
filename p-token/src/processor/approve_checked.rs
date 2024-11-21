@@ -4,7 +4,7 @@ use pinocchio::{
     account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 
-use super::approve::process_approve;
+use super::shared;
 
 #[inline(always)]
 pub fn process_approve_checked(
@@ -13,7 +13,7 @@ pub fn process_approve_checked(
     amount: u64,
     decimals: u8,
 ) -> ProgramResult {
-    process_approve(program_id, accounts, amount, Some(decimals))
+    shared::approve::process_approve(program_id, accounts, amount, Some(decimals))
 }
 
 pub struct ApproveChecked<'a> {

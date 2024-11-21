@@ -4,7 +4,7 @@ use pinocchio::{
     account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 
-use super::mint_to::process_mint_to;
+use super::shared;
 
 #[inline(always)]
 pub fn process_mint_to_checked(
@@ -13,7 +13,7 @@ pub fn process_mint_to_checked(
     amount: u64,
     decimals: u8,
 ) -> ProgramResult {
-    process_mint_to(program_id, accounts, amount, Some(decimals))
+    shared::mint_to::process_mint_to(program_id, accounts, amount, Some(decimals))
 }
 
 pub struct MintToChecked<'a> {
