@@ -6,15 +6,18 @@ use token_interface::{
     state::multisig::{Multisig, MAX_SIGNERS},
 };
 
+pub mod amount_to_ui_amount;
 pub mod approve;
 pub mod approve_checked;
 pub mod burn;
 pub mod burn_checked;
 pub mod close_account;
 pub mod freeze_account;
+pub mod get_account_data_size;
 pub mod initialize_account;
 pub mod initialize_account2;
 pub mod initialize_account3;
+pub mod initialize_immutable_owner;
 pub mod initialize_mint;
 pub mod initialize_mint2;
 pub mod initialize_multisig;
@@ -27,6 +30,7 @@ pub mod sync_native;
 pub mod thaw_account;
 pub mod transfer;
 pub mod transfer_checked;
+pub mod ui_amount_to_amount;
 // Private processor to toggle the account state. This logic is reused by the
 // freeze and thaw account instructions.
 mod toggle_account_state;
@@ -91,4 +95,58 @@ pub fn validate_owner(
     }
 
     Ok(())
+}
+
+/// Convert a raw amount to its UI representation using the given decimals field
+/// Excess zeroes or unneeded decimal point are trimmed.
+#[inline(always)]
+pub fn amount_to_ui_amount_string_trimmed(amount: u64, decimals: u8) -> String {
+    let mut s = amount_to_ui_amount_string(amount, decimals);
+    if decimals > 0 {
+        let zeros_trimmed = s.trim_end_matches('0');
+        s = zeros_trimmed.trim_end_matches('.').to_string();
+    }
+    s
+}
+
+/// Convert a raw amount to its UI representation (using the decimals field
+/// defined in its mint)
+#[inline(always)]
+pub fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
+    let decimals = decimals as usize;
+    if decimals > 0 {
+        // Left-pad zeros to decimals + 1, so we at least have an integer zero
+        let mut s = format!("{:01$}", amount, decimals + 1);
+        // Add the decimal point (Sorry, "," locales!)
+        s.insert(s.len() - decimals, '.');
+        s
+    } else {
+        amount.to_string()
+    }
+}
+
+/// Try to convert a UI representation of a token amount to its raw amount using
+/// the given decimals field
+pub fn try_ui_amount_into_amount(ui_amount: String, decimals: u8) -> Result<u64, ProgramError> {
+    let decimals = decimals as usize;
+    let mut parts = ui_amount.split('.');
+    // splitting a string, even an empty one, will always yield an iterator of at
+    // least length == 1
+    let mut amount_str = parts.next().unwrap().to_string();
+    let after_decimal = parts.next().unwrap_or("");
+    let after_decimal = after_decimal.trim_end_matches('0');
+    if (amount_str.is_empty() && after_decimal.is_empty())
+        || parts.next().is_some()
+        || after_decimal.len() > decimals
+    {
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    amount_str.push_str(after_decimal);
+    for _ in 0..decimals.saturating_sub(after_decimal.len()) {
+        amount_str.push('0');
+    }
+    amount_str
+        .parse::<u64>()
+        .map_err(|_| ProgramError::InvalidArgument)
 }

@@ -1,18 +1,23 @@
+use core::str;
+
 use pinocchio::{
     account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey,
     ProgramResult,
 };
 
 use crate::processor::{
+    amount_to_ui_amount::process_amount_to_ui_amount,
     approve::process_approve,
     approve_checked::{process_approve_checked, ApproveChecked},
     burn::process_burn,
     burn_checked::{process_burn_checked, BurnChecked},
     close_account::process_close_account,
     freeze_account::process_freeze_account,
+    get_account_data_size::process_get_account_data_size,
     initialize_account::process_initialize_account,
     initialize_account2::process_initialize_account2,
     initialize_account3::process_initialize_account3,
+    initialize_immutable_owner::process_initialize_immutable_owner,
     initialize_mint::{process_initialize_mint, InitializeMint},
     initialize_mint2::process_initialize_mint2,
     initialize_multisig::process_initialize_multisig,
@@ -25,6 +30,7 @@ use crate::processor::{
     thaw_account::process_thaw_account,
     transfer::process_transfer,
     transfer_checked::{process_transfer_checked, TransferChecked},
+    ui_amount_to_amount::process_ui_amount_to_amount,
 };
 
 entrypoint!(process_instruction);
@@ -228,6 +234,42 @@ pub fn process_instruction(
             let instruction = InitializeMint::try_from_bytes(data)?;
 
             process_initialize_mint2(accounts, &instruction)
+        }
+        // 21 - GetAccountDataSize
+        Some((&21, _)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: GetAccountDataSize");
+
+            process_get_account_data_size(program_id, accounts)
+        }
+        // 22 - InitializeImmutableOwner
+        Some((&22, _)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeImmutableOwner");
+
+            process_initialize_immutable_owner(accounts)
+        }
+        // 23 - AmountToUiAmount
+        Some((&23, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: AmountToUiAmount");
+
+            let amount = u64::from_le_bytes(
+                data.try_into()
+                    .map_err(|_error| ProgramError::InvalidInstructionData)?,
+            );
+
+            process_amount_to_ui_amount(program_id, accounts, amount)
+        }
+        // 24 - UiAmountToAmount
+        Some((&24, data)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: UiAmountToAmount");
+
+            let ui_amount =
+                str::from_utf8(data).map_err(|_error| ProgramError::InvalidInstructionData)?;
+
+            process_ui_amount_to_amount(program_id, accounts, ui_amount)
         }
         _ => Err(ProgramError::InvalidInstructionData),
     }
