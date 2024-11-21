@@ -11,7 +11,6 @@ use token_interface::{
 
 use super::validate_owner;
 
-#[inline(always)]
 pub fn process_toggle_account_state(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
