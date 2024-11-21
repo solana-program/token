@@ -18,7 +18,7 @@ use crate::processor::{
     initialize_account2::process_initialize_account2,
     initialize_account3::process_initialize_account3,
     initialize_immutable_owner::process_initialize_immutable_owner,
-    initialize_mint::{process_initialize_mint, InitializeMint},
+    initialize_mint::process_initialize_mint,
     initialize_mint2::process_initialize_mint2,
     initialize_multisig::process_initialize_multisig,
     initialize_multisig2::process_initialize_multisig2,
@@ -26,6 +26,7 @@ use crate::processor::{
     mint_to_checked::{process_mint_to_checked, MintToChecked},
     revoke::process_revoke,
     set_authority::{process_set_authority, SetAuthority},
+    shared::initialize_mint::InitializeMint,
     sync_native::process_sync_native,
     thaw_account::process_thaw_account,
     transfer::process_transfer,
@@ -49,14 +50,14 @@ pub fn process_instruction(
 
             let instruction = InitializeMint::try_from_bytes(data)?;
 
-            process_initialize_mint(accounts, &instruction, true)
+            process_initialize_mint(accounts, &instruction)
         }
         // 1 - InitializeAccount
         Some((&1, _)) => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeAccount");
 
-            process_initialize_account(program_id, accounts, None, true)
+            process_initialize_account(program_id, accounts)
         }
         // 2 - InitializeMultisig
         Some((&2, data)) => {
@@ -77,7 +78,7 @@ pub fn process_instruction(
                     .map_err(|_error| ProgramError::InvalidInstructionData)?,
             );
 
-            process_transfer(program_id, accounts, amount, None)
+            process_transfer(program_id, accounts, amount)
         }
         // 4 - Approve
         Some((&4, data)) => {
@@ -89,7 +90,7 @@ pub fn process_instruction(
                     .map_err(|_error| ProgramError::InvalidInstructionData)?,
             );
 
-            process_approve(program_id, accounts, amount, None)
+            process_approve(program_id, accounts, amount)
         }
         // 5 - Revoke
         Some((&5, _)) => {
@@ -121,7 +122,7 @@ pub fn process_instruction(
                     .map_err(|_error| ProgramError::InvalidInstructionData)?,
             );
 
-            process_mint_to(program_id, accounts, amount, None)
+            process_mint_to(program_id, accounts, amount)
         }
         // 8 - Burn
         Some((&8, data)) => {
@@ -133,7 +134,7 @@ pub fn process_instruction(
                     .map_err(|_error| ProgramError::InvalidInstructionData)?,
             );
 
-            process_burn(program_id, accounts, amount, None)
+            process_burn(program_id, accounts, amount)
         }
         // 9 - CloseAccount
         Some((&9, _)) => {

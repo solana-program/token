@@ -1,6 +1,6 @@
 use pinocchio::{account_info::AccountInfo, pubkey::Pubkey, ProgramResult};
 
-use super::initialize_account::process_initialize_account;
+use super::shared;
 
 #[inline(always)]
 pub fn process_initialize_account3(
@@ -8,5 +8,5 @@ pub fn process_initialize_account3(
     accounts: &[AccountInfo],
     owner: &Pubkey,
 ) -> ProgramResult {
-    process_initialize_account(program_id, accounts, Some(owner), false)
+    shared::initialize_account::process_initialize_account(program_id, accounts, Some(owner), false)
 }
