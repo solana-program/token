@@ -6,7 +6,7 @@ use pinocchio::{
 
 use super::shared;
 
-#[inline(always)]
+#[inline(never)]
 pub fn process_mint_to_checked(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

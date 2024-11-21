@@ -12,6 +12,7 @@ use token_interface::{
 
 use super::validate_owner;
 
+#[inline(never)]
 pub fn process_set_authority(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

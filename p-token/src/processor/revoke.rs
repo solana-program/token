@@ -5,7 +5,7 @@ use token_interface::{error::TokenError, state::account::Account};
 
 use super::validate_owner;
 
-/// Processes an [Revoke](enum.TokenInstruction.html) instruction.
+#[inline(never)]
 pub fn process_revoke(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let [source_account_info, owner_info, remaning @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);

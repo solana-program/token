@@ -1,6 +1,7 @@
 use pinocchio::{account_info::AccountInfo, msg, program_error::ProgramError, ProgramResult};
 use token_interface::{error::TokenError, state::account::Account};
 
+#[inline(never)]
 pub fn process_initialize_immutable_owner(accounts: &[AccountInfo]) -> ProgramResult {
     let token_account_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
 
