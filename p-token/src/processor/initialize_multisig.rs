@@ -6,6 +6,7 @@ use pinocchio::{
 };
 use token_interface::{error::TokenError, state::multisig::Multisig};
 
+#[inline(never)]
 pub fn process_initialize_multisig(
     accounts: &[AccountInfo],
     m: u8,

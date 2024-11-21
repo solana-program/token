@@ -6,6 +6,7 @@ use token_interface::state::{account::Account, mint::Mint};
 
 use super::check_account_owner;
 
+#[inline(never)]
 pub fn process_get_account_data_size(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

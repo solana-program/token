@@ -5,7 +5,7 @@ use token_interface::{error::TokenError, state::account::Account};
 
 use super::{is_owned_by_system_program_or_incinerator, validate_owner, INCINERATOR_ID};
 
-/// Processes a [CloseAccount](enum.TokenInstruction.html) instruction.
+#[inline(never)]
 pub fn process_close_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let [source_account_info, destination_account_info, authority_info, remaining @ ..] = accounts
     else {

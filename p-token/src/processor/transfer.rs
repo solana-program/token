@@ -2,6 +2,7 @@ use pinocchio::{account_info::AccountInfo, pubkey::Pubkey, ProgramResult};
 
 use super::shared;
 
+#[inline(never)]
 pub fn process_transfer(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
