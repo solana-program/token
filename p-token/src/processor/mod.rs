@@ -23,6 +23,7 @@ pub mod mint_to;
 pub mod mint_to_checked;
 pub mod revoke;
 pub mod set_authority;
+pub mod sync_native;
 pub mod thaw_account;
 pub mod transfer;
 pub mod transfer_checked;

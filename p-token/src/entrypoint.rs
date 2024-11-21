@@ -21,6 +21,7 @@ use crate::processor::{
     mint_to_checked::{process_mint_to_checked, MintToChecked},
     revoke::process_revoke,
     set_authority::{process_set_authority, SetAuthority},
+    sync_native::process_sync_native,
     thaw_account::process_thaw_account,
     transfer::process_transfer,
     transfer_checked::{process_transfer_checked, TransferChecked},
@@ -193,6 +194,13 @@ pub fn process_instruction(
             let owner = unsafe { &*(data.as_ptr() as *const Pubkey) };
 
             process_initialize_account2(program_id, accounts, owner)
+        }
+        // 17 - SyncNative
+        Some((&17, _)) => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: SyncNative");
+
+            process_sync_native(program_id, accounts)
         }
         // 18 - InitializeAccount3
         Some((&18, data)) => {
