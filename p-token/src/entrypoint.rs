@@ -112,7 +112,7 @@ pub fn process_instruction(
                 instruction.new_authority,
             )
         }
-        // 7 - InitializeMint
+        // 7 - MintTo
         Some((&7, data)) => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: MintTo");
