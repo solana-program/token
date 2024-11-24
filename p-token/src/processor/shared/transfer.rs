@@ -87,8 +87,9 @@ pub fn process_transfer(
         }
     }
 
-    // Comparing whether the `AccountInfo`s "point" to the same acount - this
-    // is a faster comparison since it just checks the internal raw pointer.
+    // Comparing whether the AccountInfo's "point" to the same account or
+    // not - this is a faster comparison since it just checks the internal
+    // raw pointer.
     let self_transfer = source_account_info == destination_account_info;
 
     // Validates the authority (delegate or owner).
