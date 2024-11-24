@@ -1,29 +1,25 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{error::TokenError, state::account::Account};
 
 use super::validate_owner;
 
-#[inline(never)]
-pub fn process_revoke(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+#[inline(always)]
+pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> ProgramResult {
     let [source_account_info, owner_info, remaning @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    let source_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
-        source_account_info.borrow_mut_data_unchecked()
-    })
-    .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let source_account =
+        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
 
     if source_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
     }
 
-    validate_owner(program_id, &source_account.owner, owner_info, remaning)?;
+    validate_owner(&source_account.owner, owner_info, remaning)?;
 
-    source_account.delegate.clear();
-    source_account.delegated_amount = 0.into();
+    source_account.clear_delegate();
+    source_account.set_delegated_amount(0);
 
     Ok(())
 }

@@ -1,6 +1,4 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{
     error::TokenError,
     state::{account::Account, mint::Mint},
@@ -12,7 +10,6 @@ use crate::processor::{
 
 #[inline(always)]
 pub fn process_burn(
-    program_id: &Pubkey,
     accounts: &[AccountInfo],
     amount: u64,
     expected_decimals: Option<u8>,
@@ -21,29 +18,24 @@ pub fn process_burn(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    // Safety: There are no conflicting borrows – the source account is only borrowed once.
-    let source_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
-        source_account_info.borrow_mut_data_unchecked()
-    })
-    .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let source_account =
+        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
 
     if source_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
     }
-    if source_account.is_native.is_some() {
+    if source_account.is_native() {
         return Err(TokenError::NativeNotSupported.into());
     }
 
     // Ensure the source account has the sufficient amount. This is done before
     // the value is updated on the account.
-    let updated_source_amount = u64::from(source_account.amount)
+    let updated_source_amount = source_account
+        .amount()
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
-    // Safety: There are no conflicting borrows – the mint account is only borrowed once.
-    let mint =
-        bytemuck::try_from_bytes_mut::<Mint>(unsafe { mint_info.borrow_mut_data_unchecked() })
-            .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let mint = unsafe { Mint::from_bytes_mut(mint_info.borrow_mut_data_unchecked()) };
 
     if mint_info.key() != &source_account.mint {
         return Err(TokenError::MintMismatch.into());
@@ -56,36 +48,40 @@ pub fn process_burn(
     }
 
     if !is_owned_by_system_program_or_incinerator(&source_account.owner) {
-        match source_account.delegate.as_ref() {
+        match source_account.delegate() {
             Some(delegate) if authority_info.key() == delegate => {
-                validate_owner(program_id, delegate, authority_info, remaining)?;
+                validate_owner(delegate, authority_info, remaining)?;
 
-                let delegated_amount = u64::from(source_account.delegated_amount)
+                let delegated_amount = source_account
+                    .delegated_amount()
                     .checked_sub(amount)
                     .ok_or(TokenError::InsufficientFunds)?;
-                source_account.delegated_amount = delegated_amount.into();
+                source_account.set_delegated_amount(delegated_amount);
 
                 if delegated_amount == 0 {
-                    source_account.delegate.clear();
+                    source_account.clear_delegate();
                 }
             }
             _ => {
-                validate_owner(program_id, &source_account.owner, authority_info, remaining)?;
+                validate_owner(&source_account.owner, authority_info, remaining)?;
             }
         }
     }
 
+    // Updates the source account and mint supply.
+
     if amount == 0 {
-        check_account_owner(program_id, source_account_info)?;
-        check_account_owner(program_id, mint_info)?;
+        check_account_owner(source_account_info)?;
+        check_account_owner(mint_info)?;
+    } else {
+        source_account.set_amount(updated_source_amount);
+
+        let mint_supply = mint
+            .supply()
+            .checked_sub(amount)
+            .ok_or(TokenError::Overflow)?;
+        mint.set_supply(mint_supply);
     }
-
-    source_account.amount = updated_source_amount.into();
-
-    let mint_supply = u64::from(mint.supply)
-        .checked_sub(amount)
-        .ok_or(TokenError::Overflow)?;
-    mint.supply = mint_supply.into();
 
     Ok(())
 }

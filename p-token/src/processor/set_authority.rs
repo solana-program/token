@@ -1,33 +1,33 @@
+use core::marker::PhantomData;
+
 use pinocchio::{
-    account_info::AccountInfo,
-    program_error::ProgramError,
-    pubkey::{Pubkey, PUBKEY_BYTES},
-    ProgramResult,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 use token_interface::{
     error::TokenError,
     instruction::AuthorityType,
-    state::{account::Account, mint::Mint, PodCOption},
+    state::{account::Account, mint::Mint},
 };
 
 use super::validate_owner;
 
-#[inline(never)]
-pub fn process_set_authority(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    authority_type: AuthorityType,
-    new_authority: Option<&Pubkey>,
-) -> ProgramResult {
+#[inline(always)]
+pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
+    // Validates the instruction data.
+
+    let args = SetAuthority::try_from_bytes(instruction_data)?;
+
+    let authority_type = args.authority_type()?;
+    let new_authority = args.new_authority();
+
+    // Validates the accounts.
+
     let [account_info, authority_info, remaning @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
     if account_info.data_len() == Account::LEN {
-        let account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
-            account_info.borrow_mut_data_unchecked()
-        })
-        .map_err(|_error| ProgramError::InvalidAccountData)?;
+        let account = unsafe { Account::from_bytes_mut(account_info.borrow_mut_data_unchecked()) };
 
         if account.is_frozen() {
             return Err(TokenError::AccountFrozen.into());
@@ -35,7 +35,7 @@ pub fn process_set_authority(
 
         match authority_type {
             AuthorityType::AccountOwner => {
-                validate_owner(program_id, &account.owner, authority_info, remaning)?;
+                validate_owner(&account.owner, authority_info, remaning)?;
 
                 if let Some(authority) = new_authority {
                     account.owner = *authority;
@@ -43,50 +43,58 @@ pub fn process_set_authority(
                     return Err(TokenError::InvalidInstruction.into());
                 }
 
-                account.delegate.clear();
-                account.delegated_amount = 0.into();
+                account.clear_delegate();
+                account.set_delegated_amount(0);
 
-                if account.is_native.is_some() {
-                    account.close_authority.clear();
+                if account.is_native() {
+                    account.clear_close_authority();
                 }
             }
             AuthorityType::CloseAccount => {
-                let authority = account.close_authority.as_ref().unwrap_or(&account.owner);
-                validate_owner(program_id, authority, authority_info, remaning)?;
-                account.close_authority = PodCOption::from(new_authority.copied());
+                let authority = account.close_authority().unwrap_or(&account.owner);
+                validate_owner(authority, authority_info, remaning)?;
+
+                if let Some(authority) = new_authority {
+                    account.set_close_authority(authority);
+                } else {
+                    account.clear_close_authority();
+                }
             }
             _ => {
                 return Err(TokenError::AuthorityTypeNotSupported.into());
             }
         }
     } else if account_info.data_len() == Mint::LEN {
-        let mint = bytemuck::try_from_bytes_mut::<Mint>(unsafe {
-            account_info.borrow_mut_data_unchecked()
-        })
-        .map_err(|_error| ProgramError::InvalidAccountData)?;
+        let mint = unsafe { Mint::from_bytes_mut(account_info.borrow_mut_data_unchecked()) };
 
         match authority_type {
             AuthorityType::MintTokens => {
                 // Once a mint's supply is fixed, it cannot be undone by setting a new
-                // mint_authority
-                let mint_authority = mint
-                    .mint_authority
-                    .as_ref()
-                    .ok_or(TokenError::FixedSupply)?;
+                // mint_authority.
+                let mint_authority = mint.mint_authority().ok_or(TokenError::FixedSupply)?;
 
-                validate_owner(program_id, mint_authority, authority_info, remaning)?;
-                mint.mint_authority = PodCOption::from(new_authority.copied());
+                validate_owner(mint_authority, authority_info, remaning)?;
+
+                if let Some(authority) = new_authority {
+                    mint.set_mint_authority(authority);
+                } else {
+                    mint.clear_mint_authority();
+                }
             }
             AuthorityType::FreezeAccount => {
                 // Once a mint's freeze authority is disabled, it cannot be re-enabled by
-                // setting a new freeze_authority
+                // setting a new freeze_authority.
                 let freeze_authority = mint
-                    .freeze_authority
-                    .as_ref()
+                    .freeze_authority()
                     .ok_or(TokenError::MintCannotFreeze)?;
 
-                validate_owner(program_id, freeze_authority, authority_info, remaning)?;
-                mint.freeze_authority = PodCOption::from(new_authority.copied());
+                validate_owner(freeze_authority, authority_info, remaning)?;
+
+                if let Some(authority) = new_authority {
+                    mint.set_freeze_authority(authority);
+                } else {
+                    mint.clear_freeze_authority();
+                }
             }
             _ => {
                 return Err(TokenError::AuthorityTypeNotSupported.into());
@@ -99,35 +107,41 @@ pub fn process_set_authority(
     Ok(())
 }
 
-/// Instruction data for the `InitializeMint` instruction.
-pub struct SetAuthority<'a> {
-    pub authority_type: AuthorityType,
+struct SetAuthority<'a> {
+    raw: *const u8,
 
-    /// New authority.
-    pub new_authority: Option<&'a Pubkey>,
+    _data: PhantomData<&'a [u8]>,
 }
 
-impl<'a> SetAuthority<'a> {
-    pub fn try_from_bytes(data: &'a [u8]) -> Result<Self, ProgramError> {
-        // We expect the data to be at least the size of the u8 (authority_type)
-        // plus one byte for the authority option.
-        if data.len() <= 2 {
+impl SetAuthority<'_> {
+    #[inline(always)]
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<SetAuthority, ProgramError> {
+        // The minimum expected size of the instruction data.
+        // - authority_type (1 byte)
+        // - option + new_authority (1 byte + 32 bytes)
+        if bytes.len() < 2 {
             return Err(ProgramError::InvalidInstructionData);
         }
 
-        let (authority_type, remaining) = data.split_at(1);
-
-        let new_authority = match remaining.split_first() {
-            Some((&0, _)) => None,
-            Some((&1, pubkey)) if pubkey.len() == PUBKEY_BYTES => {
-                Some(bytemuck::from_bytes::<Pubkey>(pubkey))
-            }
-            _ => return Err(ProgramError::InvalidInstructionData),
-        };
-
-        Ok(Self {
-            authority_type: AuthorityType::from(authority_type[0]),
-            new_authority,
+        Ok(SetAuthority {
+            raw: bytes.as_ptr(),
+            _data: PhantomData,
         })
+    }
+
+    #[inline(always)]
+    pub fn authority_type(&self) -> Result<AuthorityType, ProgramError> {
+        unsafe { AuthorityType::from(*self.raw) }
+    }
+
+    #[inline(always)]
+    pub fn new_authority(&self) -> Option<&Pubkey> {
+        unsafe {
+            if *self.raw.add(1) == 0 {
+                Option::None
+            } else {
+                Option::Some(&*(self.raw.add(2) as *const Pubkey))
+            }
+        }
     }
 }

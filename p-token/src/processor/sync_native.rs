@@ -1,31 +1,27 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{error::TokenError, state::account::Account};
 
 use super::check_account_owner;
 
-#[inline(never)]
-pub fn process_sync_native(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+#[inline(always)]
+pub fn process_sync_native(accounts: &[AccountInfo]) -> ProgramResult {
     let native_account_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
 
-    check_account_owner(program_id, native_account_info)?;
+    check_account_owner(native_account_info)?;
 
-    let native_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
-        native_account_info.borrow_mut_data_unchecked()
-    })
-    .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let native_account =
+        unsafe { Account::from_bytes_mut(native_account_info.borrow_mut_data_unchecked()) };
 
-    if let Option::Some(rent_exempt_reserve) = native_account.is_native.get() {
+    if let Option::Some(rent_exempt_reserve) = native_account.native_amount() {
         let new_amount = native_account_info
             .lamports()
-            .checked_sub(u64::from(rent_exempt_reserve))
+            .checked_sub(rent_exempt_reserve)
             .ok_or(TokenError::Overflow)?;
 
-        if new_amount < native_account.amount.into() {
+        if new_amount < native_account.amount() {
             return Err(TokenError::InvalidState.into());
         }
-        native_account.amount = new_amount.into();
+        native_account.set_amount(new_amount);
     } else {
         return Err(TokenError::NonNativeNotSupported.into());
     }

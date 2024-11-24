@@ -1,4 +1,4 @@
-//! A lighter Token program for SVM.
+//! An ERC20-like Token program for the Solana blockchain.
 
 mod entrypoint;
 mod processor;

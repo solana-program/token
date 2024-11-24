@@ -2,11 +2,11 @@ use pinocchio::{account_info::AccountInfo, pubkey::Pubkey, ProgramResult};
 
 use super::shared;
 
-#[inline(never)]
+#[inline(always)]
 pub fn process_initialize_account2(
-    program_id: &Pubkey,
     accounts: &[AccountInfo],
-    owner: &Pubkey,
+    instruction_data: &[u8],
 ) -> ProgramResult {
-    shared::initialize_account::process_initialize_account(program_id, accounts, Some(owner), true)
+    let owner = unsafe { &*(instruction_data.as_ptr() as *const Pubkey) };
+    shared::initialize_account::process_initialize_account(accounts, Some(owner), true)
 }
