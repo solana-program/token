@@ -18,7 +18,6 @@ logging = []
 test-sbf = []
 
 [dependencies]
-bytemuck = { workspace = true }
 pinocchio = { workspace = true }
 pinocchio-pubkey = { workspace = true }
 token-interface = { version = "^0", path = "../interface" }

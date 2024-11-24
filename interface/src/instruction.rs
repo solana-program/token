@@ -1,8 +1,8 @@
-//! Instruction types
+//! Instruction types.
 
-use pinocchio::pubkey::Pubkey;
+use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
 
-use crate::state::PodCOption;
+use crate::error::TokenError;
 
 /// Instructions supported by the token program.
 #[repr(C)]
@@ -27,7 +27,7 @@ pub enum TokenInstruction<'a> {
         /// The authority/multisignature to mint tokens.
         mint_authority: Pubkey,
         /// The freeze authority/multisignature of the mint.
-        freeze_authority: PodCOption<Pubkey>,
+        freeze_authority: Option<Pubkey>,
     },
 
     /// Initializes a new account to hold tokens.  If this account is associated
@@ -147,7 +147,7 @@ pub enum TokenInstruction<'a> {
         /// The type of authority to update.
         authority_type: AuthorityType,
         /// The new authority
-        new_authority: PodCOption<Pubkey>,
+        new_authority: Option<Pubkey>,
     },
 
     /// Mints new tokens to an account.  The native mint does not support
@@ -416,7 +416,7 @@ pub enum TokenInstruction<'a> {
         /// The authority/multisignature to mint tokens.
         mint_authority: Pubkey,
         /// The freeze authority/multisignature of the mint.
-        freeze_authority: PodCOption<Pubkey>,
+        freeze_authority: Option<Pubkey>,
     },
 
     /// Gets the required size of an account for the given mint as a
@@ -482,7 +482,7 @@ pub enum TokenInstruction<'a> {
     // token/js/src/instructions/types.ts to maintain @solana/spl-token compatibility
 }
 
-/// Specifies the authority type for SetAuthority instructions
+/// Specifies the authority type for `SetAuthority` instructions
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum AuthorityType {
@@ -506,13 +506,13 @@ impl AuthorityType {
         }
     }
 
-    pub fn from(index: u8) -> Self {
+    pub fn from(index: u8) -> Result<Self, ProgramError> {
         match index {
-            0 => AuthorityType::MintTokens,
-            1 => AuthorityType::FreezeAccount,
-            2 => AuthorityType::AccountOwner,
-            3 => AuthorityType::CloseAccount,
-            _ => panic!("invalid authority type: {index}"),
+            0 => Ok(AuthorityType::MintTokens),
+            1 => Ok(AuthorityType::FreezeAccount),
+            2 => Ok(AuthorityType::AccountOwner),
+            3 => Ok(AuthorityType::CloseAccount),
+            _ => Err(TokenError::InvalidInstruction.into()),
         }
     }
 }

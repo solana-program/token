@@ -8,6 +8,5 @@ repository = { workspace = true }
 publish = false
 
 [dependencies]
-bytemuck = { workspace = true }
 pinocchio = { workspace = true }
 pinocchio-pubkey = { workspace = true }

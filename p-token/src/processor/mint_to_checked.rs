@@ -1,47 +1,20 @@
-use std::marker::PhantomData;
-
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 
 use super::shared;
 
-#[inline(never)]
-pub fn process_mint_to_checked(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    amount: u64,
-    decimals: u8,
-) -> ProgramResult {
-    shared::mint_to::process_mint_to(program_id, accounts, amount, Some(decimals))
-}
+#[inline(always)]
+pub fn process_mint_to_checked(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
+    let (amount, decimals) = instruction_data.split_at(core::mem::size_of::<u64>());
 
-pub struct MintToChecked<'a> {
-    raw: *const u8,
+    let amount = u64::from_le_bytes(
+        amount
+            .try_into()
+            .map_err(|_error| ProgramError::InvalidInstructionData)?,
+    );
 
-    _data: PhantomData<&'a [u8]>,
-}
-
-impl MintToChecked<'_> {
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<MintToChecked, ProgramError> {
-        if bytes.len() != 9 {
-            return Err(ProgramError::InvalidInstructionData);
-        }
-
-        Ok(MintToChecked {
-            raw: bytes.as_ptr(),
-            _data: PhantomData,
-        })
-    }
-
-    pub fn amount(&self) -> u64 {
-        unsafe {
-            let amount = self.raw as *const u64;
-            amount.read_unaligned()
-        }
-    }
-
-    pub fn decimals(&self) -> u8 {
-        unsafe { *self.raw.add(8) }
-    }
+    shared::mint_to::process_mint_to(
+        accounts,
+        amount,
+        Some(*decimals.first().ok_or(ProgramError::InvalidAccountData)?),
+    )
 }

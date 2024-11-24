@@ -1,22 +1,18 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{
     error::TokenError,
-    native_mint::is_native_mint,
-    state::{account::Account, mint::Mint, PodCOption},
+    state::{account::Account, mint::Mint},
 };
 
 use crate::processor::{check_account_owner, validate_owner};
 
 #[inline(always)]
 pub fn process_transfer(
-    program_id: &Pubkey,
     accounts: &[AccountInfo],
     amount: u64,
     expected_decimals: Option<u8>,
 ) -> ProgramResult {
-    // Accounts expected depends on whether we have the mint `decimals` or not; when we have the
+    // Accounts expected depend on whether we have the mint `decimals` or not; when we have the
     // mint `decimals`, we expect the mint account to be present.
 
     let (
@@ -55,24 +51,21 @@ pub fn process_transfer(
 
     // Validates source and destination accounts.
 
-    let source_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
-        source_account_info.borrow_mut_data_unchecked()
-    })
-    .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let source_account =
+        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
 
-    let destination_account = bytemuck::try_from_bytes_mut::<Account>(unsafe {
-        destination_account_info.borrow_mut_data_unchecked()
-    })
-    .map_err(|_error| ProgramError::InvalidAccountData)?;
+    let destination_account =
+        unsafe { Account::from_bytes_mut(destination_account_info.borrow_mut_data_unchecked()) };
 
     if source_account.is_frozen() || destination_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
     }
 
-    // FEBO: Implicitly validates that the account has enough tokens by calculating the
-    // remaining amount. The amount is only updated on the account if the transfer
+    // Implicitly validates that the account has enough tokens by calculating the
+    // remaining amount - the amount is only updated on the account if the transfer
     // is successful.
-    let remaining_amount = u64::from(source_account.amount)
+    let remaining_amount = source_account
+        .amount()
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
@@ -87,72 +80,65 @@ pub fn process_transfer(
             return Err(TokenError::MintMismatch.into());
         }
 
-        let mint =
-            bytemuck::try_from_bytes_mut::<Mint>(unsafe { mint_info.borrow_mut_data_unchecked() })
-                .map_err(|_error| ProgramError::InvalidAccountData)?;
+        let mint = unsafe { Mint::from_bytes(mint_info.borrow_data_unchecked()) };
 
         if decimals != mint.decimals {
             return Err(TokenError::MintDecimalsMismatch.into());
         }
     }
 
-    let self_transfer = source_account_info.key() == destination_account_info.key();
+    // Comparing whether the `AccountInfo`s "point" to the same acount - this
+    // is a faster comparison since it just checks the internal raw pointer.
+    let self_transfer = source_account_info == destination_account_info;
 
     // Validates the authority (delegate or owner).
 
-    if source_account.delegate.as_ref() == Some(authority_info.key()) {
-        validate_owner(program_id, authority_info.key(), authority_info, remaning)?;
+    if source_account.delegate() == Some(authority_info.key()) {
+        validate_owner(authority_info.key(), authority_info, remaning)?;
 
-        let delegated_amount = u64::from(source_account.delegated_amount)
+        let delegated_amount = source_account
+            .delegated_amount()
             .checked_sub(amount)
             .ok_or(TokenError::InsufficientFunds)?;
 
         if !self_transfer {
-            source_account.delegated_amount = delegated_amount.into();
+            source_account.set_delegated_amount(delegated_amount);
 
             if delegated_amount == 0 {
-                source_account.delegate = PodCOption::from(None);
+                source_account.clear_delegate();
             }
         }
     } else {
-        validate_owner(program_id, &source_account.owner, authority_info, remaning)?;
+        validate_owner(&source_account.owner, authority_info, remaning)?;
     }
 
     if self_transfer || amount == 0 {
-        check_account_owner(program_id, source_account_info)?;
-        check_account_owner(program_id, destination_account_info)?;
+        // Validates the token accounts owner since we are not writing
+        // to these account.
+        check_account_owner(source_account_info)?;
+        check_account_owner(destination_account_info)?;
 
-        // No need to move tokens around.
         return Ok(());
     }
-
-    // FEBO: This was moved to the if statement above since we can skip the amount
-    // manipulation if it is a self-transfer or the amount is zero.
-    //
-    // This check MUST occur just before the amounts are manipulated
-    // to ensure self-transfers are fully validated
-    /*
-    if self_transfer {
-        return Ok(());
-    }
-    */
 
     // Moves the tokens.
 
-    source_account.amount = remaining_amount.into();
+    source_account.set_amount(remaining_amount);
 
-    let destination_amount = u64::from(destination_account.amount)
+    let destination_amount = destination_account
+        .amount()
         .checked_add(amount)
         .ok_or(TokenError::Overflow)?;
-    destination_account.amount = destination_amount.into();
+    destination_account.set_amount(destination_amount);
 
-    if is_native_mint(&source_account.mint) {
-        let mut source_lamports = source_account_info.try_borrow_mut_lamports()?;
+    if source_account.is_native() {
+        let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
         *source_lamports = source_lamports
             .checked_sub(amount)
             .ok_or(TokenError::Overflow)?;
 
-        let mut destination_lamports = destination_account_info.try_borrow_mut_lamports()?;
+        let destination_lamports =
+            unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
         *destination_lamports = destination_lamports
             .checked_add(amount)
             .ok_or(TokenError::Overflow)?;

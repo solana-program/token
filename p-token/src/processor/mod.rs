@@ -34,6 +34,32 @@ pub mod ui_amount_to_amount;
 // Shared processors.
 pub mod shared;
 
+pub use amount_to_ui_amount::process_amount_to_ui_amount;
+pub use approve::process_approve;
+pub use approve_checked::process_approve_checked;
+pub use burn::process_burn;
+pub use burn_checked::process_burn_checked;
+pub use close_account::process_close_account;
+pub use freeze_account::process_freeze_account;
+pub use get_account_data_size::process_get_account_data_size;
+pub use initialize_account::process_initialize_account;
+pub use initialize_account2::process_initialize_account2;
+pub use initialize_account3::process_initialize_account3;
+pub use initialize_immutable_owner::process_initialize_immutable_owner;
+pub use initialize_mint::process_initialize_mint;
+pub use initialize_mint2::process_initialize_mint2;
+pub use initialize_multisig::process_initialize_multisig;
+pub use initialize_multisig2::process_initialize_multisig2;
+pub use mint_to::process_mint_to;
+pub use mint_to_checked::process_mint_to_checked;
+pub use revoke::process_revoke;
+pub use set_authority::process_set_authority;
+pub use sync_native::process_sync_native;
+pub use thaw_account::process_thaw_account;
+pub use transfer::process_transfer;
+pub use transfer_checked::process_transfer_checked;
+pub use ui_amount_to_amount::process_ui_amount_to_amount;
+
 /// Incinerator address.
 const INCINERATOR_ID: Pubkey =
     pinocchio_pubkey::pubkey!("1nc1nerator11111111111111111111111111111111");
@@ -42,14 +68,14 @@ const INCINERATOR_ID: Pubkey =
 const SYSTEM_PROGRAM_ID: Pubkey = pinocchio_pubkey::pubkey!("11111111111111111111111111111111");
 
 #[inline(always)]
-pub fn is_owned_by_system_program_or_incinerator(owner: &Pubkey) -> bool {
-    SYSTEM_PROGRAM_ID == *owner || INCINERATOR_ID == *owner
+fn is_owned_by_system_program_or_incinerator(owner: &Pubkey) -> bool {
+    &SYSTEM_PROGRAM_ID == owner || &INCINERATOR_ID == owner
 }
 
 /// Checks that the account is owned by the expected program.
 #[inline(always)]
-pub fn check_account_owner(program_id: &Pubkey, account_info: &AccountInfo) -> ProgramResult {
-    if program_id != account_info.owner() {
+fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
+    if &crate::ID != account_info.owner() {
         Err(ProgramError::IncorrectProgramId)
     } else {
         Ok(())
@@ -58,8 +84,7 @@ pub fn check_account_owner(program_id: &Pubkey, account_info: &AccountInfo) -> P
 
 /// Validates owner(s) are present
 #[inline(always)]
-pub fn validate_owner(
-    program_id: &Pubkey,
+fn validate_owner(
     expected_owner: &Pubkey,
     owner_account_info: &AccountInfo,
     signers: &[AccountInfo],
@@ -68,9 +93,8 @@ pub fn validate_owner(
         return Err(TokenError::OwnerMismatch.into());
     }
 
-    if owner_account_info.data_len() == Multisig::LEN && program_id != owner_account_info.owner() {
-        let multisig_data = owner_account_info.try_borrow_data()?;
-        let multisig = bytemuck::from_bytes::<Multisig>(&multisig_data);
+    if owner_account_info.data_len() == Multisig::LEN && &crate::ID != owner_account_info.owner() {
+        let multisig = unsafe { Multisig::from_bytes(owner_account_info.borrow_data_unchecked()) };
 
         let mut num_signers = 0;
         let mut matched = [false; MAX_SIGNERS];
@@ -99,7 +123,7 @@ pub fn validate_owner(
 /// Convert a raw amount to its UI representation using the given decimals field
 /// Excess zeroes or unneeded decimal point are trimmed.
 #[inline(always)]
-pub fn amount_to_ui_amount_string_trimmed(amount: u64, decimals: u8) -> String {
+fn amount_to_ui_amount_string_trimmed(amount: u64, decimals: u8) -> String {
     let mut s = amount_to_ui_amount_string(amount, decimals);
     if decimals > 0 {
         let zeros_trimmed = s.trim_end_matches('0');
@@ -111,7 +135,7 @@ pub fn amount_to_ui_amount_string_trimmed(amount: u64, decimals: u8) -> String {
 /// Convert a raw amount to its UI representation (using the decimals field
 /// defined in its mint)
 #[inline(always)]
-pub fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
+fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
     let decimals = decimals as usize;
     if decimals > 0 {
         // Left-pad zeros to decimals + 1, so we at least have an integer zero
@@ -126,7 +150,7 @@ pub fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
 
 /// Try to convert a UI representation of a token amount to its raw amount using
 /// the given decimals field
-pub fn try_ui_amount_into_amount(ui_amount: String, decimals: u8) -> Result<u64, ProgramError> {
+fn try_ui_amount_into_amount(ui_amount: String, decimals: u8) -> Result<u64, ProgramError> {
     let decimals = decimals as usize;
     let mut parts = ui_amount.split('.');
     // splitting a string, even an empty one, will always yield an iterator of at
