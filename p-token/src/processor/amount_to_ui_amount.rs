@@ -1,9 +1,11 @@
+use core::str::from_utf8_unchecked;
 use pinocchio::{
     account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
 };
+use pinocchio_log::logger::{Argument, Logger};
 use token_interface::state::mint::Mint;
 
-use super::{amount_to_ui_amount_string_trimmed, check_account_owner};
+use super::{check_account_owner, MAX_DIGITS_U64};
 
 #[inline(always)]
 pub fn process_amount_to_ui_amount(
@@ -21,8 +23,17 @@ pub fn process_amount_to_ui_amount(
 
     let mint = unsafe { Mint::from_bytes(mint_info.borrow_data_unchecked()) };
 
-    let ui_amount = amount_to_ui_amount_string_trimmed(amount, mint.decimals);
-    set_return_data(&ui_amount.into_bytes());
+    let mut logger = Logger::<MAX_DIGITS_U64>::default();
+    logger.append_with_args(amount, &[Argument::Precision(mint.decimals)]);
+
+    let mut s = unsafe { from_utf8_unchecked(&logger) };
+
+    if mint.decimals > 0 {
+        let zeros_trimmed = s.trim_end_matches('0');
+        s = zeros_trimmed.trim_end_matches('.');
+    }
+
+    set_return_data(s.as_bytes());
 
     Ok(())
 }
