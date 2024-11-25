@@ -1,5 +1,7 @@
+use core::{mem::MaybeUninit, slice::from_raw_parts, str::from_utf8_unchecked};
 use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, syscalls::sol_memcpy_,
+    ProgramResult,
 };
 use token_interface::{
     error::TokenError,
@@ -67,6 +69,12 @@ const INCINERATOR_ID: Pubkey =
 /// System program id.
 const SYSTEM_PROGRAM_ID: Pubkey = pinocchio_pubkey::pubkey!("11111111111111111111111111111111");
 
+/// An uninitialized byte.
+const UNINIT_BYTE: MaybeUninit<u8> = MaybeUninit::uninit();
+
+/// Maximum number of digits in a `u64``.
+const MAX_DIGITS_U64: usize = 20;
+
 #[inline(always)]
 fn is_owned_by_system_program_or_incinerator(owner: &Pubkey) -> bool {
     &SYSTEM_PROGRAM_ID == owner || &INCINERATOR_ID == owner
@@ -120,44 +128,31 @@ fn validate_owner(
     Ok(())
 }
 
-/// Convert a raw amount to its UI representation using the given decimals field
-/// Excess zeroes or unneeded decimal point are trimmed.
-#[inline(always)]
-fn amount_to_ui_amount_string_trimmed(amount: u64, decimals: u8) -> String {
-    let mut s = amount_to_ui_amount_string(amount, decimals);
-    if decimals > 0 {
-        let zeros_trimmed = s.trim_end_matches('0');
-        s = zeros_trimmed.trim_end_matches('.').to_string();
-    }
-    s
-}
-
-/// Convert a raw amount to its UI representation (using the decimals field
-/// defined in its mint)
-#[inline(always)]
-fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
-    let decimals = decimals as usize;
-    if decimals > 0 {
-        // Left-pad zeros to decimals + 1, so we at least have an integer zero
-        let mut s = format!("{:01$}", amount, decimals + 1);
-        // Add the decimal point (Sorry, "," locales!)
-        s.insert(s.len() - decimals, '.');
-        s
-    } else {
-        amount.to_string()
-    }
-}
-
 /// Try to convert a UI representation of a token amount to its raw amount using
 /// the given decimals field
-fn try_ui_amount_into_amount(ui_amount: String, decimals: u8) -> Result<u64, ProgramError> {
+fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, ProgramError> {
     let decimals = decimals as usize;
     let mut parts = ui_amount.split('.');
+
     // splitting a string, even an empty one, will always yield an iterator of at
     // least length == 1
-    let mut amount_str = parts.next().unwrap().to_string();
+    let amount_str = parts.next().unwrap();
+    let mut length = amount_str.len();
+
+    let mut digits = [UNINIT_BYTE; MAX_DIGITS_U64];
+    let mut ptr = digits.as_mut_ptr();
+
+    unsafe {
+        sol_memcpy_(
+            ptr as *mut _,
+            amount_str.as_ptr() as *const _,
+            length as u64,
+        );
+    }
+
     let after_decimal = parts.next().unwrap_or("");
     let after_decimal = after_decimal.trim_end_matches('0');
+
     if (amount_str.is_empty() && after_decimal.is_empty())
         || parts.next().is_some()
         || after_decimal.len() > decimals
@@ -165,11 +160,30 @@ fn try_ui_amount_into_amount(ui_amount: String, decimals: u8) -> Result<u64, Pro
         return Err(ProgramError::InvalidArgument);
     }
 
-    amount_str.push_str(after_decimal);
-    for _ in 0..decimals.saturating_sub(after_decimal.len()) {
-        amount_str.push('0');
+    unsafe {
+        sol_memcpy_(
+            ptr.add(length) as *mut _,
+            after_decimal.as_ptr() as *const _,
+            after_decimal.len() as u64,
+        );
+
+        length += after_decimal.len();
+        ptr = ptr.add(length);
     }
-    amount_str
-        .parse::<u64>()
-        .map_err(|_| ProgramError::InvalidArgument)
+
+    let remaining = decimals.saturating_sub(after_decimal.len());
+
+    for offset in 0..remaining {
+        unsafe {
+            (ptr.add(offset) as *mut u8).write(b'0');
+        }
+    }
+
+    length += remaining;
+
+    unsafe {
+        from_utf8_unchecked(from_raw_parts(digits.as_ptr() as _, length))
+            .parse::<u64>()
+            .map_err(|_| ProgramError::InvalidArgument)
+    }
 }
