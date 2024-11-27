@@ -16,7 +16,7 @@ pub fn process_ui_amount_to_amount(
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;
-
+    // SAFETY: there is a single borrow to the `Mint` account.
     let mint = unsafe { Mint::from_bytes(mint_info.borrow_data_unchecked()) };
 
     let amount = try_ui_amount_into_amount(ui_amount, mint.decimals)?;
