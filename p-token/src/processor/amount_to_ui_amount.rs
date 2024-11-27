@@ -7,6 +7,12 @@ use token_interface::state::mint::Mint;
 
 use super::{check_account_owner, MAX_DIGITS_U64};
 
+/// Maximum length of the UI amount string.
+///
+/// The length includes the maximum number of digits in a `u64`` (20)
+/// and the maximum number of punctuation characters (2).
+const MAX_UI_AMOUNT_LENGTH: usize = MAX_DIGITS_U64 + 2;
+
 #[inline(always)]
 pub fn process_amount_to_ui_amount(
     accounts: &[AccountInfo],
@@ -20,12 +26,14 @@ pub fn process_amount_to_ui_amount(
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;
-
+    // SAFETY: there is a single borrow to the `Mint` account.
     let mint = unsafe { Mint::from_bytes(mint_info.borrow_data_unchecked()) };
 
-    let mut logger = Logger::<MAX_DIGITS_U64>::default();
+    let mut logger = Logger::<MAX_UI_AMOUNT_LENGTH>::default();
     logger.append_with_args(amount, &[Argument::Precision(mint.decimals)]);
-
+    // "Extract" the formatted string from the logger.
+    //
+    // SAFETY: the logger is guaranteed to be a valid UTF-8 string.
     let mut s = unsafe { from_utf8_unchecked(&logger) };
 
     if mint.decimals > 0 {
