@@ -24,7 +24,7 @@ pub async fn initialize(
         &account.pubkey(),
         &mint_authority,
         freeze_authority.as_ref(),
-        0,
+        4,
     )
     .unwrap();
     // Switches the program id in case we are using a "custom" one.
