@@ -1,0 +1,50 @@
+#![cfg(feature = "test-sbf")]
+
+mod setup;
+
+use setup::mint;
+use solana_program_test::{tokio, ProgramTest};
+use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
+
+#[test_case::test_case(spl_token::ID ; "spl-token")]
+#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
+#[tokio::test]
+async fn amount_to_ui_amount(token_program: Pubkey) {
+    let program_id = Pubkey::new_from_array(token_program::ID);
+    let mut context = ProgramTest::new("token_program", program_id, None)
+        .start_with_context()
+        .await;
+
+    // Given a mint account.
+
+    let mint_authority = Pubkey::new_unique();
+    let freeze_authority = Pubkey::new_unique();
+
+    let mint = mint::initialize(
+        &mut context,
+        mint_authority,
+        Some(freeze_authority),
+        &token_program,
+    )
+    .await
+    .unwrap();
+
+    let mut amount_to_ui_amount_ix =
+        spl_token::instruction::amount_to_ui_amount(&spl_token::ID, &mint, 1000).unwrap();
+    // Switches the program id to the token program.
+    amount_to_ui_amount_ix.program_id = token_program;
+
+    let tx = Transaction::new_signed_with_payer(
+        &[amount_to_ui_amount_ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    // Then the transaction should succeed.
+
+    let account = context.banks_client.get_account(mint).await.unwrap();
+
+    assert!(account.is_some());
+}
