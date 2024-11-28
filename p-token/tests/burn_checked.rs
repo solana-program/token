@@ -60,7 +60,7 @@ async fn burn_checked(token_program: Pubkey) {
         &owner.pubkey(),
         &[],
         50,
-        0,
+        4,
     )
     .unwrap();
     burn_ix.program_id = token_program;

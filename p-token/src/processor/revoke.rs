@@ -1,5 +1,8 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use token_interface::{error::TokenError, state::account::Account};
+use token_interface::{
+    error::TokenError,
+    state::{account::Account, load_mut},
+};
 
 use super::validate_owner;
 
@@ -10,7 +13,7 @@ pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> Pro
     };
 
     let source_account =
-        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
     if source_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());

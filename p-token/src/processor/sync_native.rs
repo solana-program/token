@@ -1,5 +1,8 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use token_interface::{error::TokenError, state::account::Account};
+use token_interface::{
+    error::TokenError,
+    state::{account::Account, load_mut},
+};
 
 use super::check_account_owner;
 
@@ -10,7 +13,7 @@ pub fn process_sync_native(accounts: &[AccountInfo]) -> ProgramResult {
     check_account_owner(native_account_info)?;
 
     let native_account =
-        unsafe { Account::from_bytes_mut(native_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(native_account_info.borrow_mut_data_unchecked())? };
 
     if let Option::Some(rent_exempt_reserve) = native_account.native_amount() {
         let new_amount = native_account_info

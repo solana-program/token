@@ -6,7 +6,7 @@ use pinocchio::{
 use token_interface::{
     error::TokenError,
     instruction::AuthorityType,
-    state::{account::Account, mint::Mint},
+    state::{account::Account, load_mut, mint::Mint, RawType},
 };
 
 use super::validate_owner;
@@ -27,7 +27,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
     };
 
     if account_info.data_len() == Account::LEN {
-        let account = unsafe { Account::from_bytes_mut(account_info.borrow_mut_data_unchecked()) };
+        let account = unsafe { load_mut::<Account>(account_info.borrow_mut_data_unchecked())? };
 
         if account.is_frozen() {
             return Err(TokenError::AccountFrozen.into());
@@ -65,7 +65,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             }
         }
     } else if account_info.data_len() == Mint::LEN {
-        let mint = unsafe { Mint::from_bytes_mut(account_info.borrow_mut_data_unchecked()) };
+        let mint = unsafe { load_mut::<Mint>(account_info.borrow_mut_data_unchecked())? };
 
         match authority_type {
             AuthorityType::MintTokens => {

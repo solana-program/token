@@ -1,7 +1,7 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{
     error::TokenError,
-    state::{account::Account, mint::Mint},
+    state::{account::Account, load_mut, mint::Mint},
 };
 
 use crate::processor::{check_account_owner, validate_owner};
@@ -19,7 +19,7 @@ pub fn process_mint_to(
     // Validates the destination account.
 
     let destination_account =
-        unsafe { Account::from_bytes_mut(destination_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(destination_account_info.borrow_mut_data_unchecked())? };
 
     if destination_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
@@ -33,7 +33,7 @@ pub fn process_mint_to(
         return Err(TokenError::MintMismatch.into());
     }
 
-    let mint = unsafe { Mint::from_bytes_mut(mint_info.borrow_mut_data_unchecked()) };
+    let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if let Some(expected_decimals) = expected_decimals {
         if expected_decimals != mint.decimals {
@@ -49,19 +49,19 @@ pub fn process_mint_to(
     if amount == 0 {
         check_account_owner(mint_info)?;
         check_account_owner(destination_account_info)?;
+    } else {
+        let destination_amount = destination_account
+            .amount()
+            .checked_add(amount)
+            .ok_or(ProgramError::InvalidAccountData)?;
+        destination_account.set_amount(destination_amount);
+
+        let mint_supply = mint
+            .supply()
+            .checked_add(amount)
+            .ok_or(ProgramError::InvalidAccountData)?;
+        mint.set_supply(mint_supply);
     }
-
-    let destination_amount = destination_account
-        .amount()
-        .checked_add(amount)
-        .ok_or(ProgramError::InvalidAccountData)?;
-    destination_account.set_amount(destination_amount);
-
-    let mint_supply = mint
-        .supply()
-        .checked_add(amount)
-        .ok_or(ProgramError::InvalidAccountData)?;
-    mint.set_supply(mint_supply);
 
     Ok(())
 }

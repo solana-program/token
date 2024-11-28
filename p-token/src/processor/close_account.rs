@@ -1,7 +1,16 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use token_interface::{error::TokenError, state::account::Account};
+use pinocchio::{
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+};
+use token_interface::{
+    error::TokenError,
+    state::{account::Account, load_mut},
+};
 
-use super::{is_owned_by_system_program_or_incinerator, validate_owner, INCINERATOR_ID};
+use super::validate_owner;
+
+/// Incinerator address.
+const INCINERATOR_ID: Pubkey =
+    pinocchio_pubkey::pubkey!("1nc1nerator11111111111111111111111111111111");
 
 #[inline(always)]
 pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
@@ -10,12 +19,15 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    if source_account_info.key() == destination_account_info.key() {
+    // Comparing whether the AccountInfo's "point" to the same account or
+    // not - this is a faster comparison since it just checks the internal
+    // raw pointer.
+    if source_account_info == destination_account_info {
         return Err(ProgramError::InvalidAccountData);
     }
 
     let source_account =
-        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
     if !source_account.is_native() && source_account.amount() != 0 {
         return Err(TokenError::NonNativeHasBalance.into());
@@ -25,7 +37,7 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
         .close_authority()
         .unwrap_or(&source_account.owner);
 
-    if !is_owned_by_system_program_or_incinerator(source_account_info.owner()) {
+    if !source_account.is_owned_by_system_program_or_incinerator() {
         validate_owner(authority, authority_info, remaining)?;
     } else if destination_account_info.key() != &INCINERATOR_ID {
         return Err(ProgramError::InvalidAccountData);

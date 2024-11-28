@@ -49,7 +49,7 @@ async fn mint_to_checked(token_program: Pubkey) {
         &mint_authority.pubkey(),
         &[],
         100,
-        0,
+        4,
     )
     .unwrap();
     // Switches the program id to the token program.

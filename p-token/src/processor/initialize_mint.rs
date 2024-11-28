@@ -6,7 +6,10 @@ use pinocchio::{
     sysvars::{rent::Rent, Sysvar},
     ProgramResult,
 };
-use token_interface::{error::TokenError, state::mint::Mint};
+use token_interface::{
+    error::TokenError,
+    state::{load_mut_unchecked, mint::Mint, Initializable},
+};
 
 #[inline(always)]
 pub fn process_initialize_mint(
@@ -32,7 +35,7 @@ pub fn process_initialize_mint(
         (mint_info, None)
     };
 
-    let mint = unsafe { Mint::from_bytes_mut(mint_info.borrow_mut_data_unchecked()) };
+    let mint = unsafe { load_mut_unchecked::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint.is_initialized() {
         return Err(TokenError::AlreadyInUse.into());
