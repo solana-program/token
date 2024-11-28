@@ -74,8 +74,12 @@ pub use ui_amount_to_amount::process_ui_amount_to_amount;
 /// An uninitialized byte.
 const UNINIT_BYTE: MaybeUninit<u8> = MaybeUninit::uninit();
 
-/// Maximum number of digits in a `u64``.
-const MAX_DIGITS_U64: usize = 20;
+/// Maximum number of digits in a formatted `u64`.
+///
+/// The maximum number of digits is equal to the maximum number
+/// of decimals (`u8::MAX`) plus the length of the decimal point
+/// and the leading zero.
+const MAX_FORMATTED_DIGITS: usize = u8::MAX as usize + 2;
 
 /// Checks that the account is owned by the expected program.
 #[inline(always)]
@@ -146,16 +150,16 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
     if (amount_str.is_empty() && after_decimal.is_empty())
         || parts.next().is_some()
         || after_decimal.len() > decimals
-        || (length + expected_after_decimal_length) > MAX_DIGITS_U64
+        || (length + expected_after_decimal_length) > MAX_FORMATTED_DIGITS
     {
         return Err(ProgramError::InvalidArgument);
     }
 
-    let mut digits = [UNINIT_BYTE; MAX_DIGITS_U64];
+    let mut digits = [UNINIT_BYTE; MAX_FORMATTED_DIGITS];
     // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same
     // memory layout as `u8`.
     let slice: &mut [u8] =
-        unsafe { from_raw_parts_mut(digits.as_mut_ptr() as *mut _, MAX_DIGITS_U64) };
+        unsafe { from_raw_parts_mut(digits.as_mut_ptr() as *mut _, MAX_FORMATTED_DIGITS) };
 
     // SAFETY: the total length of `amount_str` and `after_decimal` is less than
     // `MAX_DIGITS_U64`.

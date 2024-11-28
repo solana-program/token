@@ -8,13 +8,7 @@ use token_interface::{
     state::{load, mint::Mint},
 };
 
-use super::{check_account_owner, MAX_DIGITS_U64};
-
-/// Maximum length of the UI amount string.
-///
-/// The length includes the maximum number of digits in a `u64`` (20)
-/// and the maximum number of punctuation characters (2).
-const MAX_UI_AMOUNT_LENGTH: usize = MAX_DIGITS_U64 + 2;
+use super::{check_account_owner, MAX_FORMATTED_DIGITS};
 
 #[inline(always)]
 pub fn process_amount_to_ui_amount(
@@ -34,7 +28,7 @@ pub fn process_amount_to_ui_amount(
         load::<Mint>(mint_info.borrow_data_unchecked()).map_err(|_| TokenError::InvalidMint)?
     };
 
-    let mut logger = Logger::<MAX_UI_AMOUNT_LENGTH>::default();
+    let mut logger = Logger::<MAX_FORMATTED_DIGITS>::default();
     logger.append_with_args(amount, &[Argument::Precision(mint.decimals)]);
     // "Extract" the formatted string from the logger.
     //
