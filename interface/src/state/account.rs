@@ -1,12 +1,13 @@
-use pinocchio::{
-    account_info::{AccountInfo, Ref},
-    program_error::ProgramError,
-    pubkey::Pubkey,
-};
+use pinocchio::pubkey::Pubkey;
 
-use crate::program::ID;
+use super::{account_state::AccountState, COption, Initializable, RawType};
 
-use super::{account_state::AccountState, COption};
+/// Incinerator address.
+const INCINERATOR_ID: Pubkey =
+    pinocchio_pubkey::pubkey!("1nc1nerator11111111111111111111111111111111");
+
+/// System program id.
+const SYSTEM_PROGRAM_ID: Pubkey = pinocchio_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Internal representation of a token account data.
 #[repr(C)]
@@ -44,89 +45,28 @@ pub struct Account {
 }
 
 impl Account {
-    pub const LEN: usize = core::mem::size_of::<Account>();
-
-    /// Return a `TokenAccount` from the given account info.
-    ///
-    /// This method performs owner and length validation on `AccountInfo`, safe borrowing
-    /// the account data.
-    #[inline]
-    pub fn from_account_info(account_info: &AccountInfo) -> Result<Ref<Account>, ProgramError> {
-        if account_info.data_len() != Self::LEN {
-            return Err(ProgramError::InvalidAccountData);
-        }
-        if account_info.owner() != &ID {
-            return Err(ProgramError::InvalidAccountData);
-        }
-        Ok(Ref::map(account_info.try_borrow_data()?, |data| unsafe {
-            Self::from_bytes(data)
-        }))
-    }
-
-    /// Return a `TokenAccount` from the given account info.
-    ///
-    /// This method performs owner and length validation on `AccountInfo`, but does not
-    /// perform the borrow check.
-    ///
-    /// # Safety
-    ///
-    /// The caller must ensure that it is safe to borrow the account data – e.g., there are
-    /// no mutable borrows of the account data.
-    #[inline]
-    pub unsafe fn from_account_info_unchecked(
-        account_info: &AccountInfo,
-    ) -> Result<&Account, ProgramError> {
-        if account_info.data_len() != Self::LEN {
-            return Err(ProgramError::InvalidAccountData);
-        }
-        if account_info.owner() != &ID {
-            return Err(ProgramError::InvalidAccountData);
-        }
-        Ok(Self::from_bytes(account_info.borrow_data_unchecked()))
-    }
-
-    /// Return a `TokenAccount` from the given bytes.
-    ///
-    /// # Safety
-    ///
-    /// The caller must ensure that `bytes` contains a valid representation of `TokenAccount`.
     #[inline(always)]
-    pub unsafe fn from_bytes(bytes: &[u8]) -> &Self {
-        &*(bytes.as_ptr() as *const Account)
-    }
-
-    /// Return a mutable `Mint` reference from the given bytes.
-    ///
-    /// # Safety
-    ///
-    /// The caller must ensure that `bytes` contains a valid representation of `Mint`.
-    #[inline(always)]
-    pub unsafe fn from_bytes_mut(bytes: &mut [u8]) -> &mut Self {
-        &mut *(bytes.as_mut_ptr() as *mut Account)
-    }
-
-    #[inline]
     pub fn set_amount(&mut self, amount: u64) {
         self.amount = amount.to_le_bytes();
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn amount(&self) -> u64 {
         u64::from_le_bytes(self.amount)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn clear_delegate(&mut self) {
         self.delegate.0[0] = 0;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn set_delegate(&mut self, delegate: &Pubkey) {
         self.delegate.0[0] = 1;
         self.delegate.1 = *delegate;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn delegate(&self) -> Option<&Pubkey> {
         if self.delegate.0[0] == 1 {
             Some(&self.delegate.1)
@@ -135,17 +75,17 @@ impl Account {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn set_native(&mut self, value: bool) {
         self.is_native[0] = value as u8;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn is_native(&self) -> bool {
         self.is_native[0] == 1
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn native_amount(&self) -> Option<u64> {
         if self.is_native() {
             Some(u64::from_le_bytes(self.native_amount))
@@ -154,28 +94,28 @@ impl Account {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn set_delegated_amount(&mut self, amount: u64) {
         self.delegated_amount = amount.to_le_bytes();
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn delegated_amount(&self) -> u64 {
         u64::from_le_bytes(self.delegated_amount)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn clear_close_authority(&mut self) {
         self.close_authority.0[0] = 0;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn set_close_authority(&mut self, value: &Pubkey) {
         self.close_authority.0[0] = 1;
         self.close_authority.1 = *value;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn close_authority(&self) -> Option<&Pubkey> {
         if self.close_authority.0[0] == 1 {
             Some(&self.close_authority.1)
@@ -185,12 +125,23 @@ impl Account {
     }
 
     #[inline(always)]
-    pub fn is_initialized(&self) -> bool {
-        self.state != AccountState::Uninitialized
+    pub fn is_frozen(&self) -> bool {
+        self.state == AccountState::Frozen
     }
 
     #[inline(always)]
-    pub fn is_frozen(&self) -> bool {
-        self.state == AccountState::Frozen
+    pub fn is_owned_by_system_program_or_incinerator(&self) -> bool {
+        SYSTEM_PROGRAM_ID == self.owner || INCINERATOR_ID == self.owner
+    }
+}
+
+impl RawType for Account {
+    const LEN: usize = core::mem::size_of::<Account>();
+}
+
+impl Initializable for Account {
+    #[inline(always)]
+    fn is_initialized(&self) -> bool {
+        self.state != AccountState::Uninitialized
     }
 }

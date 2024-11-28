@@ -1,12 +1,14 @@
 use pinocchio::{account_info::AccountInfo, msg, program_error::ProgramError, ProgramResult};
-use token_interface::{error::TokenError, state::account::Account};
+use token_interface::{
+    error::TokenError,
+    state::{account::Account, load_unchecked, Initializable},
+};
 
 #[inline(always)]
 pub fn process_initialize_immutable_owner(accounts: &[AccountInfo]) -> ProgramResult {
     let token_account_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
 
-    let account =
-        unsafe { Account::from_bytes_mut(token_account_info.borrow_mut_data_unchecked()) };
+    let account = unsafe { load_unchecked::<Account>(token_account_info.borrow_data_unchecked())? };
 
     if account.is_initialized() {
         return Err(TokenError::AlreadyInUse.into());

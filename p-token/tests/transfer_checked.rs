@@ -66,7 +66,7 @@ async fn transfer_checked(token_program: Pubkey) {
         &owner.pubkey(),
         &[],
         100,
-        0,
+        4,
     )
     .unwrap();
     transfer_ix.program_id = token_program;

@@ -63,7 +63,7 @@ async fn approve_checked(token_program: Pubkey) {
         &owner.pubkey(),
         &[],
         50,
-        0,
+        4,
     )
     .unwrap();
     approve_ix.program_id = token_program;

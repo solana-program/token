@@ -10,7 +10,11 @@ use pinocchio::{
 };
 use token_interface::{
     error::TokenError,
-    state::multisig::{Multisig, MAX_SIGNERS},
+    state::{
+        load,
+        multisig::{Multisig, MAX_SIGNERS},
+        RawType,
+    },
 };
 
 pub mod amount_to_ui_amount;
@@ -67,23 +71,11 @@ pub use transfer::process_transfer;
 pub use transfer_checked::process_transfer_checked;
 pub use ui_amount_to_amount::process_ui_amount_to_amount;
 
-/// Incinerator address.
-const INCINERATOR_ID: Pubkey =
-    pinocchio_pubkey::pubkey!("1nc1nerator11111111111111111111111111111111");
-
-/// System program id.
-const SYSTEM_PROGRAM_ID: Pubkey = pinocchio_pubkey::pubkey!("11111111111111111111111111111111");
-
 /// An uninitialized byte.
 const UNINIT_BYTE: MaybeUninit<u8> = MaybeUninit::uninit();
 
 /// Maximum number of digits in a `u64``.
 const MAX_DIGITS_U64: usize = 20;
-
-#[inline(always)]
-fn is_owned_by_system_program_or_incinerator(owner: &Pubkey) -> bool {
-    &SYSTEM_PROGRAM_ID == owner || &INCINERATOR_ID == owner
-}
 
 /// Checks that the account is owned by the expected program.
 #[inline(always)]
@@ -107,7 +99,7 @@ fn validate_owner(
     }
 
     if owner_account_info.data_len() == Multisig::LEN && &crate::ID != owner_account_info.owner() {
-        let multisig = unsafe { Multisig::from_bytes(owner_account_info.borrow_data_unchecked()) };
+        let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;
         let mut matched = [false; MAX_SIGNERS];

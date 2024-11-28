@@ -4,7 +4,10 @@ use pinocchio::{
     sysvars::{rent::Rent, Sysvar},
     ProgramResult,
 };
-use token_interface::{error::TokenError, state::multisig::Multisig};
+use token_interface::{
+    error::TokenError,
+    state::{load_mut_unchecked, multisig::Multisig, Initializable},
+};
 
 #[inline(always)]
 pub fn process_initialize_multisig(
@@ -35,14 +38,15 @@ pub fn process_initialize_multisig(
         Rent::get()?.is_exempt(multisig_info.lamports(), multisig_info_data_len)
     };
 
-    if !is_exempt {
-        return Err(TokenError::NotRentExempt.into());
-    }
-
-    let multisig = unsafe { Multisig::from_bytes_mut(multisig_info.borrow_mut_data_unchecked()) };
+    let multisig =
+        unsafe { load_mut_unchecked::<Multisig>(multisig_info.borrow_mut_data_unchecked())? };
 
     if multisig.is_initialized() {
         return Err(TokenError::AlreadyInUse.into());
+    }
+
+    if !is_exempt {
+        return Err(TokenError::NotRentExempt.into());
     }
 
     // Initialize the multisig account.

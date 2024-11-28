@@ -1,12 +1,10 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{
     error::TokenError,
-    state::{account::Account, mint::Mint},
+    state::{account::Account, load_mut, mint::Mint},
 };
 
-use crate::processor::{
-    check_account_owner, is_owned_by_system_program_or_incinerator, validate_owner,
-};
+use crate::processor::{check_account_owner, validate_owner};
 
 #[inline(always)]
 pub fn process_burn(
@@ -19,7 +17,7 @@ pub fn process_burn(
     };
 
     let source_account =
-        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
     if source_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
@@ -35,7 +33,7 @@ pub fn process_burn(
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
-    let mint = unsafe { Mint::from_bytes_mut(mint_info.borrow_mut_data_unchecked()) };
+    let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint_info.key() != &source_account.mint {
         return Err(TokenError::MintMismatch.into());
@@ -47,7 +45,7 @@ pub fn process_burn(
         }
     }
 
-    if !is_owned_by_system_program_or_incinerator(&source_account.owner) {
+    if !source_account.is_owned_by_system_program_or_incinerator() {
         match source_account.delegate() {
             Some(delegate) if authority_info.key() == delegate => {
                 validate_owner(delegate, authority_info, remaining)?;

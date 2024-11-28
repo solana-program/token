@@ -1,7 +1,7 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{
     error::TokenError,
-    state::{account::Account, mint::Mint},
+    state::{account::Account, load, load_mut, mint::Mint},
 };
 
 use crate::processor::validate_owner;
@@ -46,7 +46,7 @@ pub fn process_approve(
     // Validates source account.
 
     let source_account =
-        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
     if source_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
@@ -57,7 +57,7 @@ pub fn process_approve(
             return Err(TokenError::MintMismatch.into());
         }
 
-        let mint = unsafe { Mint::from_bytes(mint_info.borrow_data_unchecked()) };
+        let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
         if expected_decimals != mint.decimals {
             return Err(TokenError::MintDecimalsMismatch.into());

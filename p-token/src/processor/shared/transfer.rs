@@ -1,7 +1,7 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use token_interface::{
     error::TokenError,
-    state::{account::Account, mint::Mint},
+    state::{account::Account, load, load_mut, mint::Mint},
 };
 
 use crate::processor::{check_account_owner, validate_owner};
@@ -52,10 +52,10 @@ pub fn process_transfer(
     // Validates source and destination accounts.
 
     let source_account =
-        unsafe { Account::from_bytes_mut(source_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
     let destination_account =
-        unsafe { Account::from_bytes_mut(destination_account_info.borrow_mut_data_unchecked()) };
+        unsafe { load_mut::<Account>(destination_account_info.borrow_mut_data_unchecked())? };
 
     if source_account.is_frozen() || destination_account.is_frozen() {
         return Err(TokenError::AccountFrozen.into());
@@ -80,7 +80,7 @@ pub fn process_transfer(
             return Err(TokenError::MintMismatch.into());
         }
 
-        let mint = unsafe { Mint::from_bytes(mint_info.borrow_data_unchecked()) };
+        let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
         if decimals != mint.decimals {
             return Err(TokenError::MintDecimalsMismatch.into());
@@ -118,31 +118,29 @@ pub fn process_transfer(
         // to these account.
         check_account_owner(source_account_info)?;
         check_account_owner(destination_account_info)?;
+    } else {
+        // Moves the tokens.
 
-        return Ok(());
-    }
+        source_account.set_amount(remaining_amount);
 
-    // Moves the tokens.
-
-    source_account.set_amount(remaining_amount);
-
-    let destination_amount = destination_account
-        .amount()
-        .checked_add(amount)
-        .ok_or(TokenError::Overflow)?;
-    destination_account.set_amount(destination_amount);
-
-    if source_account.is_native() {
-        let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
-        *source_lamports = source_lamports
-            .checked_sub(amount)
-            .ok_or(TokenError::Overflow)?;
-
-        let destination_lamports =
-            unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
-        *destination_lamports = destination_lamports
+        let destination_amount = destination_account
+            .amount()
             .checked_add(amount)
             .ok_or(TokenError::Overflow)?;
+        destination_account.set_amount(destination_amount);
+
+        if source_account.is_native() {
+            let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
+            *source_lamports = source_lamports
+                .checked_sub(amount)
+                .ok_or(TokenError::Overflow)?;
+
+            let destination_lamports =
+                unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
+            *destination_lamports = destination_lamports
+                .checked_add(amount)
+                .ok_or(TokenError::Overflow)?;
+        }
     }
 
     Ok(())
