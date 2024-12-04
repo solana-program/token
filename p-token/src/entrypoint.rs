@@ -1,11 +1,11 @@
 use pinocchio::{
-    account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey,
+    account_info::AccountInfo, heapless_entrypoint, program_error::ProgramError, pubkey::Pubkey,
     ProgramResult,
 };
 
 use crate::processor::*;
 
-entrypoint!(process_instruction);
+heapless_entrypoint!(process_instruction);
 
 /// Process an instruction.
 ///
