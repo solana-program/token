@@ -1,7 +1,10 @@
 #![cfg(feature = "test-sbf")]
 
+mod setup;
+
 use std::mem::size_of;
 
+use setup::TOKEN_PROGRAM_ID;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
     program_option::COption,
@@ -14,11 +17,10 @@ use solana_sdk::{
 use token_interface::state::mint::Mint;
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
-#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
+#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn initialize_mint(token_program: Pubkey) {
-    let program_id = Pubkey::new_from_array(token_program::ID);
-    let mut context = ProgramTest::new("token_program", program_id, None)
+    let mut context = ProgramTest::new("token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
 

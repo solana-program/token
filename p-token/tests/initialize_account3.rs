@@ -2,7 +2,7 @@
 
 mod setup;
 
-use setup::mint;
+use setup::{mint, TOKEN_PROGRAM_ID};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
     program_pack::Pack,
@@ -13,11 +13,10 @@ use solana_sdk::{
 };
 
 #[test_case::test_case(spl_token::ID ; "spl-token")]
-#[test_case::test_case(Pubkey::new_from_array(token_program::ID) ; "p-token")]
+#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn initialize_account3(token_program: Pubkey) {
-    let program_id = Pubkey::new_from_array(token_program::ID);
-    let mut context = ProgramTest::new("token_program", program_id, None)
+    let mut context = ProgramTest::new("token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
 
