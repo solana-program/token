@@ -8,19 +8,13 @@ import {
   workingDirectory,
 } from '../utils.mjs';
 
-// Configure additional arguments here, e.g.:
-// ['--arg1', '--arg2', ...cliArguments()]
-const formatArgs = cliArguments();
+const [folder, ...formatArgs] = cliArguments();
 
 const fix = popArgument(formatArgs, '--fix');
 const [cargoArgs, fmtArgs] = partitionArguments(formatArgs, '--');
 const toolchain = getToolchainArgument('format');
-const manifestPath = path.join(
-  workingDirectory,
-  'clients',
-  'rust',
-  'Cargo.toml'
-);
+
+const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
 
 // Format the client.
 if (fix) {
