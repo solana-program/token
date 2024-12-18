@@ -1,12 +1,22 @@
 [workspace]
 resolver = "2"
-members = ["clients/rust"]
+members = ["program"]
+
+[workspace.lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+    'cfg(target_os, values("solana"))',
+    'cfg(feature, values("frozen-abi", "no-entrypoint"))',
+]
 
 [workspace.metadata.cli]
-solana = "1.18.18"
+solana = "2.1.0"
 
 # Specify Rust toolchains for rustfmt, clippy, and build.
 # Any unprovided toolchains default to stable.
 [workspace.metadata.toolchains]
-format = "1.78.0"
-lint = "1.78.0"
+format = "nightly-2024-08-08"
+lint = "nightly-2024-08-08"
+
+[workspace.metadata.spellcheck]
+config = "scripts/spellcheck.toml"

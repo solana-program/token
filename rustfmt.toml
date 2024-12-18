@@ -1,10 +1,5 @@
-max_width = 100
-reorder_imports = true
-reorder_modules = true
-
-# == Nightly only. ==
-# imports_indent = "Block"
-# imports_layout = "Mixed"
-# imports_granularity = "Crate"
-# group_imports = "Preserve"
-# reorder_impl_items = false
+comment_width = 80
+edition = "2021"
+group_imports = "One"
+imports_granularity = "One"
+wrap_comments = true
