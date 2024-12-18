@@ -35,3 +35,6 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [lints]
 workspace = true
+
+[package.metadata.solana]
+program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
