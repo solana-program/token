@@ -21,15 +21,19 @@ fn success_init_after_close_account() {
     let owner = Pubkey::new_unique();
     let mint = Pubkey::new_unique();
     let account = Pubkey::new_unique();
+    let destination = Pubkey::new_unique();
     let decimals = 9;
 
     let owner_account = AccountSharedData::new(1_000_000_000, 0, &system_program::id());
     let mint_account = setup::setup_mint_account(None, None, 0, decimals);
     let token_account = setup::setup_token_account(&mint, &owner, 0);
 
+    let expected_destination_lamports = token_account.lamports();
+
     mollusk.process_and_validate_instruction_chain(
         &[
-            instruction::close_account(&spl_token::id(), &account, &owner, &owner, &[]).unwrap(),
+            instruction::close_account(&spl_token::id(), &account, &destination, &owner, &[])
+                .unwrap(),
             system_instruction::create_account(
                 &owner,
                 &account,
@@ -43,14 +47,19 @@ fn success_init_after_close_account() {
             (mint, mint_account),
             (account, token_account),
             (owner, owner_account),
+            (destination, AccountSharedData::default()),
             mollusk.sysvars.keyed_account_for_rent_sysvar(),
         ],
         &[
             Check::success(),
-            // Account successfully initialized.
+            // Account successfully re-initialized.
             Check::account(&account)
                 .data(setup::setup_token_account(&mint, &owner, 0).data())
                 .owner(&spl_token::id())
+                .build(),
+            // The destination should have the lamports from the closed account.
+            Check::account(&destination)
+                .lamports(expected_destination_lamports)
                 .build(),
         ],
     );
@@ -63,15 +72,19 @@ fn fail_init_after_close_account() {
     let owner = Pubkey::new_unique();
     let mint = Pubkey::new_unique();
     let account = Pubkey::new_unique();
+    let destination = Pubkey::new_unique();
     let decimals = 9;
 
     let owner_account = AccountSharedData::new(1_000_000_000, 0, &system_program::id());
     let mint_account = setup::setup_mint_account(None, None, 0, decimals);
     let token_account = setup::setup_token_account(&mint, &owner, 0);
 
+    let expected_destination_lamports = token_account.lamports();
+
     mollusk.process_and_validate_instruction_chain(
         &[
-            instruction::close_account(&spl_token::id(), &account, &owner, &owner, &[]).unwrap(),
+            instruction::close_account(&spl_token::id(), &account, &destination, &owner, &[])
+                .unwrap(),
             system_instruction::transfer(&owner, &account, 1_000_000_000),
             instruction::initialize_account(&spl_token::id(), &account, &mint, &owner).unwrap(),
         ],
@@ -79,14 +92,19 @@ fn fail_init_after_close_account() {
             (mint, mint_account),
             (account, token_account),
             (owner, owner_account),
+            (destination, AccountSharedData::default()),
             mollusk.sysvars.keyed_account_for_rent_sysvar(),
         ],
         &[
             Check::err(ProgramError::InvalidAccountData),
-            // Account not initialized.
+            // Account not re-initialized.
             Check::account(&account)
                 .lamports(1_000_000_000)
                 .owner(&system_program::id())
+                .build(),
+            // The destination should have the lamports from the closed account.
+            Check::account(&destination)
+                .lamports(expected_destination_lamports)
                 .build(),
         ],
     );
