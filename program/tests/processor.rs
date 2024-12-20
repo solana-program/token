@@ -2,43 +2,23 @@
 
 //! Program state processor tests
 
-use std::collections::HashSet;
-
-use mollusk_svm::{
-    result::{Check, InstructionResult},
-    Mollusk,
+use {
+    mollusk_svm::{
+        result::{Check, InstructionResult},
+        Mollusk,
+    },
+    solana_sdk::{
+        account::{create_account_for_test, Account as SolanaAccount, AccountSharedData},
+        instruction::Instruction,
+        program_pack::Pack,
+        pubkey::Pubkey,
+        rent::Rent,
+    },
+    spl_token::{error::TokenError, instruction::initialize_mint, state::Mint},
+    std::collections::HashSet,
 };
-use solana_sdk::{
-    account::{create_account_for_test, Account as SolanaAccount, AccountSharedData},
-    instruction::Instruction,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    rent::Rent,
-};
-use spl_token::{error::TokenError, instruction::initialize_mint, state::Mint};
 
 type InstructionPack<'a> = (Instruction, Vec<&'a SolanaAccount>);
-
-fn do_process_instruction(
-    instruction: Instruction,
-    accounts: Vec<&SolanaAccount>,
-    checks: &[Check],
-) -> InstructionResult {
-    let accounts = instruction
-        .accounts
-        .iter()
-        .zip(accounts)
-        .map(|(account_meta, account)| {
-            (
-                account_meta.pubkey,
-                AccountSharedData::from(account.clone()),
-            )
-        })
-        .collect::<Vec<_>>();
-
-    let mollusk = Mollusk::new(&spl_token::id(), "spl_token");
-    mollusk.process_and_validate_instruction(&instruction, accounts.as_slice(), checks)
-}
 
 fn do_process_instructions(
     instructions: &[InstructionPack],
@@ -96,18 +76,22 @@ fn test_initialize_mint() {
     let rent_sysvar = rent_sysvar();
 
     // mint is not rent exempt
-    do_process_instruction(
-        initialize_mint(&program_id, &mint_key, &owner_key, None, 2).unwrap(),
-        vec![&mint_account, &rent_sysvar],
+    do_process_instructions(
+        &[(
+            initialize_mint(&program_id, &mint_key, &owner_key, None, 2).unwrap(),
+            vec![&mint_account, &rent_sysvar],
+        )],
         &[Check::err(TokenError::NotRentExempt.into())],
     );
 
     mint_account.lamports = mint_minimum_balance();
 
     // create new mint
-    do_process_instruction(
-        initialize_mint(&program_id, &mint_key, &owner_key, None, 2).unwrap(),
-        vec![&mint_account, &rent_sysvar],
+    do_process_instructions(
+        &[(
+            initialize_mint(&program_id, &mint_key, &owner_key, None, 2).unwrap(),
+            vec![&mint_account, &rent_sysvar],
+        )],
         &[Check::success()],
     );
 
@@ -127,9 +111,11 @@ fn test_initialize_mint() {
     );
 
     // create another mint that can freeze
-    do_process_instruction(
-        initialize_mint(&program_id, &mint2_key, &owner_key, Some(&owner_key), 2).unwrap(),
-        vec![&mint2_account, &rent_sysvar],
+    do_process_instructions(
+        &[(
+            initialize_mint(&program_id, &mint2_key, &owner_key, Some(&owner_key), 2).unwrap(),
+            vec![&mint2_account, &rent_sysvar],
+        )],
         &[
             // Account successfully re-initialized.
             Check::success(),
