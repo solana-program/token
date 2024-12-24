@@ -102,7 +102,7 @@ fn validate_owner(
         return Err(TokenError::OwnerMismatch.into());
     }
 
-    if owner_account_info.data_len() == Multisig::LEN && &crate::ID != owner_account_info.owner() {
+    if owner_account_info.data_len() == Multisig::LEN && &crate::ID == owner_account_info.owner() {
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;
