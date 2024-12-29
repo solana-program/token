@@ -33,10 +33,10 @@ const TOKEN_PROGRAM_NAME: &str = "spl_token";
 /// The ID of the token program used in the instruction constructors.
 ///
 /// In general this should be the same as the `spl_token::id()` constant, since
-/// the instruction construction functions are designed to work with the `spl_token`.
-/// This value then is replaced by [`TARGET_TOKEN_PROGRAM_ID`] when the instruction
-/// is processed by `mollusk`.
-const TOKEN_PROGRAM_ID: Pubkey = spl_token::id();
+/// the instruction construction functions are designed to work with the
+/// `spl_token`. This value then is replaced by [`TARGET_TOKEN_PROGRAM_ID`] when
+/// the instruction is processed by `mollusk` helper.
+const INSTRUCTION_TOKEN_PROGRAM_ID: Pubkey = spl_token::id();
 
 /// The ID of the token program that will execute the instruction.
 const TARGET_TOKEN_PROGRAM_ID: Pubkey = spl_token::id();
@@ -152,7 +152,14 @@ fn test_initialize_mint() {
     // mint is not rent exempt
     do_process_instructions(
         &[(
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account, &rent_sysvar],
         )],
         &[Check::err(TokenError::NotRentExempt.into())],
@@ -163,7 +170,14 @@ fn test_initialize_mint() {
     // create new mint
     do_process_instructions(
         &[(
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account, &rent_sysvar],
         )],
         &[Check::success()],
@@ -173,11 +187,25 @@ fn test_initialize_mint() {
     do_process_instructions(
         &[
             (
-                initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+                initialize_mint(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &owner_key,
+                    None,
+                    2,
+                )
+                .unwrap(),
                 vec![&mint_account, &rent_sysvar],
             ),
             (
-                initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+                initialize_mint(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &owner_key,
+                    None,
+                    2,
+                )
+                .unwrap(),
                 vec![&mint_account, &rent_sysvar],
             ),
         ],
@@ -188,7 +216,7 @@ fn test_initialize_mint() {
     do_process_instructions(
         &[(
             initialize_mint(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &mint2_key,
                 &owner_key,
                 Some(&owner_key),
@@ -225,7 +253,14 @@ fn test_initialize_mint2() {
     // mint is not rent exempt
     do_process_instructions(
         &[(
-            initialize_mint2(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint2(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account],
         )],
         &[Check::err(TokenError::NotRentExempt.into())],
@@ -236,7 +271,14 @@ fn test_initialize_mint2() {
     // create new mint
     do_process_instructions(
         &[(
-            initialize_mint2(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint2(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account],
         )],
         &[Check::success()],
@@ -246,11 +288,25 @@ fn test_initialize_mint2() {
     do_process_instructions(
         &[
             (
-                initialize_mint2(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+                initialize_mint2(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &owner_key,
+                    None,
+                    2,
+                )
+                .unwrap(),
                 vec![&mint_account],
             ),
             (
-                initialize_mint2(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+                initialize_mint2(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &owner_key,
+                    None,
+                    2,
+                )
+                .unwrap(),
                 vec![&mint_account],
             ),
         ],
@@ -261,7 +317,7 @@ fn test_initialize_mint2() {
     do_process_instructions(
         &[(
             initialize_mint2(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &mint2_key,
                 &owner_key,
                 Some(&owner_key),
@@ -300,7 +356,13 @@ fn test_initialize_mint_account() {
     // account is not rent exempt
     do_process_instructions(
         &[(
-            initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account_account,
                 &mint_account,
@@ -316,7 +378,13 @@ fn test_initialize_mint_account() {
     // mint is not valid (not initialized)
     do_process_instructions(
         &[(
-            initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account_account,
                 &mint_account,
@@ -330,7 +398,14 @@ fn test_initialize_mint_account() {
     // create mint
     do_process_instructions(
         &[(
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account, &rent_sysvar],
         )],
         &[Check::success()],
@@ -342,7 +417,13 @@ fn test_initialize_mint_account() {
 
     do_process_instructions(
         &[(
-            initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account_account,
                 &mint_account,
@@ -359,11 +440,24 @@ fn test_initialize_mint_account() {
     do_process_instructions(
         &[
             (
-                initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+                initialize_mint(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &owner_key,
+                    None,
+                    2,
+                )
+                .unwrap(),
                 vec![&mint_account, &rent_sysvar],
             ),
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &mint_key,
+                    &owner_key,
+                )
+                .unwrap(),
                 vec![
                     &account_account,
                     &mint_account,
@@ -379,11 +473,24 @@ fn test_initialize_mint_account() {
     do_process_instructions(
         &[
             (
-                initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+                initialize_mint(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &owner_key,
+                    None,
+                    2,
+                )
+                .unwrap(),
                 vec![&mint_account, &rent_sysvar],
             ),
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &mint_key,
+                    &owner_key,
+                )
+                .unwrap(),
                 vec![
                     &account_account,
                     &mint_account,
@@ -392,7 +499,13 @@ fn test_initialize_mint_account() {
                 ],
             ),
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &mint_key,
+                    &owner_key,
+                )
+                .unwrap(),
                 vec![
                     &account_account,
                     &mint_account,
@@ -414,35 +527,40 @@ fn test_transfer_dups() {
         Account::get_packed_len(),
         &program_id,
     );
-    //let mut account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
+    //let mut account1_info: AccountInfo = (&account1_key, true, &mut
+    // account1_account).into();
     let account2_key = Pubkey::new_unique();
     let account2_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
-    //let mut account2_info: AccountInfo = (&account2_key, false, &mut account2_account).into();
+    //let mut account2_info: AccountInfo = (&account2_key, false, &mut
+    // account2_account).into();
     let account3_key = Pubkey::new_unique();
     let account3_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
-    //let account3_info: AccountInfo = (&account3_key, false, &mut account3_account).into();
+    //let account3_info: AccountInfo = (&account3_key, false, &mut
+    // account3_account).into();
     let account4_key = Pubkey::new_unique();
     let account4_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
-    //let account4_info: AccountInfo = (&account4_key, true, &mut account4_account).into();
+    //let account4_info: AccountInfo = (&account4_key, true, &mut
+    // account4_account).into();
     let multisig_key = Pubkey::new_unique();
     let multisig_account = SolanaAccount::new(
         multisig_minimum_balance(),
         Multisig::get_packed_len(),
         &program_id,
     );
-    //let multisig_info: AccountInfo = (&multisig_key, true, &mut multisig_account).into();
+    //let multisig_info: AccountInfo = (&multisig_key, true, &mut
+    // multisig_account).into();
     let owner_key = Pubkey::new_unique();
     let owner_account = SolanaAccount::default();
     //let owner_info: AccountInfo = (&owner_key, true, &mut owner_account).into();
@@ -457,12 +575,25 @@ fn test_transfer_dups() {
     let setup_instructions = vec![
         // create mint
         (
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account, &rent_sysvar],
         ),
         // create account
         (
-            initialize_account(&TOKEN_PROGRAM_ID, &account1_key, &mint_key, &account1_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account1_key,
+                &mint_key,
+                &account1_key,
+            )
+            .unwrap(),
             vec![
                 &account1_account,
                 &mint_account,
@@ -472,7 +603,13 @@ fn test_transfer_dups() {
         ),
         // create another account
         (
-            initialize_account(&TOKEN_PROGRAM_ID, &account2_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account2_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account2_account,
                 &mint_account,
@@ -483,7 +620,7 @@ fn test_transfer_dups() {
         // mint to account
         (
             mint_to(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &mint_key,
                 &account1_key,
                 &owner_key,
@@ -604,8 +741,13 @@ fn test_transfer_dups() {
         Some(&setup_instructions),
         &[
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account3_key, &mint_key, &account2_key)
-                    .unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account3_key,
+                    &mint_key,
+                    &account2_key,
+                )
+                .unwrap(),
                 vec![
                     &account3_account,
                     &mint_account,
@@ -615,7 +757,7 @@ fn test_transfer_dups() {
             ),
             (
                 mint_to(
-                    &TOKEN_PROGRAM_ID,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
                     &mint_key,
                     &account3_key,
                     &owner_key,
@@ -646,8 +788,13 @@ fn test_transfer_dups() {
         Some(&setup_instructions),
         &[
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account3_key, &mint_key, &account2_key)
-                    .unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account3_key,
+                    &mint_key,
+                    &account2_key,
+                )
+                .unwrap(),
                 vec![
                     &account3_account,
                     &mint_account,
@@ -657,7 +804,7 @@ fn test_transfer_dups() {
             ),
             (
                 mint_to(
-                    &TOKEN_PROGRAM_ID,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
                     &mint_key,
                     &account3_key,
                     &owner_key,
@@ -695,12 +842,23 @@ fn test_transfer_dups() {
         Some(&setup_instructions),
         &[
             (
-                initialize_multisig(&TOKEN_PROGRAM_ID, &multisig_key, &[&account4_key], 1).unwrap(),
+                initialize_multisig(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &multisig_key,
+                    &[&account4_key],
+                    1,
+                )
+                .unwrap(),
                 vec![&multisig_account, &rent_sysvar, &account4_account],
             ),
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account4_key, &mint_key, &multisig_key)
-                    .unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account4_key,
+                    &mint_key,
+                    &multisig_key,
+                )
+                .unwrap(),
                 vec![
                     &account4_account,
                     &mint_account,
@@ -710,7 +868,7 @@ fn test_transfer_dups() {
             ),
             (
                 mint_to(
-                    &TOKEN_PROGRAM_ID,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
                     &mint_key,
                     &account4_key,
                     &owner_key,
@@ -729,12 +887,23 @@ fn test_transfer_dups() {
         Some(&setup_instructions),
         &[
             (
-                initialize_multisig(&TOKEN_PROGRAM_ID, &multisig_key, &[&account4_key], 1).unwrap(),
+                initialize_multisig(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &multisig_key,
+                    &[&account4_key],
+                    1,
+                )
+                .unwrap(),
                 vec![&multisig_account, &rent_sysvar, &account4_account],
             ),
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account4_key, &mint_key, &multisig_key)
-                    .unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account4_key,
+                    &mint_key,
+                    &multisig_key,
+                )
+                .unwrap(),
                 vec![
                     &account4_account,
                     &mint_account,
@@ -744,7 +913,7 @@ fn test_transfer_dups() {
             ),
             (
                 mint_to(
-                    &TOKEN_PROGRAM_ID,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
                     &mint_key,
                     &account4_key,
                     &owner_key,
@@ -780,12 +949,23 @@ fn test_transfer_dups() {
         Some(&setup_instructions),
         &[
             (
-                initialize_multisig(&TOKEN_PROGRAM_ID, &multisig_key, &[&account4_key], 1).unwrap(),
+                initialize_multisig(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &multisig_key,
+                    &[&account4_key],
+                    1,
+                )
+                .unwrap(),
                 vec![&multisig_account, &rent_sysvar, &account4_account],
             ),
             (
-                initialize_account(&TOKEN_PROGRAM_ID, &account4_key, &mint_key, &multisig_key)
-                    .unwrap(),
+                initialize_account(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account4_key,
+                    &mint_key,
+                    &multisig_key,
+                )
+                .unwrap(),
                 vec![
                     &account4_account,
                     &mint_account,
@@ -795,7 +975,7 @@ fn test_transfer_dups() {
             ),
             (
                 mint_to(
-                    &TOKEN_PROGRAM_ID,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
                     &mint_key,
                     &account4_key,
                     &owner_key,
