@@ -19,8 +19,8 @@ use {
     spl_token::{
         error::TokenError,
         instruction::{
-            initialize_account, initialize_mint, initialize_mint2, initialize_multisig, mint_to,
-            transfer, transfer_checked,
+            approve, initialize_account, initialize_mint, initialize_mint2, initialize_multisig,
+            mint_to, transfer, transfer_checked,
         },
         state::{Account, AccountState, Mint, Multisig},
     },
@@ -1009,57 +1009,70 @@ fn test_transfer_dups() {
         &[Check::success()],
     );
 }
-/*
+
 #[test]
 fn test_transfer() {
     let program_id = TARGET_TOKEN_PROGRAM_ID;
     let account_key = Pubkey::new_unique();
-    let mut account_account = SolanaAccount::new(
+    let account_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
     let account2_key = Pubkey::new_unique();
-    let mut account2_account = SolanaAccount::new(
+    let account2_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
     let account3_key = Pubkey::new_unique();
-    let mut account3_account = SolanaAccount::new(
+    let account3_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
     let delegate_key = Pubkey::new_unique();
-    let mut delegate_account = SolanaAccount::default();
+    let delegate_account = SolanaAccount::default();
     let mismatch_key = Pubkey::new_unique();
-    let mut mismatch_account = SolanaAccount::new(
+    let mismatch_account = SolanaAccount::new(
         account_minimum_balance(),
         Account::get_packed_len(),
         &program_id,
     );
     let owner_key = Pubkey::new_unique();
-    let mut owner_account = SolanaAccount::default();
+    let owner_account = SolanaAccount::default();
     let owner2_key = Pubkey::new_unique();
-    let mut owner2_account = SolanaAccount::default();
+    let owner2_account = SolanaAccount::default();
     let mint_key = Pubkey::new_unique();
-    let mut mint_account =
+    let mint_account =
         SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
     let mint2_key = Pubkey::new_unique();
-    let mut mint2_account =
+    let mint2_account =
         SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
-    let mut rent_sysvar = rent_sysvar();
+    let rent_sysvar = rent_sysvar();
 
     let setup_instructions = vec![
         // create mint
         (
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint_account, &rent_sysvar],
         ),
         // create account
         (
-            initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account_account,
                 &mint_account,
@@ -1069,7 +1082,13 @@ fn test_transfer() {
         ),
         // create another account
         (
-            initialize_account(&TOKEN_PROGRAM_ID, &account2_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account2_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account2_account,
                 &mint_account,
@@ -1079,7 +1098,13 @@ fn test_transfer() {
         ),
         // create another account
         (
-            initialize_account(&TOKEN_PROGRAM_ID, &account3_key, &mint_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account3_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &account3_account,
                 &mint_account,
@@ -1090,7 +1115,7 @@ fn test_transfer() {
         // mint to account
         (
             mint_to(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &mint_key,
                 &account_key,
                 &owner_key,
@@ -1102,12 +1127,25 @@ fn test_transfer() {
         ),
         // create a second mint
         (
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint2_key, &owner_key, None, 2).unwrap(),
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint2_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
             vec![&mint2_account, &rent_sysvar],
         ),
         // create mismatch account using mint2
         (
-            initialize_account(&TOKEN_PROGRAM_ID, &mismatch_key, &mint2_key, &owner_key).unwrap(),
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mismatch_key,
+                &mint2_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
                 &mismatch_account,
                 &mint2_account,
@@ -1119,7 +1157,7 @@ fn test_transfer() {
 
     // missing signer
     let mut instruction = transfer(
-        &TOKEN_PROGRAM_ID,
+        &INSTRUCTION_TOKEN_PROGRAM_ID,
         &account_key,
         &account2_key,
         &owner_key,
@@ -1142,7 +1180,7 @@ fn test_transfer() {
         Some(&setup_instructions),
         &[(
             transfer(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account_key,
                 &mismatch_key,
                 &owner_key,
@@ -1160,7 +1198,7 @@ fn test_transfer() {
         Some(&setup_instructions),
         &[(
             transfer(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account_key,
                 &account2_key,
                 &owner2_key,
@@ -1174,180 +1212,261 @@ fn test_transfer() {
     );
 
     // account not owned by program
-    let not_program_id = Pubkey::new_unique();
-    let mut not_program_id_account = account_account.clone();
-    not_program_id_account.owner = not_program_id;
+    let not_program_key = Pubkey::new_unique();
+    let mut account = Account::unpack_unchecked(&account_account.data).unwrap();
+    account.state = AccountState::Initialized;
+    account.mint = mint_key;
+    account.owner = owner_key;
+    let mut not_program_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &not_program_key,
+    );
+    Account::pack(account, &mut not_program_account.data).unwrap();
 
     do_process_instructions_with_pre_instructions(
         Some(&setup_instructions),
         &[(
             transfer(
-                &TOKEN_PROGRAM_ID,
-                &not_program_id,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &not_program_key,
                 &account2_key,
                 &owner_key,
                 &[],
                 0,
             )
             .unwrap(),
-            vec![&not_program_id_account, &account2_account, &owner2_account],
+            vec![&not_program_account, &account2_account, &owner2_account],
         )],
         &[Check::err(ProgramError::IncorrectProgramId)],
     );
-    //account_account.owner = program_id;
 
     // account 2 not owned by program
-    let not_program_id = Pubkey::new_unique();
-    account2_account.owner = not_program_id;
-    assert_eq!(
-        Err(ProgramError::IncorrectProgramId),
-        do_process_instruction(
+    let mut account2 = Account::unpack_unchecked(&account_account.data).unwrap();
+    account2.state = AccountState::Initialized;
+    account2.mint = mint_key;
+    account2.owner = owner_key;
+    let mut not_program_account2 = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &not_program_key,
+    );
+    Account::pack(account2, &mut not_program_account2.data).unwrap();
+
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
             transfer(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account_key,
-                &account2_key,
+                &not_program_key,
                 &owner_key,
                 &[],
                 0,
             )
             .unwrap(),
-            vec![
-                &mut account_account,
-                &mut account2_account,
-                &mut owner2_account,
-            ],
-        )
+            vec![&account_account, &not_program_account2, &owner2_account],
+        )],
+        &[Check::err(ProgramError::IncorrectProgramId)],
     );
-    account2_account.owner = program_id;
 
     // transfer
-    do_process_instruction(
-        transfer(
-            &program_id,
-            &account_key,
-            &account2_key,
-            &owner_key,
-            &[],
-            1000,
-        )
-        .unwrap(),
-        vec![
-            &mut account_account,
-            &mut account2_account,
-            &mut owner_account,
-        ],
-    )
-    .unwrap();
-
-    // insufficient funds
-    assert_eq!(
-        Err(TokenError::InsufficientFunds.into()),
-        do_process_instruction(
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
             transfer(
-                &TOKEN_PROGRAM_ID,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account_key,
                 &account2_key,
                 &owner_key,
                 &[],
-                1
+                1000,
             )
             .unwrap(),
-            vec![
-                &mut account_account,
-                &mut account2_account,
-                &mut owner_account,
-            ],
-        )
+            vec![&account_account, &account2_account, &owner_account],
+        )],
+        &[Check::success()],
+    );
+
+    // insufficient funds
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            transfer(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &account2_key,
+                &owner_key,
+                &[],
+                1001,
+            )
+            .unwrap(),
+            vec![&account_account, &account2_account, &owner_account],
+        )],
+        &[Check::err(TokenError::InsufficientFunds.into())],
     );
 
     // transfer half back
-    do_process_instruction(
-        transfer(
-            &program_id,
-            &account2_key,
-            &account_key,
-            &owner_key,
-            &[],
-            500,
-        )
-        .unwrap(),
-        vec![
-            &mut account2_account,
-            &mut account_account,
-            &mut owner_account,
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    1000,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account2_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    500,
+                )
+                .unwrap(),
+                vec![&account2_account, &account_account, &owner_account],
+            ),
         ],
-    )
-    .unwrap();
+        &[Check::success()],
+    );
 
     // incorrect decimals
-    assert_eq!(
-        Err(TokenError::MintDecimalsMismatch.into()),
-        do_process_instruction(
-            transfer_checked(
-                &program_id,
-                &account2_key,
-                &mint_key,
-                &account_key,
-                &owner_key,
-                &[],
-                1,
-                10 // <-- incorrect decimals
-            )
-            .unwrap(),
-            vec![
-                &mut account2_account,
-                &mut mint_account,
-                &mut account_account,
-                &mut owner_account,
-            ],
-        )
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    1000,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
+            (
+                transfer_checked(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account2_key,
+                    &mint_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    1,
+                    10, // <-- incorrect decimals
+                )
+                .unwrap(),
+                vec![
+                    &account2_account,
+                    &mint_account,
+                    &account_account,
+                    &owner_account,
+                ],
+            ),
+        ],
+        &[Check::err(TokenError::MintDecimalsMismatch.into())],
     );
 
     // incorrect mint
-    assert_eq!(
-        Err(TokenError::MintMismatch.into()),
-        do_process_instruction(
-            transfer_checked(
-                &program_id,
-                &account2_key,
-                &account3_key, // <-- incorrect mint
-                &account_key,
-                &owner_key,
-                &[],
-                1,
-                2
-            )
-            .unwrap(),
-            vec![
-                &mut account2_account,
-                &mut account3_account, // <-- incorrect mint
-                &mut account_account,
-                &mut owner_account,
-            ],
-        )
-    );
-    // transfer rest with explicit decimals
-    do_process_instruction(
-        transfer_checked(
-            &program_id,
-            &account2_key,
-            &mint_key,
-            &account_key,
-            &owner_key,
-            &[],
-            500,
-            2,
-        )
-        .unwrap(),
-        vec![
-            &mut account2_account,
-            &mut mint_account,
-            &mut account_account,
-            &mut owner_account,
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    1000,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
+            (
+                transfer_checked(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account2_key,
+                    &account3_key, // <-- incorrect mint
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    1,
+                    2,
+                )
+                .unwrap(),
+                vec![
+                    &account2_account,
+                    &account3_account, // <-- incorrect mint
+                    &account_account,
+                    &owner_account,
+                ],
+            ),
         ],
-    )
-    .unwrap();
+        &[Check::err(TokenError::MintMismatch.into())],
+    );
 
+    // transfer rest with explicit decimals
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    1000,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account2_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    500,
+                )
+                .unwrap(),
+                vec![&account2_account, &account_account, &owner_account],
+            ),
+            (
+                transfer_checked(
+                    &program_id,
+                    &account2_key,
+                    &mint_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    500,
+                    2,
+                )
+                .unwrap(),
+                vec![
+                    &account2_account,
+                    &mint_account,
+                    &account_account,
+                    &owner_account,
+                ],
+            ),
+        ],
+        &[Check::success()],
+    );
+    /* TODO: seems to be done already
     // insufficient funds
     assert_eq!(
         Err(TokenError::InsufficientFunds.into()),
@@ -1368,169 +1487,335 @@ fn test_transfer() {
             ],
         )
     );
+    */
 
     // approve delegate
-    do_process_instruction(
-        approve(
-            &program_id,
-            &account_key,
-            &delegate_key,
-            &owner_key,
-            &[],
-            100,
-        )
-        .unwrap(),
-        vec![
-            &mut account_account,
-            &mut delegate_account,
-            &mut owner_account,
-        ],
-    )
-    .unwrap();
-
-    // not a delegate of source account
-    assert_eq!(
-        Err(TokenError::OwnerMismatch.into()),
-        do_process_instruction(
-            transfer(
-                &program_id,
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account_key,
-                &account2_key,
-                &owner2_key, // <-- incorrect owner or delegate
+                &delegate_key,
+                &owner_key,
                 &[],
-                1,
+                100,
             )
             .unwrap(),
-            vec![
-                &mut account_account,
-                &mut account2_account,
-                &mut owner2_account,
-            ],
-        )
+            vec![&account_account, &delegate_account, &owner_account],
+        )],
+        &[Check::success()],
+    );
+
+    // not a delegate of source account
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner2_key, // <-- incorrect owner or delegate
+                    &[],
+                    1,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner2_account],
+            ),
+        ],
+        &[Check::err(TokenError::OwnerMismatch.into())],
     );
 
     // insufficient funds approved via delegate
-    assert_eq!(
-        Err(TokenError::InsufficientFunds.into()),
-        do_process_instruction(
-            transfer(
-                &program_id,
-                &account_key,
-                &account2_key,
-                &delegate_key,
-                &[],
-                101
-            )
-            .unwrap(),
-            vec![
-                &mut account_account,
-                &mut account2_account,
-                &mut delegate_account,
-            ],
-        )
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    101,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+        ],
+        &[Check::err(TokenError::InsufficientFunds.into())],
     );
 
     // transfer via delegate
-    do_process_instruction(
-        transfer(
-            &program_id,
-            &account_key,
-            &account2_key,
-            &delegate_key,
-            &[],
-            100,
-        )
-        .unwrap(),
-        vec![
-            &mut account_account,
-            &mut account2_account,
-            &mut delegate_account,
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
         ],
-    )
-    .unwrap();
+        &[Check::success()],
+    );
 
     // insufficient funds approved via delegate
-    assert_eq!(
-        Err(TokenError::OwnerMismatch.into()),
-        do_process_instruction(
-            transfer(
-                &program_id,
-                &account_key,
-                &account2_key,
-                &delegate_key,
-                &[],
-                1
-            )
-            .unwrap(),
-            vec![
-                &mut account_account,
-                &mut account2_account,
-                &mut delegate_account,
-            ],
-        )
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    1,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+        ],
+        &[Check::err(TokenError::OwnerMismatch.into())],
     );
 
     // transfer rest
-    do_process_instruction(
-        transfer(
-            &program_id,
-            &account_key,
-            &account2_key,
-            &owner_key,
-            &[],
-            900,
-        )
-        .unwrap(),
-        vec![
-            &mut account_account,
-            &mut account2_account,
-            &mut owner_account,
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    900,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
         ],
-    )
-    .unwrap();
-
-    // approve delegate
-    do_process_instruction(
-        approve(
-            &program_id,
-            &account_key,
-            &delegate_key,
-            &owner_key,
-            &[],
-            100,
-        )
-        .unwrap(),
-        vec![
-            &mut account_account,
-            &mut delegate_account,
-            &mut owner_account,
-        ],
-    )
-    .unwrap();
-
-    // insufficient funds in source account via delegate
-    assert_eq!(
-        Err(TokenError::InsufficientFunds.into()),
-        do_process_instruction(
-            transfer(
-                &program_id,
-                &account_key,
-                &account2_key,
-                &delegate_key,
-                &[],
-                100
-            )
-            .unwrap(),
-            vec![
-                &mut account_account,
-                &mut account2_account,
-                &mut delegate_account,
-            ],
-        )
+        &[Check::success()],
     );
 
-}
+    // approve delegate
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    900,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+        ],
+        &[Check::success()],
+    );
 
+    // insufficient funds in source account via delegate
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &owner_key,
+                    &[],
+                    900,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &owner_account],
+            ),
+            (
+                approve(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &delegate_key,
+                    &owner_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &delegate_account, &owner_account],
+            ),
+            (
+                transfer(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account_key,
+                    &account2_key,
+                    &delegate_key,
+                    &[],
+                    100,
+                )
+                .unwrap(),
+                vec![&account_account, &account2_account, &delegate_account],
+            ),
+        ],
+        &[Check::err(TokenError::InsufficientFunds.into())],
+    );
+}
+/*
     #[test]
     fn test_self_transfer() {
         let program_id = crate::id();
