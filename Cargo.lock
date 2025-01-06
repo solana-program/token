@@ -1559,7 +1559,7 @@ dependencies = [
 [[package]]
 name = "mollusk-svm"
 version = "0.0.13"
-source = "git+https://github.com/febo/mollusk.git?branch=data-slice-check#ab5d8157fd4d1dc2bd66c23fe516e3b6e7d8d6cd"
+source = "git+https://github.com/buffalojoec/mollusk.git#c01523016195c315870bd9e4bfa3a64a6cffa659"
 dependencies = [
  "bincode",
  "mollusk-svm-error",
@@ -1576,7 +1576,7 @@ dependencies = [
 [[package]]
 name = "mollusk-svm-error"
 version = "0.0.13"
-source = "git+https://github.com/febo/mollusk.git?branch=data-slice-check#ab5d8157fd4d1dc2bd66c23fe516e3b6e7d8d6cd"
+source = "git+https://github.com/buffalojoec/mollusk.git#c01523016195c315870bd9e4bfa3a64a6cffa659"
 dependencies = [
  "solana-sdk",
  "thiserror 1.0.69",
@@ -1585,7 +1585,7 @@ dependencies = [
 [[package]]
 name = "mollusk-svm-keys"
 version = "0.0.13"
-source = "git+https://github.com/febo/mollusk.git?branch=data-slice-check#ab5d8157fd4d1dc2bd66c23fe516e3b6e7d8d6cd"
+source = "git+https://github.com/buffalojoec/mollusk.git#c01523016195c315870bd9e4bfa3a64a6cffa659"
 dependencies = [
  "mollusk-svm-error",
  "solana-sdk",
