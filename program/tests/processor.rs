@@ -19,8 +19,8 @@ use {
     spl_token::{
         error::TokenError,
         instruction::{
-            approve, initialize_account, initialize_mint, initialize_mint2, initialize_multisig,
-            mint_to, mint_to_checked, transfer, transfer_checked,
+            approve, approve_checked, initialize_account, initialize_mint, initialize_mint2,
+            initialize_multisig, mint_to, mint_to_checked, revoke, transfer, transfer_checked,
         },
         state::{Account, AccountState, Mint, Multisig},
     },
@@ -2591,91 +2591,107 @@ fn test_mintable_token_with_zero_supply() {
         ],
     );
 }
-/*
-    #[test]
-    fn test_approve_dups() {
-        let program_id = crate::id();
-        let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
-            account_minimum_balance(),
-            Account::get_packed_len(),
-            &program_id,
-        );
-        let account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
-        let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
-            account_minimum_balance(),
-            Account::get_packed_len(),
-            &program_id,
-        );
-        let account2_info: AccountInfo = (&account2_key, false, &mut account2_account).into();
-        let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
-            account_minimum_balance(),
-            Account::get_packed_len(),
-            &program_id,
-        );
-        let account3_info: AccountInfo = (&account3_key, true, &mut account3_account).into();
-        let multisig_key = Pubkey::new_unique();
-        let mut multisig_account = SolanaAccount::new(
-            multisig_minimum_balance(),
-            Multisig::get_packed_len(),
-            &program_id,
-        );
-        let multisig_info: AccountInfo = (&multisig_key, true, &mut multisig_account).into();
-        let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
-        let owner_info: AccountInfo = (&owner_key, true, &mut owner_account).into();
-        let mint_key = Pubkey::new_unique();
-        let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
-        let mint_info: AccountInfo = (&mint_key, false, &mut mint_account).into();
-        let rent_key = rent::id();
-        let mut rent_sysvar = rent_sysvar();
-        let rent_info: AccountInfo = (&rent_key, false, &mut rent_sysvar).into();
 
+#[test]
+fn test_approve_dups() {
+    let program_id = TARGET_TOKEN_PROGRAM_ID;
+    let account1_key = Pubkey::new_unique();
+    let account1_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let account2_key = Pubkey::new_unique();
+    let account2_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let account3_key = Pubkey::new_unique();
+    let account3_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let multisig_key = Pubkey::new_unique();
+    let multisig_account = SolanaAccount::new(
+        multisig_minimum_balance(),
+        Multisig::get_packed_len(),
+        &program_id,
+    );
+    let owner_key = Pubkey::new_unique();
+    let owner_account = SolanaAccount::default();
+    let mint_key = Pubkey::new_unique();
+    let mint_account =
+        SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+    let rent_sysvar = rent_sysvar();
+
+    let mut setup_instructions = vec![
         // create mint
-        do_process_instruction_dups(
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
-            vec![mint_info.clone(), rent_info.clone()],
-        )
-        .unwrap();
-
+        (
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
+            vec![&mint_account, &rent_sysvar],
+        ),
         // create account
-        do_process_instruction_dups(
-            initialize_account(&TOKEN_PROGRAM_ID, &account1_key, &mint_key, &account1_key).unwrap(),
+        (
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account1_key,
+                &mint_key,
+                &account1_key,
+            )
+            .unwrap(),
             vec![
-                account1_info.clone(),
-                mint_info.clone(),
-                account1_info.clone(),
-                rent_info.clone(),
+                &account1_account,
+                &mint_account,
+                &account1_account,
+                &rent_sysvar,
             ],
-        )
-        .unwrap();
-
+        ),
         // create another account
-        do_process_instruction_dups(
-            initialize_account(&TOKEN_PROGRAM_ID, &account2_key, &mint_key, &owner_key).unwrap(),
+        (
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account2_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
             vec![
-                account2_info.clone(),
-                mint_info.clone(),
-                owner_info.clone(),
-                rent_info.clone(),
+                &account2_account,
+                &mint_account,
+                &owner_account,
+                &rent_sysvar,
             ],
-        )
-        .unwrap();
-
+        ),
         // mint to account
-        do_process_instruction_dups(
-            mint_to(&TOKEN_PROGRAM_ID, &mint_key, &account1_key, &owner_key, &[], 1000).unwrap(),
-            vec![mint_info.clone(), account1_info.clone(), owner_info.clone()],
-        )
-        .unwrap();
+        (
+            mint_to(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &account1_key,
+                &owner_key,
+                &[],
+                1000,
+            )
+            .unwrap(),
+            vec![&mint_account, &account1_account, &owner_account],
+        ),
+    ];
 
-        // source-owner approve
-        do_process_instruction_dups(
+    // source-owner approve
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
             approve(
-                &program_id,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account1_key,
                 &account2_key,
                 &account1_key,
@@ -2683,18 +2699,17 @@ fn test_mintable_token_with_zero_supply() {
                 500,
             )
             .unwrap(),
-            vec![
-                account1_info.clone(),
-                account2_info.clone(),
-                account1_info.clone(),
-            ],
-        )
-        .unwrap();
+            vec![&account1_account, &account2_account, &account1_account],
+        )],
+        &[Check::success()],
+    );
 
-        // source-owner approve_checked
-        do_process_instruction_dups(
+    // source-owner approve_checked
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
             approve_checked(
-                &program_id,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account1_key,
                 &mint_key,
                 &account2_key,
@@ -2705,216 +2720,307 @@ fn test_mintable_token_with_zero_supply() {
             )
             .unwrap(),
             vec![
-                account1_info.clone(),
-                mint_info.clone(),
-                account2_info.clone(),
-                account1_info.clone(),
+                &account1_account,
+                &mint_account,
+                &account2_account,
+                &account1_account,
             ],
-        )
-        .unwrap();
+        )],
+        &[Check::success()],
+    );
 
-        // source-owner revoke
-        do_process_instruction_dups(
-            revoke(&TOKEN_PROGRAM_ID, &account1_key, &account1_key, &[]).unwrap(),
-            vec![account1_info.clone(), account1_info.clone()],
-        )
-        .unwrap();
-
-        // test source-multisig signer
-        do_process_instruction_dups(
-            initialize_multisig(&TOKEN_PROGRAM_ID, &multisig_key, &[&account3_key], 1).unwrap(),
-            vec![
-                multisig_info.clone(),
-                rent_info.clone(),
-                account3_info.clone(),
-            ],
-        )
-        .unwrap();
-
-        do_process_instruction_dups(
-            initialize_account(&TOKEN_PROGRAM_ID, &account3_key, &mint_key, &multisig_key).unwrap(),
-            vec![
-                account3_info.clone(),
-                mint_info.clone(),
-                multisig_info.clone(),
-                rent_info.clone(),
-            ],
-        )
-        .unwrap();
-
-        do_process_instruction_dups(
-            mint_to(&TOKEN_PROGRAM_ID, &mint_key, &account3_key, &owner_key, &[], 1000).unwrap(),
-            vec![mint_info.clone(), account3_info.clone(), owner_info.clone()],
-        )
-        .unwrap();
-
-        // source-multisig-signer approve
-        do_process_instruction_dups(
-            approve(
-                &program_id,
-                &account3_key,
-                &account2_key,
-                &multisig_key,
-                &[&account3_key],
-                500,
-            )
-            .unwrap(),
-            vec![
-                account3_info.clone(),
-                account2_info.clone(),
-                multisig_info.clone(),
-                account3_info.clone(),
-            ],
-        )
-        .unwrap();
-
-        // source-multisig-signer approve_checked
-        do_process_instruction_dups(
-            approve_checked(
-                &program_id,
-                &account3_key,
-                &mint_key,
-                &account2_key,
-                &multisig_key,
-                &[&account3_key],
-                500,
-                2,
-            )
-            .unwrap(),
-            vec![
-                account3_info.clone(),
-                mint_info.clone(),
-                account2_info.clone(),
-                multisig_info.clone(),
-                account3_info.clone(),
-            ],
-        )
-        .unwrap();
-
-        // source-owner multisig-signer
-        do_process_instruction_dups(
-            revoke(&TOKEN_PROGRAM_ID, &account3_key, &multisig_key, &[&account3_key]).unwrap(),
-            vec![
-                account3_info.clone(),
-                multisig_info.clone(),
-                account3_info.clone(),
-            ],
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn test_approve() {
-        let program_id = crate::id();
-        let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
-            account_minimum_balance(),
-            Account::get_packed_len(),
-            &program_id,
-        );
-        let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
-            account_minimum_balance(),
-            Account::get_packed_len(),
-            &program_id,
-        );
-        let delegate_key = Pubkey::new_unique();
-        let mut delegate_account = SolanaAccount::default();
-        let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
-        let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
-        let mint_key = Pubkey::new_unique();
-        let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
-        let mut rent_sysvar = rent_sysvar();
-
-        // create mint
-        do_process_instruction(
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, 2).unwrap(),
-            vec![&mut mint_account, &mut rent_sysvar],
-        )
-        .unwrap();
-
-        // create account
-        do_process_instruction(
-            initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
-            vec![
-                &mut account_account,
-                &mut mint_account,
-                &mut owner_account,
-                &mut rent_sysvar,
-            ],
-        )
-        .unwrap();
-
-        // create another account
-        do_process_instruction(
-            initialize_account(&TOKEN_PROGRAM_ID, &account2_key, &mint_key, &owner_key).unwrap(),
-            vec![
-                &mut account2_account,
-                &mut mint_account,
-                &mut owner_account,
-                &mut rent_sysvar,
-            ],
-        )
-        .unwrap();
-
-        // mint to account
-        do_process_instruction(
-            mint_to(&TOKEN_PROGRAM_ID, &mint_key, &account_key, &owner_key, &[], 1000).unwrap(),
-            vec![&mut mint_account, &mut account_account, &mut owner_account],
-        )
-        .unwrap();
-
-        // missing signer
-        let mut instruction = approve(
-            &program_id,
-            &account_key,
-            &delegate_key,
-            &owner_key,
-            &[],
-            100,
-        )
-        .unwrap();
-        instruction.accounts[2].is_signer = false;
-        assert_eq!(
-            Err(ProgramError::MissingRequiredSignature),
-            do_process_instruction(
-                instruction,
-                vec![
-                    &mut account_account,
-                    &mut delegate_account,
-                    &mut owner_account,
-                ],
-            )
-        );
-
-        // no owner
-        assert_eq!(
-            Err(TokenError::OwnerMismatch.into()),
-            do_process_instruction(
+    // source-owner revoke
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
                 approve(
-                    &program_id,
-                    &account_key,
-                    &delegate_key,
-                    &owner2_key,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account1_key,
+                    &account2_key,
+                    &account1_key,
                     &[],
-                    100
+                    500,
+                )
+                .unwrap(),
+                vec![&account1_account, &account2_account, &account1_account],
+            ),
+            (
+                revoke(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account1_key,
+                    &account1_key,
+                    &[],
+                )
+                .unwrap(),
+                vec![&account1_account, &account1_account],
+            ),
+        ],
+        &[Check::success()],
+    );
+
+    // test source-multisig signer
+    setup_instructions.extend_from_slice(&[
+        (
+            initialize_multisig(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &multisig_key,
+                &[&account3_key],
+                1,
+            )
+            .unwrap(),
+            vec![&multisig_account, &rent_sysvar, &account3_account],
+        ),
+        (
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account3_key,
+                &mint_key,
+                &multisig_key,
+            )
+            .unwrap(),
+            vec![
+                &account3_account,
+                &mint_account,
+                &multisig_account,
+                &rent_sysvar,
+            ],
+        ),
+        (
+            mint_to(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &account3_key,
+                &owner_key,
+                &[],
+                1000,
+            )
+            .unwrap(),
+            vec![&mint_account, &account3_account, &owner_account],
+        ),
+    ]);
+
+    do_process_instructions(&setup_instructions, &[Check::success()]);
+
+    // source-multisig-signer approve
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account3_key,
+                &account2_key,
+                &multisig_key,
+                &[&account3_key],
+                500,
+            )
+            .unwrap(),
+            vec![
+                &account3_account,
+                &account2_account,
+                &multisig_account,
+                &account3_account,
+            ],
+        )],
+        &[Check::success()],
+    );
+
+    // source-multisig-signer approve_checked
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve_checked(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account3_key,
+                &mint_key,
+                &account2_key,
+                &multisig_key,
+                &[&account3_key],
+                500,
+                2,
+            )
+            .unwrap(),
+            vec![
+                &account3_account,
+                &mint_account,
+                &account2_account,
+                &multisig_account,
+                &account3_account,
+            ],
+        )],
+        &[Check::success()],
+    );
+
+    // source-owner multisig-signer
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                approve_checked(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account3_key,
+                    &mint_key,
+                    &account2_key,
+                    &multisig_key,
+                    &[&account3_key],
+                    500,
+                    2,
                 )
                 .unwrap(),
                 vec![
-                    &mut account_account,
-                    &mut delegate_account,
-                    &mut owner2_account,
+                    &account3_account,
+                    &mint_account,
+                    &account2_account,
+                    &multisig_account,
+                    &account3_account,
                 ],
-            )
-        );
+            ),
+            (
+                revoke(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &account3_key,
+                    &multisig_key,
+                    &[&account3_key],
+                )
+                .unwrap(),
+                vec![&account3_account, &multisig_account, &account3_account],
+            ),
+        ],
+        &[Check::success()],
+    );
+}
 
-        // approve delegate
-        do_process_instruction(
+#[test]
+fn test_approve() {
+    let program_id = TARGET_TOKEN_PROGRAM_ID;
+    let account_key = Pubkey::new_unique();
+    let account_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let account2_key = Pubkey::new_unique();
+    let account2_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let delegate_key = Pubkey::new_unique();
+    let delegate_account = SolanaAccount::default();
+    let owner_key = Pubkey::new_unique();
+    let owner_account = SolanaAccount::default();
+    let owner2_key = Pubkey::new_unique();
+    let owner2_account = SolanaAccount::default();
+    let mint_key = Pubkey::new_unique();
+    let mint_account =
+        SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+    let rent_sysvar = rent_sysvar();
+
+    let setup_instructions = vec![
+        // create mint
+        (
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
+                2,
+            )
+            .unwrap(),
+            vec![&mint_account, &rent_sysvar],
+        ),
+        // create account
+        (
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
+            vec![
+                &account_account,
+                &mint_account,
+                &owner_account,
+                &rent_sysvar,
+            ],
+        ),
+        // create another account
+        (
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account2_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
+            vec![
+                &account2_account,
+                &mint_account,
+                &owner_account,
+                &rent_sysvar,
+            ],
+        ),
+        // mint to account
+        (
+            mint_to(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &account_key,
+                &owner_key,
+                &[],
+                1000,
+            )
+            .unwrap(),
+            vec![&mint_account, &account_account, &owner_account],
+        ),
+    ];
+
+    // missing signer
+    let mut instruction = approve(
+        &INSTRUCTION_TOKEN_PROGRAM_ID,
+        &account_key,
+        &delegate_key,
+        &owner_key,
+        &[],
+        100,
+    )
+    .unwrap();
+    instruction.accounts[2].is_signer = false;
+
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            instruction,
+            vec![&account_account, &delegate_account, &owner_account],
+        )],
+        &[Check::err(ProgramError::MissingRequiredSignature)],
+    );
+
+    // no owner
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
             approve(
-                &program_id,
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &delegate_key,
+                &owner2_key,
+                &[],
+                100,
+            )
+            .unwrap(),
+            vec![&account_account, &delegate_account, &owner2_account],
+        )],
+        &[Check::err(TokenError::OwnerMismatch.into())],
+    );
+
+    // approve delegate
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &account_key,
                 &delegate_key,
                 &owner_key,
@@ -2922,92 +3028,118 @@ fn test_mintable_token_with_zero_supply() {
                 100,
             )
             .unwrap(),
-            vec![
-                &mut account_account,
-                &mut delegate_account,
-                &mut owner_account,
-            ],
-        )
-        .unwrap();
+            vec![&account_account, &delegate_account, &owner_account],
+        )],
+        &[Check::success()],
+    );
 
-        // approve delegate 2, with incorrect decimals
-        assert_eq!(
-            Err(TokenError::MintDecimalsMismatch.into()),
-            do_process_instruction(
+    // approve delegate 2, with incorrect decimals
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve_checked(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &delegate_key,
+                &owner_key,
+                &[],
+                100,
+                0, // <-- incorrect decimals
+            )
+            .unwrap(),
+            vec![
+                &account_account,
+                &mint_account,
+                &delegate_account,
+                &owner_account,
+            ],
+        )],
+        &[Check::err(TokenError::MintDecimalsMismatch.into())],
+    );
+
+    // approve delegate 2, with incorrect mint
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve_checked(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &account2_key, // <-- bad mint
+                &delegate_key,
+                &owner_key,
+                &[],
+                100,
+                0,
+            )
+            .unwrap(),
+            vec![
+                &account_account,
+                &account2_account, // <-- bad mint
+                &delegate_account,
+                &owner_account,
+            ],
+        )],
+        &[Check::err(TokenError::MintMismatch.into())],
+    );
+
+    // approve delegate 2
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            approve_checked(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &delegate_key,
+                &owner_key,
+                &[],
+                100,
+                2,
+            )
+            .unwrap(),
+            vec![
+                &account_account,
+                &mint_account,
+                &delegate_account,
+                &owner_account,
+            ],
+        )],
+        &[Check::success()],
+    );
+
+    // revoke delegate
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
                 approve_checked(
-                    &program_id,
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
                     &account_key,
                     &mint_key,
                     &delegate_key,
                     &owner_key,
                     &[],
                     100,
-                    0 // <-- incorrect decimals
+                    2,
                 )
                 .unwrap(),
                 vec![
-                    &mut account_account,
-                    &mut mint_account,
-                    &mut delegate_account,
-                    &mut owner_account,
+                    &account_account,
+                    &mint_account,
+                    &delegate_account,
+                    &owner_account,
                 ],
-            )
-        );
-
-        // approve delegate 2, with incorrect mint
-        assert_eq!(
-            Err(TokenError::MintMismatch.into()),
-            do_process_instruction(
-                approve_checked(
-                    &program_id,
-                    &account_key,
-                    &account2_key, // <-- bad mint
-                    &delegate_key,
-                    &owner_key,
-                    &[],
-                    100,
-                    0
-                )
-                .unwrap(),
-                vec![
-                    &mut account_account,
-                    &mut account2_account, // <-- bad mint
-                    &mut delegate_account,
-                    &mut owner_account,
-                ],
-            )
-        );
-
-        // approve delegate 2
-        do_process_instruction(
-            approve_checked(
-                &program_id,
-                &account_key,
-                &mint_key,
-                &delegate_key,
-                &owner_key,
-                &[],
-                100,
-                2,
-            )
-            .unwrap(),
-            vec![
-                &mut account_account,
-                &mut mint_account,
-                &mut delegate_account,
-                &mut owner_account,
-            ],
-        )
-        .unwrap();
-
-        // revoke delegate
-        do_process_instruction(
-            revoke(&TOKEN_PROGRAM_ID, &account_key, &owner_key, &[]).unwrap(),
-            vec![&mut account_account, &mut owner_account],
-        )
-        .unwrap();
-    }
-
+            ),
+            (
+                revoke(&INSTRUCTION_TOKEN_PROGRAM_ID, &account_key, &owner_key, &[]).unwrap(),
+                vec![&account_account, &owner_account],
+            ),
+        ],
+        &[Check::success()],
+    );
+}
+/*
     #[test]
     fn test_set_authority_dups() {
         let program_id = crate::id();
