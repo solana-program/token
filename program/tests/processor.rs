@@ -20,7 +20,7 @@ use {
         error::TokenError,
         instruction::{
             approve, initialize_account, initialize_mint, initialize_mint2, initialize_multisig,
-            mint_to, transfer, transfer_checked,
+            mint_to, mint_to_checked, transfer, transfer_checked,
         },
         state::{Account, AccountState, Mint, Multisig},
     },
@@ -2423,106 +2423,175 @@ fn test_self_transfer() {
         ],
     );
 }
-/*
-    #[test]
-    fn test_mintable_token_with_zero_supply() {
-        let program_id = crate::id();
-        let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
-            account_minimum_balance(),
-            Account::get_packed_len(),
-            &program_id,
-        );
-        let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
-        let mint_key = Pubkey::new_unique();
-        let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
-        let mut rent_sysvar = rent_sysvar();
 
+#[test]
+fn test_mintable_token_with_zero_supply() {
+    let program_id = TARGET_TOKEN_PROGRAM_ID;
+    let account_key = Pubkey::new_unique();
+    let account_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let owner_key = Pubkey::new_unique();
+    let owner_account = SolanaAccount::default();
+    let mint_key = Pubkey::new_unique();
+    let mint_account =
+        SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+    let rent_sysvar = rent_sysvar();
+
+    let decimals = 2;
+    let setup_instructions = vec![
         // create mint-able token with zero supply
-        let decimals = 2;
-        do_process_instruction(
-            initialize_mint(&TOKEN_PROGRAM_ID, &mint_key, &owner_key, None, decimals).unwrap(),
-            vec![&mut mint_account, &mut rent_sysvar],
-        )
-        .unwrap();
-        let mint = Mint::unpack_unchecked(&mint_account.data).unwrap();
-        assert_eq!(
-            mint,
-            Mint {
-                mint_authority: COption::Some(owner_key),
-                supply: 0,
+        (
+            initialize_mint(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &mint_key,
+                &owner_key,
+                None,
                 decimals,
-                is_initialized: true,
-                freeze_authority: COption::None,
-            }
-        );
-
-        // create account
-        do_process_instruction(
-            initialize_account(&TOKEN_PROGRAM_ID, &account_key, &mint_key, &owner_key).unwrap(),
-            vec![
-                &mut account_account,
-                &mut mint_account,
-                &mut owner_account,
-                &mut rent_sysvar,
-            ],
-        )
-        .unwrap();
-
-        // mint to
-        do_process_instruction(
-            mint_to(&TOKEN_PROGRAM_ID, &mint_key, &account_key, &owner_key, &[], 42).unwrap(),
-            vec![&mut mint_account, &mut account_account, &mut owner_account],
-        )
-        .unwrap();
-        let _ = Mint::unpack(&mint_account.data).unwrap();
-        let account = Account::unpack_unchecked(&account_account.data).unwrap();
-        assert_eq!(account.amount, 42);
-
-        // mint to 2, with incorrect decimals
-        assert_eq!(
-            Err(TokenError::MintDecimalsMismatch.into()),
-            do_process_instruction(
-                mint_to_checked(
-                    &program_id,
-                    &mint_key,
-                    &account_key,
-                    &owner_key,
-                    &[],
-                    42,
-                    decimals + 1
-                )
-                .unwrap(),
-                vec![&mut mint_account, &mut account_account, &mut owner_account],
             )
-        );
+            .unwrap(),
+            vec![&mint_account, &rent_sysvar],
+        ),
+        // create account
+        (
+            initialize_account(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
+                &account_key,
+                &mint_key,
+                &owner_key,
+            )
+            .unwrap(),
+            vec![
+                &account_account,
+                &mint_account,
+                &owner_account,
+                &rent_sysvar,
+            ],
+        ),
+    ];
 
-        let _ = Mint::unpack(&mint_account.data).unwrap();
-        let account = Account::unpack_unchecked(&account_account.data).unwrap();
-        assert_eq!(account.amount, 42);
+    let mut mint_data = [0u8; Mint::LEN];
+    Mint {
+        mint_authority: COption::Some(owner_key),
+        supply: 0,
+        decimals,
+        is_initialized: true,
+        freeze_authority: COption::None,
+    }
+    .pack_into_slice(&mut mint_data);
 
-        // mint to 2
-        do_process_instruction(
-            mint_to_checked(
-                &program_id,
+    // create mint-able token with zero supply
+    do_process_instructions(
+        &setup_instructions,
+        &[
+            Check::success(),
+            Check::account(&mint_key).data(&mint_data).build(),
+        ],
+    );
+
+    // mint to
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[(
+            mint_to(
+                &INSTRUCTION_TOKEN_PROGRAM_ID,
                 &mint_key,
                 &account_key,
                 &owner_key,
                 &[],
                 42,
-                decimals,
             )
             .unwrap(),
-            vec![&mut mint_account, &mut account_account, &mut owner_account],
-        )
-        .unwrap();
-        let _ = Mint::unpack(&mint_account.data).unwrap();
-        let account = Account::unpack_unchecked(&account_account.data).unwrap();
-        assert_eq!(account.amount, 84);
-    }
+            vec![&mint_account, &account_account, &owner_account],
+        )],
+        &[
+            Check::success(),
+            Check::account(&account_key)
+                .data_slice(64, &42u64.to_le_bytes())
+                .build(),
+        ],
+    );
 
+    // mint to 2, with incorrect decimals
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                mint_to(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    42,
+                )
+                .unwrap(),
+                vec![&mint_account, &account_account, &owner_account],
+            ),
+            (
+                mint_to_checked(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    42,
+                    decimals + 1,
+                )
+                .unwrap(),
+                vec![&mint_account, &account_account, &owner_account],
+            ),
+        ],
+        &[
+            Check::err(TokenError::MintDecimalsMismatch.into()),
+            // no balance change...
+            Check::account(&account_key)
+                .data_slice(64, &42u64.to_le_bytes())
+                .build(),
+        ],
+    );
+
+    // mint to 2
+    do_process_instructions_with_pre_instructions(
+        Some(&setup_instructions),
+        &[
+            (
+                mint_to(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    42,
+                )
+                .unwrap(),
+                vec![&mint_account, &account_account, &owner_account],
+            ),
+            (
+                mint_to_checked(
+                    &INSTRUCTION_TOKEN_PROGRAM_ID,
+                    &mint_key,
+                    &account_key,
+                    &owner_key,
+                    &[],
+                    42,
+                    decimals,
+                )
+                .unwrap(),
+                vec![&mint_account, &account_account, &owner_account],
+            ),
+        ],
+        &[
+            Check::success(),
+            Check::account(&account_key)
+                .data_slice(64, &84u64.to_le_bytes())
+                .build(),
+        ],
+    );
+}
+/*
     #[test]
     fn test_approve_dups() {
         let program_id = crate::id();
