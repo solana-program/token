@@ -61,8 +61,7 @@ fn do_process_instruction(
         });
 
     let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
-    let result =
-        mollusk.process_and_validate_instruction_chain(&[instruction], &instruction_accounts, &[]);
+    let result = mollusk.process_and_validate_instruction(&instruction, &instruction_accounts, &[]);
 
     // Update accounts after the instruction is processed.
     for (original, (_, updated)) in accounts.iter_mut().zip(result.resulting_accounts.iter()) {
@@ -102,8 +101,7 @@ fn do_process_instruction_dups(
     });
 
     let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
-    let result =
-        mollusk.process_and_validate_instruction_chain(&[instruction], &dedup_accounts, &[]);
+    let result = mollusk.process_and_validate_instruction(&instruction, &dedup_accounts, &[]);
 
     // Update accounts after the instruction is processed.
     result
