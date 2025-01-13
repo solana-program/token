@@ -4,5 +4,3 @@
 
 mod entrypoint;
 mod processor;
-
-pinocchio_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");

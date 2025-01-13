@@ -10,6 +10,7 @@ use pinocchio::{
 };
 use token_interface::{
     error::TokenError,
+    program::ID as TOKEN_PROGRAM_ID,
     state::{
         load,
         multisig::{Multisig, MAX_SIGNERS},
@@ -84,7 +85,7 @@ const MAX_FORMATTED_DIGITS: usize = u8::MAX as usize + 2;
 /// Checks that the account is owned by the expected program.
 #[inline(always)]
 fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
-    if &crate::ID != account_info.owner() {
+    if &TOKEN_PROGRAM_ID != account_info.owner() {
         Err(ProgramError::IncorrectProgramId)
     } else {
         Ok(())
@@ -102,7 +103,9 @@ fn validate_owner(
         return Err(TokenError::OwnerMismatch.into());
     }
 
-    if owner_account_info.data_len() == Multisig::LEN && &crate::ID == owner_account_info.owner() {
+    if owner_account_info.data_len() == Multisig::LEN
+        && owner_account_info.owner() == &TOKEN_PROGRAM_ID
+    {
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;
