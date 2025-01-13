@@ -35,7 +35,7 @@ pub fn process_amount_to_ui_amount(
     // SAFETY: the logger is guaranteed to be a valid UTF-8 string.
     let mut s = unsafe { from_utf8_unchecked(&logger) };
 
-    if mint.decimals > 0 {
+    if mint.decimals > 0 && s.contains('.') {
         let zeros_trimmed = s.trim_end_matches('0');
         s = zeros_trimmed.trim_end_matches('.');
     }
