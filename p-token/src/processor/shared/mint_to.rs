@@ -53,13 +53,13 @@ pub fn process_mint_to(
         let destination_amount = destination_account
             .amount()
             .checked_add(amount)
-            .ok_or(ProgramError::InvalidAccountData)?;
+            .ok_or(TokenError::Overflow)?;
         destination_account.set_amount(destination_amount);
 
         let mint_supply = mint
             .supply()
             .checked_add(amount)
-            .ok_or(ProgramError::InvalidAccountData)?;
+            .ok_or(TokenError::Overflow)?;
         mint.set_supply(mint_supply);
     }
 
