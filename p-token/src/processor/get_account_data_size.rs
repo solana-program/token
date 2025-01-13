@@ -1,5 +1,6 @@
 use pinocchio::{
-    account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
+    account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
+    pubkey::Pubkey, ProgramResult,
 };
 use token_interface::{
     error::TokenError,
@@ -9,16 +10,19 @@ use token_interface::{
 use super::check_account_owner;
 
 #[inline(always)]
-pub fn process_get_account_data_size(accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_get_account_data_size(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let [mint_info, _remaning @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
     // Make sure the mint is valid.
-    check_account_owner(mint_info)?;
+    check_account_owner(program_id, mint_info)?;
 
     let _ = unsafe {
-        load::<Mint>(mint_info.borrow_data_unchecked()).map_err(|_| TokenError::InvalidMint)
+        load::<Mint>(mint_info.borrow_data_unchecked()).map_err(|_| TokenError::InvalidMint)?
     };
 
     set_return_data(&Account::LEN.to_le_bytes());
