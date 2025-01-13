@@ -2,7 +2,10 @@ use core::str::from_utf8;
 use pinocchio::{
     account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
 };
-use token_interface::state::{load, mint::Mint};
+use token_interface::{
+    error::TokenError,
+    state::{load, mint::Mint},
+};
 
 use super::{check_account_owner, try_ui_amount_into_amount};
 
@@ -17,7 +20,9 @@ pub fn process_ui_amount_to_amount(
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;
     // SAFETY: there is a single borrow to the `Mint` account.
-    let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
+    let mint = unsafe {
+        load::<Mint>(mint_info.borrow_data_unchecked()).map_err(|_| TokenError::InvalidMint)?
+    };
 
     let amount = try_ui_amount_into_amount(ui_amount, mint.decimals)?;
     set_return_data(&amount.to_le_bytes());
