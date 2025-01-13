@@ -86,6 +86,11 @@ impl Account {
     }
 
     #[inline(always)]
+    pub fn set_native_amount(&mut self, amount: u64) {
+        self.native_amount = amount.to_le_bytes();
+    }
+
+    #[inline(always)]
     pub fn native_amount(&self) -> Option<u64> {
         if self.is_native() {
             Some(u64::from_le_bytes(self.native_amount))
