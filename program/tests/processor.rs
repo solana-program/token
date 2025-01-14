@@ -6,9 +6,7 @@ use {
     mollusk_svm::{result::Check, Mollusk},
     serial_test::serial,
     solana_sdk::{
-        account::{
-            create_account_for_test, Account as SolanaAccount, AccountSharedData, ReadableAccount,
-        },
+        account::{create_account_for_test, Account as SolanaAccount, ReadableAccount},
         account_info::{AccountInfo, IntoAccountInfo},
         entrypoint::ProgramResult,
         instruction::Instruction,
@@ -47,16 +45,11 @@ fn do_process_instruction(
     checks: &[Check],
 ) -> ProgramResult {
     // Prepare accounts for mollusk.
-    let instruction_accounts: Vec<(Pubkey, AccountSharedData)> = instruction
+    let instruction_accounts: Vec<(Pubkey, SolanaAccount)> = instruction
         .accounts
         .iter()
         .zip(&accounts)
-        .map(|(account_meta, account)| {
-            (
-                account_meta.pubkey,
-                AccountSharedData::from((*account).clone()),
-            )
-        })
+        .map(|(account_meta, account)| (account_meta.pubkey, (*account).clone()))
         .collect();
 
     let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
@@ -96,7 +89,7 @@ fn do_process_instruction_dups(
                 executable: account_info.executable,
                 rent_epoch: account_info.rent_epoch,
             };
-            dedup_accounts.push((*account_info.key, AccountSharedData::from(account)));
+            dedup_accounts.push((*account_info.key, account));
             cached_accounts.insert(account_info.key, account_info);
         }
     });
@@ -109,8 +102,9 @@ fn do_process_instruction_dups(
         .resulting_accounts
         .into_iter()
         .for_each(|(pubkey, account)| {
+            let account = account.clone();
             let account_info = cached_accounts.get(&pubkey).unwrap();
-            if account.data().is_empty() {
+            if account.data.is_empty() {
                 // When the account is closed, the tests expect the data to
                 // be zeroed.
                 account_info.try_borrow_mut_data().unwrap().fill(0);
