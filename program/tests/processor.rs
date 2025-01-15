@@ -29,15 +29,8 @@ use {
         },
         state::{Account, AccountState, Mint, Multisig},
     },
-    std::{
-        collections::HashMap,
-        sync::{Arc, RwLock},
-    },
+    std::collections::HashMap,
 };
-
-lazy_static::lazy_static! {
-    static ref EXPECTED_DATA: Arc<RwLock<Vec<u8>>> = Arc::new(RwLock::new(Vec::new()));
-}
 
 fn do_process_instruction(
     instruction: Instruction,
@@ -121,10 +114,6 @@ fn do_process_instruction_dups(
     result
         .raw_result
         .map_err(|e| ProgramError::try_from(e).unwrap())
-}
-
-fn set_expected_data(expected_data: Vec<u8>) {
-    *EXPECTED_DATA.write().unwrap() = expected_data;
 }
 
 fn rent_sysvar() -> SolanaAccount {
@@ -6066,11 +6055,13 @@ fn test_get_account_data_size() {
     )
     .unwrap();
 
-    set_expected_data(Account::LEN.to_le_bytes().to_vec());
     do_process_instruction(
         get_account_data_size(&program_id, &mint_key).unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[
+            Check::success(),
+            Check::return_data(&Account::LEN.to_le_bytes()),
+        ],
     )
     .unwrap();
 }
@@ -6159,35 +6150,31 @@ fn test_amount_to_ui_amount() {
     )
     .unwrap();
 
-    set_expected_data("0.23".as_bytes().to_vec());
     do_process_instruction(
         amount_to_ui_amount(&program_id, &mint_key, 23).unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data("0.23".as_bytes())],
     )
     .unwrap();
 
-    set_expected_data("1.1".as_bytes().to_vec());
     do_process_instruction(
         amount_to_ui_amount(&program_id, &mint_key, 110).unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data("1.1".as_bytes())],
     )
     .unwrap();
 
-    set_expected_data("42".as_bytes().to_vec());
     do_process_instruction(
         amount_to_ui_amount(&program_id, &mint_key, 4200).unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data("42".as_bytes())],
     )
     .unwrap();
 
-    set_expected_data("0".as_bytes().to_vec());
     do_process_instruction(
         amount_to_ui_amount(&program_id, &mint_key, 0).unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data("0".as_bytes())],
     )
     .unwrap();
 }
@@ -6220,75 +6207,66 @@ fn test_ui_amount_to_amount() {
     )
     .unwrap();
 
-    set_expected_data(23u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "0.23").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&23u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(20u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "0.20").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&20u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(20u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "0.2000").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&20u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(20u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, ".20").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&20u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(110u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "1.1").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&110u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(110u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "1.10").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&110u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(4200u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "42").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&4200u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(4200u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "42.").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&4200u64.to_le_bytes())],
     )
     .unwrap();
 
-    set_expected_data(0u64.to_le_bytes().to_vec());
     do_process_instruction(
         ui_amount_to_amount(&program_id, &mint_key, "0").unwrap(),
         vec![&mut mint_account],
-        &[Check::success()],
+        &[Check::success(), Check::return_data(&0u64.to_le_bytes())],
     )
     .unwrap();
 
