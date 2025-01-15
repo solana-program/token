@@ -1559,7 +1559,7 @@ dependencies = [
 [[package]]
 name = "mollusk-svm"
 version = "0.0.13"
-source = "git+https://github.com/buffalojoec/mollusk.git#f01db9074f90405b5e5109a1845a1a643d9e0dc5"
+source = "git+https://github.com/buffalojoec/mollusk.git#ba391d116e8a032806cb093e7433940fa2cf27b6"
 dependencies = [
  "bincode",
  "mollusk-svm-error",
@@ -1576,7 +1576,7 @@ dependencies = [
 [[package]]
 name = "mollusk-svm-error"
 version = "0.0.13"
-source = "git+https://github.com/buffalojoec/mollusk.git#f01db9074f90405b5e5109a1845a1a643d9e0dc5"
+source = "git+https://github.com/buffalojoec/mollusk.git#ba391d116e8a032806cb093e7433940fa2cf27b6"
 dependencies = [
  "solana-sdk",
  "thiserror 1.0.69",
@@ -1585,7 +1585,7 @@ dependencies = [
 [[package]]
 name = "mollusk-svm-keys"
 version = "0.0.13"
-source = "git+https://github.com/buffalojoec/mollusk.git#f01db9074f90405b5e5109a1845a1a643d9e0dc5"
+source = "git+https://github.com/buffalojoec/mollusk.git#ba391d116e8a032806cb093e7433940fa2cf27b6"
 dependencies = [
  "mollusk-svm-error",
  "solana-sdk",

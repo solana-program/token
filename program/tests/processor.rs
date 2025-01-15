@@ -5911,7 +5911,15 @@ fn test_sync_native() {
             &mut owner_account,
             &mut rent_sysvar,
         ],
-        &[Check::success()],
+        &[
+            Check::success(),
+            Check::account(&non_native_account_key)
+                .data_slice(109, &[0, 0, 0, 0])
+                .build(),
+            Check::account(&non_native_account_key)
+                .data_slice(64, &0u64.to_le_bytes())
+                .build(),
+        ],
     )
     .unwrap();
 
