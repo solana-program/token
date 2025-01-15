@@ -3,10 +3,12 @@
 //! Program state processor tests
 
 use {
-    mollusk_svm::{result::ProgramResult as MolluskResult, Mollusk},
+    mollusk_svm::Mollusk,
     serial_test::serial,
     solana_sdk::{
-        account::{create_account_for_test, Account as SolanaAccount, AccountSharedData},
+        account::{
+            create_account_for_test, Account as SolanaAccount, AccountSharedData, ReadableAccount,
+        },
         account_info::{AccountInfo, IntoAccountInfo},
         entrypoint::ProgramResult,
         instruction::Instruction,
@@ -43,10 +45,8 @@ fn do_process_instruction(
     instruction: Instruction,
     mut accounts: Vec<&mut SolanaAccount>,
 ) -> ProgramResult {
-    let mut instruction_accounts = Vec::new();
-
     // Prepare accounts for mollusk.
-    instruction
+    let instruction_accounts: Vec<(Pubkey, AccountSharedData)> = instruction
         .accounts
         .iter()
         .zip(&accounts)
@@ -56,26 +56,24 @@ fn do_process_instruction(
                 AccountSharedData::from((*account).clone()),
             )
         })
-        .for_each(|(pubkey, account)| {
-            instruction_accounts.push((pubkey, account));
-        });
+        .collect();
 
     let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
-    let result = mollusk.process_and_validate_instruction(&instruction, &instruction_accounts, &[]);
+    let result = mollusk.process_instruction(&instruction, &instruction_accounts);
 
     // Update accounts after the instruction is processed.
-    for (original, (_, updated)) in accounts.iter_mut().zip(result.resulting_accounts.iter()) {
-        let account = SolanaAccount::from(updated.clone());
-        original.data = account.data;
-        original.lamports = account.lamports;
-        original.owner = account.owner;
+    for (original, (_, updated)) in accounts
+        .iter_mut()
+        .zip(result.resulting_accounts.into_iter())
+    {
+        original.data = updated.data().to_vec();
+        original.lamports = updated.lamports();
+        original.owner = *updated.owner();
     }
 
-    match result.program_result {
-        MolluskResult::Success => Ok(()),
-        MolluskResult::Failure(err) => Err(err),
-        MolluskResult::UnknownError(err) => panic!("Unknown error: {:?}", err),
-    }
+    result
+        .raw_result
+        .map_err(|e| ProgramError::try_from(e).unwrap())
 }
 
 fn do_process_instruction_dups(
@@ -101,16 +99,15 @@ fn do_process_instruction_dups(
     });
 
     let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
-    let result = mollusk.process_and_validate_instruction(&instruction, &dedup_accounts, &[]);
+    let result = mollusk.process_instruction(&instruction, &dedup_accounts);
 
     // Update accounts after the instruction is processed.
     result
         .resulting_accounts
-        .iter()
+        .into_iter()
         .for_each(|(pubkey, account)| {
-            let account = SolanaAccount::from(account.clone());
-            let account_info = cached_accounts.get(pubkey).unwrap();
-            if account.data.is_empty() {
+            let account_info = cached_accounts.get(&pubkey).unwrap();
+            if account.data().is_empty() {
                 // When the account is closed, the tests expect the data to
                 // be zeroed.
                 account_info.try_borrow_mut_data().unwrap().fill(0);
@@ -118,17 +115,15 @@ fn do_process_instruction_dups(
                 account_info
                     .try_borrow_mut_data()
                     .unwrap()
-                    .copy_from_slice(&account.data);
+                    .copy_from_slice(account.data());
             }
-            **account_info.try_borrow_mut_lamports().unwrap() = account.lamports;
-            account_info.assign(&account.owner);
+            **account_info.try_borrow_mut_lamports().unwrap() = account.lamports();
+            account_info.assign(account.owner());
         });
 
-    match result.program_result {
-        MolluskResult::Success => Ok(()),
-        MolluskResult::Failure(err) => Err(err),
-        MolluskResult::UnknownError(err) => panic!("Unknown error: {:?}", err),
-    }
+    result
+        .raw_result
+        .map_err(|e| ProgramError::try_from(e).unwrap())
 }
 
 fn set_expected_data(expected_data: Vec<u8>) {
