@@ -1,21 +1,23 @@
 #![cfg(feature = "test-sbf")]
 
+//! Program state processor tests
+
 use {
+    mollusk_svm::Mollusk,
     serial_test::serial,
-    solana_program::{
-        account_info::IntoAccountInfo, instruction::Instruction, program_error, sysvar::rent,
-    },
     solana_sdk::{
         account::{
-            create_account_for_test, create_is_signer_account_infos, Account as SolanaAccount,
+            create_account_for_test, Account as SolanaAccount, AccountSharedData, ReadableAccount,
         },
-        account_info::AccountInfo,
+        account_info::{AccountInfo, IntoAccountInfo},
         entrypoint::ProgramResult,
+        instruction::Instruction,
         program_error::ProgramError,
         program_option::COption,
         program_pack::Pack,
         pubkey::Pubkey,
         rent::Rent,
+        sysvar::rent,
     },
     spl_token::{
         error::TokenError,
@@ -27,87 +29,105 @@ use {
             set_authority, sync_native, thaw_account, transfer, transfer_checked,
             ui_amount_to_amount, AuthorityType, MAX_SIGNERS,
         },
-        processor::Processor,
         state::{Account, AccountState, Mint, Multisig},
     },
-    std::sync::{Arc, RwLock},
+    std::{
+        collections::HashMap,
+        sync::{Arc, RwLock},
+    },
 };
 
 lazy_static::lazy_static! {
     static ref EXPECTED_DATA: Arc<RwLock<Vec<u8>>> = Arc::new(RwLock::new(Vec::new()));
 }
 
-fn set_expected_data(expected_data: Vec<u8>) {
-    *EXPECTED_DATA.write().unwrap() = expected_data;
-}
-
-struct SyscallStubs {}
-impl solana_sdk::program_stubs::SyscallStubs for SyscallStubs {
-    fn sol_log(&self, _message: &str) {}
-
-    fn sol_invoke_signed(
-        &self,
-        _instruction: &Instruction,
-        _account_infos: &[AccountInfo],
-        _signers_seeds: &[&[&[u8]]],
-    ) -> ProgramResult {
-        Err(ProgramError::Custom(42)) // Not supported
-    }
-
-    fn sol_get_clock_sysvar(&self, _var_addr: *mut u8) -> u64 {
-        program_error::UNSUPPORTED_SYSVAR
-    }
-
-    fn sol_get_epoch_schedule_sysvar(&self, _var_addr: *mut u8) -> u64 {
-        program_error::UNSUPPORTED_SYSVAR
-    }
-
-    #[allow(deprecated)]
-    fn sol_get_fees_sysvar(&self, _var_addr: *mut u8) -> u64 {
-        program_error::UNSUPPORTED_SYSVAR
-    }
-
-    fn sol_get_rent_sysvar(&self, var_addr: *mut u8) -> u64 {
-        unsafe {
-            *(var_addr as *mut _ as *mut Rent) = Rent::default();
-        }
-        solana_program::entrypoint::SUCCESS
-    }
-
-    fn sol_set_return_data(&self, data: &[u8]) {
-        assert_eq!(&*EXPECTED_DATA.write().unwrap(), data)
-    }
-}
-
 fn do_process_instruction(
     instruction: Instruction,
-    accounts: Vec<&mut SolanaAccount>,
+    mut accounts: Vec<&mut SolanaAccount>,
 ) -> ProgramResult {
-    {
-        use std::sync::Once;
-        static ONCE: Once = Once::new();
-
-        ONCE.call_once(|| {
-            solana_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
-        });
-    }
-
-    let mut meta = instruction
+    // Prepare accounts for mollusk.
+    let instruction_accounts: Vec<(Pubkey, AccountSharedData)> = instruction
         .accounts
         .iter()
-        .zip(accounts)
-        .map(|(account_meta, account)| (&account_meta.pubkey, account_meta.is_signer, account))
-        .collect::<Vec<_>>();
+        .zip(&accounts)
+        .map(|(account_meta, account)| {
+            (
+                account_meta.pubkey,
+                AccountSharedData::from((*account).clone()),
+            )
+        })
+        .collect();
 
-    let account_infos = create_is_signer_account_infos(&mut meta);
-    Processor::process(&instruction.program_id, &account_infos, &instruction.data)
+    let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
+    let result = mollusk.process_instruction(&instruction, &instruction_accounts);
+
+    // Update accounts after the instruction is processed.
+    for (original, (_, updated)) in accounts
+        .iter_mut()
+        .zip(result.resulting_accounts.into_iter())
+    {
+        original.data = updated.data().to_vec();
+        original.lamports = updated.lamports();
+        original.owner = *updated.owner();
+    }
+
+    result
+        .raw_result
+        .map_err(|e| ProgramError::try_from(e).unwrap())
 }
 
 fn do_process_instruction_dups(
     instruction: Instruction,
     account_infos: Vec<AccountInfo>,
 ) -> ProgramResult {
-    Processor::process(&instruction.program_id, &account_infos, &instruction.data)
+    let mut cached_accounts = HashMap::new();
+    let mut dedup_accounts = Vec::new();
+
+    // Dedup accounts for mollusk.
+    account_infos.iter().for_each(|account_info| {
+        if !cached_accounts.contains_key(account_info.key) {
+            let account = SolanaAccount {
+                lamports: account_info.lamports(),
+                data: account_info.try_borrow_data().unwrap().to_vec(),
+                owner: *account_info.owner,
+                executable: account_info.executable,
+                rent_epoch: account_info.rent_epoch,
+            };
+            dedup_accounts.push((*account_info.key, AccountSharedData::from(account)));
+            cached_accounts.insert(account_info.key, account_info);
+        }
+    });
+
+    let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
+    let result = mollusk.process_instruction(&instruction, &dedup_accounts);
+
+    // Update accounts after the instruction is processed.
+    result
+        .resulting_accounts
+        .into_iter()
+        .for_each(|(pubkey, account)| {
+            let account_info = cached_accounts.get(&pubkey).unwrap();
+            if account.data().is_empty() {
+                // When the account is closed, the tests expect the data to
+                // be zeroed.
+                account_info.try_borrow_mut_data().unwrap().fill(0);
+            } else {
+                account_info
+                    .try_borrow_mut_data()
+                    .unwrap()
+                    .copy_from_slice(account.data());
+            }
+            **account_info.try_borrow_mut_lamports().unwrap() = account.lamports();
+            account_info.assign(account.owner());
+        });
+
+    result
+        .raw_result
+        .map_err(|e| ProgramError::try_from(e).unwrap())
+}
+
+fn set_expected_data(expected_data: Vec<u8>) {
+    *EXPECTED_DATA.write().unwrap() = expected_data;
 }
 
 fn rent_sysvar() -> SolanaAccount {
@@ -1217,14 +1237,13 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Ok(()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
     // no balance change...
@@ -1245,15 +1264,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Ok(()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
     // no balance change...
@@ -1275,14 +1293,13 @@ fn test_self_transfer() {
     owner_no_sign_info.is_signer = false;
     assert_eq!(
         Err(ProgramError::MissingRequiredSignature),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 owner_no_sign_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1301,15 +1318,14 @@ fn test_self_transfer() {
     instruction.accounts[3].is_signer = false;
     assert_eq!(
         Err(ProgramError::MissingRequiredSignature),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 owner_no_sign_info,
             ],
-            &instruction.data,
         )
     );
 
@@ -1325,14 +1341,13 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::OwnerMismatch.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 owner2_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1350,15 +1365,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::OwnerMismatch.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 owner2_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1374,14 +1388,13 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::InsufficientFunds.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1399,15 +1412,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::InsufficientFunds.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1425,15 +1437,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::MintDecimalsMismatch.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1451,15 +1462,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::MintMismatch.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account3_info.clone(), // <-- incorrect mint
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1473,14 +1483,13 @@ fn test_self_transfer() {
         100,
     )
     .unwrap();
-    Processor::process(
-        &instruction.program_id,
-        &[
+    do_process_instruction_dups(
+        instruction,
+        vec![
             account_info.clone(),
             delegate_info.clone(),
             owner_info.clone(),
         ],
-        &instruction.data,
     )
     .unwrap();
 
@@ -1496,14 +1505,13 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Ok(()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 delegate_info.clone(),
             ],
-            &instruction.data,
         )
     );
     // no balance change...
@@ -1525,15 +1533,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Ok(()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 delegate_info.clone(),
             ],
-            &instruction.data,
         )
     );
     // no balance change...
@@ -1553,14 +1560,13 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::InsufficientFunds.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 delegate_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1578,15 +1584,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Err(TokenError::InsufficientFunds.into()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 delegate_info.clone(),
             ],
-            &instruction.data,
         )
     );
 
@@ -1602,14 +1607,13 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Ok(()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
     // no balance change...
@@ -1630,15 +1634,14 @@ fn test_self_transfer() {
     .unwrap();
     assert_eq!(
         Ok(()),
-        Processor::process(
-            &instruction.program_id,
-            &[
+        do_process_instruction_dups(
+            instruction,
+            vec![
                 account_info.clone(),
                 mint_info.clone(),
                 account_info.clone(),
                 owner_info.clone(),
             ],
-            &instruction.data,
         )
     );
     // no balance change...
@@ -3020,8 +3023,8 @@ fn test_burn_dups() {
     do_process_instruction_dups(
         burn(
             &program_id,
-            &mint_key,
             &account1_key,
+            &mint_key,
             &account1_key,
             &[],
             500,
@@ -4406,10 +4409,9 @@ fn test_close_account() {
         ],
     )
     .unwrap();
+    assert!(account_account.data.is_empty());
     assert_eq!(account_account.lamports, 0);
     assert_eq!(account3_account.lamports, 2 * account_minimum_balance());
-    let account = Account::unpack_unchecked(&account_account.data).unwrap();
-    assert_eq!(account.amount, 0);
 
     // fund and initialize new non-native account to test close authority
     let account_key = Pubkey::new_unique();
@@ -4473,10 +4475,9 @@ fn test_close_account() {
         ],
     )
     .unwrap();
+    assert!(account_account.data.is_empty());
     assert_eq!(account_account.lamports, 0);
     assert_eq!(account3_account.lamports, 2 * account_minimum_balance() + 2);
-    let account = Account::unpack_unchecked(&account_account.data).unwrap();
-    assert_eq!(account.amount, 0);
 
     // close native account
     do_process_instruction(
@@ -4488,7 +4489,7 @@ fn test_close_account() {
         ],
     )
     .unwrap();
-    assert_eq!(account2_account.data, [0u8; Account::LEN]);
+    assert!(account2_account.data.is_empty());
     assert_eq!(
         account3_account.lamports,
         3 * account_minimum_balance() + 2 + 42
@@ -4706,7 +4707,7 @@ fn test_native_token() {
     .unwrap();
     assert_eq!(account_account.lamports, 0);
     assert_eq!(account3_account.lamports, 2 * account_minimum_balance());
-    assert_eq!(account_account.data, [0u8; Account::LEN]);
+    assert!(account_account.data.is_empty());
 }
 
 #[test]
