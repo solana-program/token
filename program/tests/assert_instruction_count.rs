@@ -5,7 +5,7 @@ mod setup;
 use {
     mollusk_svm::{result::Check, Mollusk},
     solana_sdk::{
-        account::{AccountSharedData, ReadableAccount},
+        account::{Account as SolanaAccount, ReadableAccount},
         program_pack::Pack,
         pubkey::Pubkey,
     },
@@ -29,7 +29,7 @@ fn initialize_mint() {
     let mint_account = {
         let space = Mint::LEN;
         let lamports = mollusk.sysvars.rent.minimum_balance(space);
-        AccountSharedData::new(lamports, space, &id())
+        SolanaAccount::new(lamports, space, &id())
     };
 
     mollusk.process_and_validate_instruction(
@@ -61,7 +61,7 @@ fn initialize_account() {
     let token_account = {
         let space = Account::LEN;
         let lamports = mollusk.sysvars.rent.minimum_balance(space);
-        AccountSharedData::new(lamports, space, &id())
+        SolanaAccount::new(lamports, space, &id())
     };
 
     mollusk.process_and_validate_instruction(
@@ -69,7 +69,7 @@ fn initialize_account() {
         &[
             (account, token_account),
             (mint, mint_account),
-            (owner, AccountSharedData::default()),
+            (owner, SolanaAccount::default()),
             mollusk.sysvars.keyed_account_for_rent_sysvar(),
         ],
         &[
@@ -99,7 +99,7 @@ fn mint_to() {
         &[
             (mint, mint_account),
             (account, token_account),
-            (owner, AccountSharedData::default()),
+            (owner, SolanaAccount::default()),
         ],
         &[
             Check::success(),
@@ -133,7 +133,7 @@ fn transfer() {
         &[
             (source, source_token_account),
             (destination, destination_token_account),
-            (owner, AccountSharedData::default()),
+            (owner, SolanaAccount::default()),
         ],
         &[
             Check::success(),
@@ -165,7 +165,7 @@ fn burn() {
         &[
             (mint, mint_account),
             (account, token_account),
-            (owner, AccountSharedData::default()),
+            (owner, SolanaAccount::default()),
         ],
         &[
             Check::success(),
@@ -194,7 +194,7 @@ fn close_account() {
         &[
             (mint, mint_account),
             (account, token_account),
-            (owner, AccountSharedData::default()),
+            (owner, SolanaAccount::default()),
         ],
         &[Check::success(), Check::account(&account).closed().build()],
     );

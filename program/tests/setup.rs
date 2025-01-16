@@ -2,10 +2,7 @@
 
 use {
     solana_sdk::{
-        account::{Account as SolanaAccount, AccountSharedData},
-        program_pack::Pack,
-        pubkey::Pubkey,
-        rent::Rent,
+        account::Account as SolanaAccount, program_pack::Pack, pubkey::Pubkey, rent::Rent,
     },
     spl_token::state::{Account, AccountState, Mint},
 };
@@ -15,7 +12,7 @@ pub fn setup_mint_account(
     freeze_authority: Option<&Pubkey>,
     supply: u64,
     decimals: u8,
-) -> AccountSharedData {
+) -> SolanaAccount {
     let data = {
         let mut data = vec![0; Mint::LEN];
         let state = Mint {
@@ -32,15 +29,15 @@ pub fn setup_mint_account(
     let space = data.len();
     let lamports = Rent::default().minimum_balance(space);
 
-    AccountSharedData::from(SolanaAccount {
+    SolanaAccount {
         lamports,
         data,
         owner: spl_token::id(),
         ..Default::default()
-    })
+    }
 }
 
-pub fn setup_token_account(mint: &Pubkey, owner: &Pubkey, amount: u64) -> AccountSharedData {
+pub fn setup_token_account(mint: &Pubkey, owner: &Pubkey, amount: u64) -> SolanaAccount {
     let data = {
         let mut data = vec![0; Account::LEN];
         let state = Account {
@@ -60,10 +57,10 @@ pub fn setup_token_account(mint: &Pubkey, owner: &Pubkey, amount: u64) -> Accoun
     let space = data.len();
     let lamports = Rent::default().minimum_balance(space);
 
-    AccountSharedData::from(SolanaAccount {
+    SolanaAccount {
         lamports,
         data,
         owner: spl_token::id(),
         ..Default::default()
-    })
+    }
 }
