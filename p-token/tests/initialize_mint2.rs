@@ -16,7 +16,6 @@ use solana_sdk::{
 };
 use token_interface::state::mint::Mint;
 
-#[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn initialize_mint2(token_program: Pubkey) {

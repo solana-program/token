@@ -12,6 +12,8 @@ pub fn process_sync_native(accounts: &[AccountInfo]) -> ProgramResult {
 
     check_account_owner(native_account_info)?;
 
+    // SAFETY: single mutable borrow to `native_account_info` account data and
+    // `load_mut` validates that the account is initialized.
     let native_account =
         unsafe { load_mut::<Account>(native_account_info.borrow_mut_data_unchecked())? };
 

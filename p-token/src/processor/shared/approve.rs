@@ -45,6 +45,8 @@ pub fn process_approve(
 
     // Validates source account.
 
+    // SAFETY: single mutable borrow to `source_account_info` account data and
+    // `load_mut` validates that the account is initialized.
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
@@ -57,6 +59,8 @@ pub fn process_approve(
             return Err(TokenError::MintMismatch.into());
         }
 
+        // SAFETY: single immutable borrow of `mint_info` account data and
+        // `load` validates that the mint is initialized.
         let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
         if expected_decimals != mint.decimals {

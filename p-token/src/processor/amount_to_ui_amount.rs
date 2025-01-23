@@ -23,7 +23,8 @@ pub fn process_amount_to_ui_amount(
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;
-    // SAFETY: there is a single borrow to the `Mint` account.
+    // SAFETY: single immutable borrow to `mint_info` account data and
+    // `load` validates that the mint is initialized.
     let mint = unsafe {
         load::<Mint>(mint_info.borrow_data_unchecked()).map_err(|_| TokenError::InvalidMint)?
     };

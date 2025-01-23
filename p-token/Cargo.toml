@@ -20,7 +20,6 @@ test-sbf = []
 [dependencies]
 pinocchio = { workspace = true }
 pinocchio-log = { workspace = true }
-pinocchio-pubkey = { workspace = true }
 token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]

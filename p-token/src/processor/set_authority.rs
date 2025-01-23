@@ -27,6 +27,8 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
     };
 
     if account_info.data_len() == Account::LEN {
+        // SAFETY: single mutable borrow to `account_info` account data and
+        // `load_mut` validates that the account is initialized.
         let account = unsafe { load_mut::<Account>(account_info.borrow_mut_data_unchecked())? };
 
         if account.is_frozen() {
@@ -65,6 +67,8 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             }
         }
     } else if account_info.data_len() == Mint::LEN {
+        // SAFETY: single mutable borrow to `account_info` account data and
+        // `load_mut` validates that the mint is initialized.
         let mint = unsafe { load_mut::<Mint>(account_info.borrow_mut_data_unchecked())? };
 
         match authority_type {
@@ -119,7 +123,7 @@ impl SetAuthority<'_> {
         // The minimum expected size of the instruction data.
         // - authority_type (1 byte)
         // - option + new_authority (1 byte + 32 bytes)
-        if bytes.len() < 2 {
+        if bytes.len() < 2 || (bytes[1] == 1 && bytes.len() < 34) {
             return Err(ProgramError::InvalidInstructionData);
         }
 
@@ -131,11 +135,13 @@ impl SetAuthority<'_> {
 
     #[inline(always)]
     pub fn authority_type(&self) -> Result<AuthorityType, ProgramError> {
+        // SAFETY: `bytes` length is validated in `try_from_bytes`.
         unsafe { AuthorityType::from(*self.raw) }
     }
 
     #[inline(always)]
     pub fn new_authority(&self) -> Option<&Pubkey> {
+        // SAFETY: `bytes` length is validated in `try_from_bytes`.
         unsafe {
             if *self.raw.add(1) == 0 {
                 Option::None

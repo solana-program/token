@@ -12,10 +12,12 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
+    // SAFETY: single mutable borrow to `source_account_info` account data and
+    // `load_mut` validates that the account is initialized.
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
-    if freeze && source_account.is_frozen() || !freeze && !source_account.is_frozen() {
+    if freeze == source_account.is_frozen() {
         return Err(TokenError::InvalidState.into());
     }
     if source_account.is_native() {
@@ -25,6 +27,8 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
         return Err(TokenError::MintMismatch.into());
     }
 
+    // SAFETY: single immutable borrow of `mint_info` account data and
+    // `load` validates that the mint is initialized.
     let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
     match mint.freeze_authority() {
