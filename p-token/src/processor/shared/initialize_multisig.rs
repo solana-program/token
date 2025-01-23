@@ -32,12 +32,15 @@ pub fn process_initialize_multisig(
     let multisig_info_data_len = multisig_info.data_len();
 
     let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
-        let rent = unsafe { Rent::from_bytes(rent_sysvar_info.borrow_data_unchecked()) };
+        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length are
+        // checked by `from_account_info_unchecked`.
+        let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
         rent.is_exempt(multisig_info.lamports(), multisig_info_data_len)
     } else {
         Rent::get()?.is_exempt(multisig_info.lamports(), multisig_info_data_len)
     };
 
+    // SAFETY: single mutable borrow to `multisig_info` account data.
     let multisig =
         unsafe { load_mut_unchecked::<Multisig>(multisig_info.borrow_mut_data_unchecked())? };
 

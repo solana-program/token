@@ -12,6 +12,8 @@ pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> Pro
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
+    // SAFETY: single mutable borrow to `source_account_info` account data and
+    // `load_mut` validates that the account is initialized.
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 

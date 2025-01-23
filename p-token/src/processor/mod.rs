@@ -92,7 +92,10 @@ fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
     }
 }
 
-/// Validates owner(s) are present
+/// Validates owner(s) are present.
+///
+/// Note that `owner_account_info` will be immutable borrowed when it represents
+/// a multisig account.
 #[inline(always)]
 fn validate_owner(
     expected_owner: &Pubkey,
@@ -106,6 +109,8 @@ fn validate_owner(
     if owner_account_info.data_len() == Multisig::LEN
         && owner_account_info.owner() == &TOKEN_PROGRAM_ID
     {
+        // SAFETY: the caller guarantees that there are no mutable borrows of `owner_account_info`
+        // account data and the `load` validates that the account is initialized.
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;

@@ -13,7 +13,6 @@ use solana_sdk::{
 };
 use spl_token::state::Multisig;
 
-#[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn initialize_multisig2(token_program: Pubkey) {

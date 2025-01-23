@@ -6,7 +6,6 @@ use setup::{mint, TOKEN_PROGRAM_ID};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 
-#[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn ui_amount_to_amount(token_program: Pubkey) {

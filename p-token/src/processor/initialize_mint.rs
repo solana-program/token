@@ -35,6 +35,7 @@ pub fn process_initialize_mint(
         (mint_info, None)
     };
 
+    // SAFETY: single mutable borrow to `mint_info` account data.
     let mint = unsafe { load_mut_unchecked::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint.is_initialized() {
@@ -44,7 +45,9 @@ pub fn process_initialize_mint(
     // Check rent-exempt status of the mint account.
 
     let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
-        let rent = unsafe { Rent::from_bytes(rent_sysvar_info.borrow_data_unchecked()) };
+        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length are
+        // checked by `from_account_info_unchecked`.
+        let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
         rent.is_exempt(mint_info.lamports(), size_of::<Mint>())
     } else {
         Rent::get()?.is_exempt(mint_info.lamports(), size_of::<Mint>())
@@ -81,7 +84,7 @@ impl InitializeMint<'_> {
         // - decimals (1 byte)
         // - mint_authority (32 bytes)
         // - option + freeze_authority (1 byte + 32 bytes)
-        if bytes.len() < 34 {
+        if bytes.len() < 34 || (bytes[33] == 1 && bytes.len() < 66) {
             return Err(ProgramError::InvalidInstructionData);
         }
 
@@ -93,16 +96,19 @@ impl InitializeMint<'_> {
 
     #[inline]
     pub fn decimals(&self) -> u8 {
+        // SAFETY: the `bytes` length was validated in `try_from_bytes`.
         unsafe { *self.raw }
     }
 
     #[inline]
     pub fn mint_authority(&self) -> &Pubkey {
+        // SAFETY: the `bytes` length was validated in `try_from_bytes`.
         unsafe { &*(self.raw.add(1) as *const Pubkey) }
     }
 
     #[inline]
     pub fn freeze_authority(&self) -> Option<&Pubkey> {
+        // SAFETY: the `bytes` length was validated in `try_from_bytes`.
         unsafe {
             if *self.raw.add(33) == 0 {
                 Option::None

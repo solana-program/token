@@ -18,6 +18,8 @@ pub fn process_mint_to(
 
     // Validates the destination account.
 
+    // SAFETY: single mutable borrow to `destination_account_info` account data and
+    // `load_mut` validates that the account is initialized.
     let destination_account =
         unsafe { load_mut::<Account>(destination_account_info.borrow_mut_data_unchecked())? };
 
@@ -33,6 +35,8 @@ pub fn process_mint_to(
         return Err(TokenError::MintMismatch.into());
     }
 
+    // SAFETY: single mutable borrow to `mint_info` account data and
+    // `load_mut` validates that the mint is initialized.
     let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if let Some(expected_decimals) = expected_decimals {

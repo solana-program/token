@@ -11,7 +11,6 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
-#[test_case::test_case(spl_token::ID ; "spl-token")]
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn burn_checked(token_program: Pubkey) {

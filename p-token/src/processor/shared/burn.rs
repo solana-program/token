@@ -16,6 +16,8 @@ pub fn process_burn(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
+    // SAFETY: single mutable borrow to `source_account_info` account data and
+    // `load_mut` validates that the account is initialized.
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
@@ -33,6 +35,8 @@ pub fn process_burn(
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
+    // SAFETY: single mutable borrow to `mint_info` account data and
+    // `load_mut` validates that the mint is initialized.
     let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint_info.key() != &source_account.mint {
