@@ -17,7 +17,7 @@ pub fn process_approve(
 
     let (source_account_info, expected_mint_info, delegate_info, owner_info, remaining) =
         if let Some(expected_decimals) = expected_decimals {
-            let [source_account_info, expected_mint_info, delegate_info, owner_info, remaning @ ..] =
+            let [source_account_info, expected_mint_info, delegate_info, owner_info, remaining @ ..] =
                 accounts
             else {
                 return Err(ProgramError::NotEnoughAccountKeys);
@@ -28,10 +28,10 @@ pub fn process_approve(
                 Some((expected_mint_info, expected_decimals)),
                 delegate_info,
                 owner_info,
-                remaning,
+                remaining,
             )
         } else {
-            let [source_account_info, delegate_info, owner_info, remaning @ ..] = accounts else {
+            let [source_account_info, delegate_info, owner_info, remaining @ ..] = accounts else {
                 return Err(ProgramError::NotEnoughAccountKeys);
             };
             (
@@ -39,7 +39,7 @@ pub fn process_approve(
                 None,
                 delegate_info,
                 owner_info,
-                remaning,
+                remaining,
             )
         };
 

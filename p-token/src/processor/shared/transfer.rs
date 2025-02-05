@@ -20,9 +20,9 @@ pub fn process_transfer(
         expected_mint_info,
         destination_account_info,
         authority_info,
-        remaning,
+        remaining,
     ) = if let Some(decimals) = expected_decimals {
-        let [source_account_info, mint_info, destination_account_info, authority_info, remaning @ ..] =
+        let [source_account_info, mint_info, destination_account_info, authority_info, remaining @ ..] =
             accounts
         else {
             return Err(ProgramError::NotEnoughAccountKeys);
@@ -32,10 +32,10 @@ pub fn process_transfer(
             Some((mint_info, decimals)),
             destination_account_info,
             authority_info,
-            remaning,
+            remaining,
         )
     } else {
-        let [source_account_info, destination_account_info, authority_info, remaning @ ..] =
+        let [source_account_info, destination_account_info, authority_info, remaining @ ..] =
             accounts
         else {
             return Err(ProgramError::NotEnoughAccountKeys);
@@ -45,7 +45,7 @@ pub fn process_transfer(
             None,
             destination_account_info,
             authority_info,
-            remaning,
+            remaining,
         )
     };
 
@@ -114,7 +114,7 @@ pub fn process_transfer(
     // Validates the authority (delegate or owner).
 
     if source_account.delegate() == Some(authority_info.key()) {
-        validate_owner(authority_info.key(), authority_info, remaning)?;
+        validate_owner(authority_info.key(), authority_info, remaining)?;
 
         let delegated_amount = source_account
             .delegated_amount()
@@ -129,7 +129,7 @@ pub fn process_transfer(
             }
         }
     } else {
-        validate_owner(&source_account.owner, authority_info, remaning)?;
+        validate_owner(&source_account.owner, authority_info, remaining)?;
     }
 
     if self_transfer || amount == 0 {
