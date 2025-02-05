@@ -22,7 +22,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
 
     // Validates the accounts.
 
-    let [account_info, authority_info, remaning @ ..] = accounts else {
+    let [account_info, authority_info, remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -37,7 +37,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
 
         match authority_type {
             AuthorityType::AccountOwner => {
-                validate_owner(&account.owner, authority_info, remaning)?;
+                validate_owner(&account.owner, authority_info, remaining)?;
 
                 if let Some(authority) = new_authority {
                     account.owner = *authority;
@@ -54,7 +54,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             }
             AuthorityType::CloseAccount => {
                 let authority = account.close_authority().unwrap_or(&account.owner);
-                validate_owner(authority, authority_info, remaning)?;
+                validate_owner(authority, authority_info, remaining)?;
 
                 if let Some(authority) = new_authority {
                     account.set_close_authority(authority);
@@ -77,7 +77,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                 // mint_authority.
                 let mint_authority = mint.mint_authority().ok_or(TokenError::FixedSupply)?;
 
-                validate_owner(mint_authority, authority_info, remaning)?;
+                validate_owner(mint_authority, authority_info, remaining)?;
 
                 if let Some(authority) = new_authority {
                     mint.set_mint_authority(authority);
@@ -92,7 +92,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                     .freeze_authority()
                     .ok_or(TokenError::MintCannotFreeze)?;
 
-                validate_owner(freeze_authority, authority_info, remaning)?;
+                validate_owner(freeze_authority, authority_info, remaining)?;
 
                 if let Some(authority) = new_authority {
                     mint.set_freeze_authority(authority);

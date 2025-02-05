@@ -10,7 +10,7 @@ use super::check_account_owner;
 
 #[inline(always)]
 pub fn process_get_account_data_size(accounts: &[AccountInfo]) -> ProgramResult {
-    let [mint_info, _remaning @ ..] = accounts else {
+    let [mint_info, _remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 

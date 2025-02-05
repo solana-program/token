@@ -24,16 +24,16 @@ pub fn process_initialize_account(
 ) -> ProgramResult {
     // Accounts expected depend on whether we have the `rent_sysvar` account or not.
 
-    let (new_account_info, mint_info, owner, remaning) = if let Some(owner) = owner {
-        let [new_account_info, mint_info, remaning @ ..] = accounts else {
+    let (new_account_info, mint_info, owner, remaining) = if let Some(owner) = owner {
+        let [new_account_info, mint_info, remaining @ ..] = accounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
-        (new_account_info, mint_info, owner, remaning)
+        (new_account_info, mint_info, owner, remaining)
     } else {
-        let [new_account_info, mint_info, owner_info, remaning @ ..] = accounts else {
+        let [new_account_info, mint_info, owner_info, remaining @ ..] = accounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
-        (new_account_info, mint_info, owner_info.key(), remaning)
+        (new_account_info, mint_info, owner_info.key(), remaining)
     };
 
     // Check rent-exempt status of the token account.
@@ -41,7 +41,9 @@ pub fn process_initialize_account(
     let new_account_info_data_len = new_account_info.data_len();
 
     let minimum_balance = if rent_sysvar_account {
-        let rent_sysvar_info = remaning.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
+        let rent_sysvar_info = remaining
+            .first()
+            .ok_or(ProgramError::NotEnoughAccountKeys)?;
         // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length are
         // checked by `from_account_info_unchecked`.
         let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };

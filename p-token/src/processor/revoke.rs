@@ -8,7 +8,7 @@ use super::validate_owner;
 
 #[inline(always)]
 pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> ProgramResult {
-    let [source_account_info, owner_info, remaning @ ..] = accounts else {
+    let [source_account_info, owner_info, remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -21,7 +21,7 @@ pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> Pro
         return Err(TokenError::AccountFrozen.into());
     }
 
-    validate_owner(&source_account.owner, owner_info, remaning)?;
+    validate_owner(&source_account.owner, owner_info, remaining)?;
 
     source_account.clear_delegate();
     source_account.set_delegated_amount(0);
