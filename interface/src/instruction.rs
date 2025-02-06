@@ -67,7 +67,7 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[writable]` The multisignature account to initialize.
     ///   1. `[]` Rent sysvar
-    ///   2+N. `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
+    ///   2. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
     InitializeMultisig {
         /// The number of signers (M) required to validate this multisignature
         /// account.
@@ -90,7 +90,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
     ///   2. `[]` The source account's multisignature owner/delegate.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     Transfer {
         /// The amount of tokens to transfer.
         amount: u64,
@@ -110,7 +110,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The source account.
     ///   1. `[]` The delegate.
     ///   2. `[]` The source account's multisignature owner.
-    ///   3+M. `[signer]` M signer accounts
+    ///   3. `..+M` `[signer]` M signer accounts
     Approve {
         /// The amount of tokens the delegate is approved for.
         amount: u64,
@@ -127,7 +127,7 @@ pub enum TokenInstruction<'a> {
     ///   * Multisignature owner
     ///   0. `[writable]` The source account.
     ///   1. `[]` The source account's multisignature owner.
-    ///   2+M. `[signer]` M signer accounts
+    ///   2. `..+M` `[signer]` M signer accounts
     Revoke,
 
     /// Sets a new authority of a mint or account.
@@ -141,7 +141,7 @@ pub enum TokenInstruction<'a> {
     ///   * Multisignature authority
     ///   0. `[writable]` The mint or account to change the authority of.
     ///   1. `[]` The mint's or account's current multisignature authority.
-    ///   2+M. `[signer]` M signer accounts
+    ///   2. `..+M` `[signer]` M signer accounts
     SetAuthority {
         /// The type of authority to update.
         authority_type: AuthorityType,
@@ -163,7 +163,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The mint.
     ///   1. `[writable]` The account to mint tokens to.
     ///   2. `[]` The mint's multisignature mint-tokens authority.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     MintTo {
         /// The amount of new tokens to mint.
         amount: u64,
@@ -183,7 +183,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to burn from.
     ///   1. `[writable]` The token mint.
     ///   2. `[]` The account's multisignature owner/delegate.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     Burn {
         /// The amount of tokens to burn.
         amount: u64,
@@ -203,7 +203,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to close.
     ///   1. `[writable]` The destination account.
     ///   2. `[]` The account's multisignature owner.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     CloseAccount,
 
     /// Freeze an Initialized account using the Mint's [`freeze_authority`] (if
@@ -220,7 +220,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to freeze.
     ///   1. `[]` The token mint.
     ///   2. `[]` The mint's multisignature freeze authority.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     FreezeAccount,
 
     /// Thaw a Frozen account using the Mint's [`freeze_authority`] (if set).
@@ -236,7 +236,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to freeze.
     ///   1. `[]` The token mint.
     ///   2. `[]` The mint's multisignature freeze authority.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     ThawAccount,
 
     /// Transfers tokens from one account to another either directly or via a
@@ -261,7 +261,7 @@ pub enum TokenInstruction<'a> {
     ///   1. `[]` The token mint.
     ///   2. `[writable]` The destination account.
     ///   3. `[]` The source account's multisignature owner/delegate.
-    ///   4+M. `[signer]` M signer accounts.
+    ///   4. `..+M` `[signer]` M signer accounts.
     TransferChecked {
         /// The amount of tokens to transfer.
         amount: u64,
@@ -289,7 +289,7 @@ pub enum TokenInstruction<'a> {
     ///   1. `[]` The token mint.
     ///   2. `[]` The delegate.
     ///   3. `[]` The source account's multisignature owner.
-    ///   4+M. `[signer]` M signer accounts
+    ///   4. `..+M` `[signer]` M signer accounts
     ApproveChecked {
         /// The amount of tokens the delegate is approved for.
         amount: u64,
@@ -315,7 +315,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The mint.
     ///   1. `[writable]` The account to mint tokens to.
     ///   2. `[]` The mint's multisignature mint-tokens authority.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     MintToChecked {
         /// The amount of new tokens to mint.
         amount: u64,
@@ -342,7 +342,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to burn from.
     ///   1. `[writable]` The token mint.
     ///   2. `[]` The account's multisignature owner/delegate.
-    ///   3+M. `[signer]` M signer accounts.
+    ///   3. `..+M` `[signer]` M signer accounts.
     BurnChecked {
         /// The amount of tokens to burn.
         amount: u64,
@@ -395,7 +395,7 @@ pub enum TokenInstruction<'a> {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]` The multisignature account to initialize.
-    ///   1+N. `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
+    ///   1. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
     InitializeMultisig2 {
         /// The number of signers (M) required to validate this multisignature
         /// account.
