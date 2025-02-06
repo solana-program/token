@@ -1,11 +1,13 @@
 [package]
 name = "token-program"
 version = "0.0.0"
-edition = { workspace = true }
+description = "A pinocchio-based Token program"
+authors = { workspace = true}
+repository = { workspace = true}
+license = { workspace = true}
+edition = { workspace = true}
 readme = "./README.md"
-license = { workspace = true }
-repository = { workspace = true }
-publish = false
+
 
 [package.metadata.solana]
 program-id = "PToken1111111111111111111111111111111111111"
@@ -18,13 +20,13 @@ logging = []
 test-sbf = []
 
 [dependencies]
-pinocchio = { workspace = true }
-pinocchio-log = { workspace = true }
+pinocchio = { version = "0.7", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }
+pinocchio-log = { version = "0.3", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }
 token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-solana-program-test = "~1.18"
-solana-sdk = "~1.18"
+solana-program-test = "2.1"
+solana-sdk = "2.1"
 spl-token = { version="^4", features=["no-entrypoint"] }
 test-case = "3.3.1"
