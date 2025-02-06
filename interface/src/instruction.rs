@@ -36,7 +36,7 @@ pub enum TokenInstruction<'a> {
     /// associated with another mint, that mint must be initialized before this
     /// command can succeed.
     ///
-    /// The `InitializeAccount` instruction requires no signers and MUST be
+    /// The [`InitializeAccount`] instruction requires no signers and MUST be
     /// included within the same Transaction as the system program's
     /// `CreateAccount` instruction that creates the account being initialized.
     /// Otherwise another party can acquire ownership of the uninitialized
@@ -57,7 +57,7 @@ pub enum TokenInstruction<'a> {
     /// present.  The variant field represents the number of signers (M)
     /// required to validate this multisignature account.
     ///
-    /// The `InitializeMultisig` instruction requires no signers and MUST be
+    /// The [`InitializeMultisig`] instruction requires no signers and MUST be
     /// included within the same Transaction as the system program's
     /// `CreateAccount` instruction that creates the account being initialized.
     /// Otherwise another party can acquire ownership of the uninitialized
@@ -67,8 +67,7 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[writable]` The multisignature account to initialize.
     ///   1. `[]` Rent sysvar
-    ///   2. ..2+N. `[]` The signer accounts, must equal to N where 1 <= N <=
-    ///      11.
+    ///   2+N. `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
     InitializeMultisig {
         /// The number of signers (M) required to validate this multisignature
         /// account.
@@ -91,7 +90,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
     ///   2. `[]` The source account's multisignature owner/delegate.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     Transfer {
         /// The amount of tokens to transfer.
         amount: u64,
@@ -111,7 +110,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The source account.
     ///   1. `[]` The delegate.
     ///   2. `[]` The source account's multisignature owner.
-    ///   3. ..3+M `[signer]` M signer accounts
+    ///   3+M. `[signer]` M signer accounts
     Approve {
         /// The amount of tokens the delegate is approved for.
         amount: u64,
@@ -128,7 +127,7 @@ pub enum TokenInstruction<'a> {
     ///   * Multisignature owner
     ///   0. `[writable]` The source account.
     ///   1. `[]` The source account's multisignature owner.
-    ///   2. ..2+M `[signer]` M signer accounts
+    ///   2+M. `[signer]` M signer accounts
     Revoke,
 
     /// Sets a new authority of a mint or account.
@@ -142,7 +141,7 @@ pub enum TokenInstruction<'a> {
     ///   * Multisignature authority
     ///   0. `[writable]` The mint or account to change the authority of.
     ///   1. `[]` The mint's or account's current multisignature authority.
-    ///   2. ..2+M `[signer]` M signer accounts
+    ///   2+M. `[signer]` M signer accounts
     SetAuthority {
         /// The type of authority to update.
         authority_type: AuthorityType,
@@ -164,7 +163,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The mint.
     ///   1. `[writable]` The account to mint tokens to.
     ///   2. `[]` The mint's multisignature mint-tokens authority.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     MintTo {
         /// The amount of new tokens to mint.
         amount: u64,
@@ -184,7 +183,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to burn from.
     ///   1. `[writable]` The token mint.
     ///   2. `[]` The account's multisignature owner/delegate.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     Burn {
         /// The amount of tokens to burn.
         amount: u64,
@@ -204,10 +203,10 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to close.
     ///   1. `[writable]` The destination account.
     ///   2. `[]` The account's multisignature owner.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     CloseAccount,
 
-    /// Freeze an Initialized account using the Mint's freeze_authority (if
+    /// Freeze an Initialized account using the Mint's [`freeze_authority`] (if
     /// set).
     ///
     /// Accounts expected by this instruction:
@@ -221,10 +220,10 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to freeze.
     ///   1. `[]` The token mint.
     ///   2. `[]` The mint's multisignature freeze authority.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     FreezeAccount,
 
-    /// Thaw a Frozen account using the Mint's freeze_authority (if set).
+    /// Thaw a Frozen account using the Mint's [`freeze_authority`] (if set).
     ///
     /// Accounts expected by this instruction:
     ///
@@ -237,7 +236,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to freeze.
     ///   1. `[]` The token mint.
     ///   2. `[]` The mint's multisignature freeze authority.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     ThawAccount,
 
     /// Transfers tokens from one account to another either directly or via a
@@ -262,7 +261,7 @@ pub enum TokenInstruction<'a> {
     ///   1. `[]` The token mint.
     ///   2. `[writable]` The destination account.
     ///   3. `[]` The source account's multisignature owner/delegate.
-    ///   4. ..4+M `[signer]` M signer accounts.
+    ///   4+M. `[signer]` M signer accounts.
     TransferChecked {
         /// The amount of tokens to transfer.
         amount: u64,
@@ -290,7 +289,7 @@ pub enum TokenInstruction<'a> {
     ///   1. `[]` The token mint.
     ///   2. `[]` The delegate.
     ///   3. `[]` The source account's multisignature owner.
-    ///   4. ..4+M `[signer]` M signer accounts
+    ///   4+M. `[signer]` M signer accounts
     ApproveChecked {
         /// The amount of tokens the delegate is approved for.
         amount: u64,
@@ -301,7 +300,7 @@ pub enum TokenInstruction<'a> {
     /// Mints new tokens to an account.  The native mint does not support
     /// minting.
     ///
-    /// This instruction differs from MintTo in that the decimals value is
+    /// This instruction differs from [`MintTo`] in that the decimals value is
     /// checked by the caller.  This may be useful when creating transactions
     /// offline or within a hardware wallet.
     ///
@@ -316,7 +315,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The mint.
     ///   1. `[writable]` The account to mint tokens to.
     ///   2. `[]` The mint's multisignature mint-tokens authority.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     MintToChecked {
         /// The amount of new tokens to mint.
         amount: u64,
@@ -324,7 +323,7 @@ pub enum TokenInstruction<'a> {
         decimals: u8,
     },
 
-    /// Burns tokens by removing them from an account.  `BurnChecked` does not
+    /// Burns tokens by removing them from an account.  [`BurnChecked`] does not
     /// support accounts associated with the native mint, use `CloseAccount`
     /// instead.
     ///
@@ -343,7 +342,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The account to burn from.
     ///   1. `[writable]` The token mint.
     ///   2. `[]` The account's multisignature owner/delegate.
-    ///   3. ..3+M `[signer]` M signer accounts.
+    ///   3+M. `[signer]` M signer accounts.
     BurnChecked {
         /// The amount of tokens to burn.
         amount: u64,
@@ -351,7 +350,7 @@ pub enum TokenInstruction<'a> {
         decimals: u8,
     },
 
-    /// Like InitializeAccount, but the owner pubkey is passed via instruction
+    /// Like [`InitializeAccount`], but the owner pubkey is passed via instruction
     /// data rather than the accounts list. This variant may be preferable
     /// when using Cross Program Invocation from an instruction that does
     /// not need the owner's `AccountInfo` otherwise.
@@ -378,7 +377,7 @@ pub enum TokenInstruction<'a> {
     ///      lamports.
     SyncNative,
 
-    /// Like InitializeAccount2, but does not require the Rent sysvar to be
+    /// Like [`InitializeAccount2`], but does not require the Rent sysvar to be
     /// provided
     ///
     /// Accounts expected by this instruction:
@@ -390,14 +389,13 @@ pub enum TokenInstruction<'a> {
         owner: Pubkey,
     },
 
-    /// Like InitializeMultisig, but does not require the Rent sysvar to be
+    /// Like [`InitializeMultisig`], but does not require the Rent sysvar to be
     /// provided
     ///
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]` The multisignature account to initialize.
-    ///   1. ..1+N. `[]` The signer accounts, must equal to N where 1 <= N <=
-    ///      11.
+    ///   1+N. `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
     InitializeMultisig2 {
         /// The number of signers (M) required to validate this multisignature
         /// account.
@@ -433,7 +431,7 @@ pub enum TokenInstruction<'a> {
     /// Initialize the Immutable Owner extension for the given token account
     ///
     /// Fails if the account has already been initialized, so must be called
-    /// before `InitializeAccount`.
+    /// before [`InitializeAccount`].
     ///
     /// No-ops in this version of the program, but is included for compatibility
     /// with the Associated Token Account program.
@@ -446,7 +444,7 @@ pub enum TokenInstruction<'a> {
     ///   None
     InitializeImmutableOwner,
 
-    /// Convert an Amount of tokens to a UiAmount `string`, using the given
+    /// Convert an Amount of tokens to a `UiAmount` `string`, using the given
     /// mint. In this version of the program, the mint can only specify the
     /// number of decimals.
     ///
@@ -463,7 +461,7 @@ pub enum TokenInstruction<'a> {
         amount: u64,
     },
 
-    /// Convert a UiAmount of tokens to a little-endian `u64` raw Amount, using
+    /// Convert a `UiAmount` of tokens to a little-endian `u64` raw Amount, using
     /// the given mint. In this version of the program, the mint can only
     /// specify the number of decimals.
     ///
@@ -474,7 +472,7 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[]` The mint to calculate for
     UiAmountToAmount {
-        /// The ui_amount of tokens to reformat.
+        /// The `ui_amount` of tokens to reformat.
         ui_amount: &'a str,
     },
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
