@@ -8,19 +8,17 @@ use {
         state::{Account, AccountState, Mint, Multisig},
         try_ui_amount_into_amount,
     },
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        msg,
-        program::set_return_data,
-        program_error::ProgramError,
-        program_memory::sol_memcmp,
-        program_option::COption,
-        program_pack::{IsInitialized, Pack},
-        pubkey::{Pubkey, PUBKEY_BYTES},
-        system_program,
-        sysvar::{rent::Rent, Sysvar},
-    },
+    solana_account_info::{next_account_info, AccountInfo},
+    solana_cpi::set_return_data,
+    solana_msg::msg,
+    solana_program_error::{ProgramError, ProgramResult},
+    solana_program_memory::sol_memcmp,
+    solana_program_option::COption,
+    solana_program_pack::{IsInitialized, Pack},
+    solana_pubkey::{Pubkey, PUBKEY_BYTES},
+    solana_rent::Rent,
+    solana_sdk_ids::system_program,
+    solana_sysvar::Sysvar,
 };
 
 /// Program state handler.
@@ -695,7 +693,7 @@ impl Processor {
                 authority_info,
                 account_info_iter.as_slice(),
             )?;
-        } else if !solana_program::incinerator::check_id(destination_account_info.key) {
+        } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
             return Err(ProgramError::InvalidAccountData);
         }
 
@@ -1027,7 +1025,7 @@ fn delete_account(account_info: &AccountInfo) -> Result<(), ProgramError> {
     account_info.assign(&system_program::id());
     let mut account_data = account_info.data.borrow_mut();
     let data_len = account_data.len();
-    solana_program::program_memory::sol_memset(*account_data, 0, data_len);
+    solana_program_memory::sol_memset(*account_data, 0, data_len);
     Ok(())
 }
 
@@ -1042,7 +1040,8 @@ fn delete_account(account_info: &AccountInfo) -> Result<(), ProgramError> {
 mod tests {
     use {
         super::*,
-        solana_program::{clock::Epoch, program_error::PrintProgramError},
+        solana_clock::Epoch,
+        solana_program_error::PrintProgramError,
         std::sync::{Arc, RwLock},
     };
 
