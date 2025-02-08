@@ -2,13 +2,11 @@
 
 use {
     crate::{check_program_account, error::TokenError},
-    solana_program::{
-        instruction::{AccountMeta, Instruction},
-        program_error::ProgramError,
-        program_option::COption,
-        pubkey::Pubkey,
-        sysvar,
-    },
+        solana_instruction::{AccountMeta, Instruction},
+        solana_program_error::ProgramError,
+        solana_program_option::COption,
+        solana_pubkey::Pubkey,
+        solana_sdk_ids::sysvar,
     std::{convert::TryInto, mem::size_of},
 };
 
