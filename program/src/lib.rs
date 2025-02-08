@@ -36,8 +36,10 @@ pub mod solana_program {
         pub use solana_pubkey::{Pubkey, PUBKEY_BYTES};
     }
 }
-use solana_program_error::{ProgramError, ProgramResult};
-use solana_pubkey::Pubkey;
+use {
+    solana_program_error::{ProgramError, ProgramResult},
+    solana_pubkey::Pubkey,
+};
 
 /// Convert the UI representation of a token amount (using the decimals field
 /// defined in its mint) to the raw amount

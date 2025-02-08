@@ -2,9 +2,9 @@
 
 use {
     num_derive::FromPrimitive,
-        solana_decode_error::DecodeError,
-        solana_msg::msg,
-        solana_program_error::{PrintProgramError, ProgramError},
+    solana_decode_error::DecodeError,
+    solana_msg::msg,
+    solana_program_error::{PrintProgramError, ProgramError},
     thiserror::Error,
 };
 

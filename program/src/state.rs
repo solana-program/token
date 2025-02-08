@@ -4,10 +4,10 @@ use {
     crate::instruction::MAX_SIGNERS,
     arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs},
     num_enum::TryFromPrimitive,
-        solana_program_error::ProgramError,
-        solana_program_option::COption,
-        solana_program_pack::{IsInitialized, Pack, Sealed},
-        solana_pubkey::{Pubkey, PUBKEY_BYTES},
+    solana_program_error::ProgramError,
+    solana_program_option::COption,
+    solana_program_pack::{IsInitialized, Pack, Sealed},
+    solana_pubkey::{Pubkey, PUBKEY_BYTES},
 };
 
 /// Mint data.
