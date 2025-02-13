@@ -1,5 +1,5 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     state::{account::Account, load_mut, mint::Mint},
 };

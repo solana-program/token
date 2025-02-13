@@ -3,7 +3,7 @@ use core::marker::PhantomData;
 use pinocchio::{
     account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     instruction::AuthorityType,
     state::{account::Account, load_mut, mint::Mint, RawType},

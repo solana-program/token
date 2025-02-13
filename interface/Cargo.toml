@@ -1,7 +1,7 @@
 [package]
-name = "token-interface"
+name = "spl-token-interface"
 version = "0.0.0"
-description = "Instructions and types for interacting with p-token"
+description = "Instructions and types for interacting with SPL Token program"
 authors = { workspace = true}
 repository = { workspace = true}
 license = { workspace = true}
