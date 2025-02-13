@@ -1,5 +1,5 @@
 [package]
-name = "token-program"
+name = "pinocchio-token-program"
 version = "0.0.0"
 description = "A pinocchio-based Token program"
 authors = { workspace = true}
@@ -7,10 +7,6 @@ repository = { workspace = true}
 license = { workspace = true}
 edition = { workspace = true}
 readme = "./README.md"
-
-
-[package.metadata.solana]
-program-id = "PToken1111111111111111111111111111111111111"
 
 [lib]
 crate-type = ["cdylib"]
@@ -22,7 +18,7 @@ test-sbf = []
 [dependencies]
 pinocchio = { version = "0.7", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }
 pinocchio-log = { version = "0.3", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }
-token-interface = { version = "^0", path = "../interface" }
+spl-token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"
