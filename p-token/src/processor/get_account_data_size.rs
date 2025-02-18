@@ -1,7 +1,7 @@
 use pinocchio::{
     account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
 };
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     state::{account::Account, load, mint::Mint, RawType},
 };

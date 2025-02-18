@@ -2,10 +2,10 @@
 name = "spl-token"
 version = "7.0.0"
 description = "Solana Program Library Token"
-authors = ["Anza Maintainers <maintainers@anza.xyz>"]
-repository = "https://github.com/solana-program/token"
-license = "Apache-2.0"
-edition = "2021"
+authors = { workspace = true}
+repository = { workspace = true}
+license = { workspace = true}
+edition = { workspace = true}
 
 [features]
 no-entrypoint = []

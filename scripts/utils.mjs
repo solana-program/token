@@ -65,8 +65,11 @@ export function getProgramFolders() {
 }
 
 export function getAllProgramFolders() {
-  return getCargo().workspace.members.filter((member) =>
-    (getCargo(member).lib?.['crate-type'] ?? []).includes('cdylib')
+  return getCargo().workspace.members.filter(
+    (member) =>
+      (getCargo(member).lib?.['crate-type'] ?? []).includes('cdylib') &&
+      // Exclude the pinocchio-token-program crate.
+      getCargo(member).package?.name !== 'pinocchio-token-program'
   );
 }
 

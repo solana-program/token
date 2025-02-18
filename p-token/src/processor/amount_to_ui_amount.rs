@@ -3,7 +3,7 @@ use pinocchio::{
     account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
 };
 use pinocchio_log::logger::{Argument, Logger};
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     state::{load, mint::Mint},
 };
