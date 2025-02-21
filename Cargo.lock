@@ -1573,38 +1573,62 @@ dependencies = [
 
 [[package]]
 name = "mollusk-svm"
-version = "0.0.15"
-source = "git+https://github.com/kevinheavey/mollusk.git?rev=7ec873b6131a177f3ce9be526064321b12a12c21#7ec873b6131a177f3ce9be526064321b12a12c21"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdd69eeb49efb56a6da89cb095260d327ed585031c1d9f7c2aa70633621e1d2e"
 dependencies = [
  "bincode",
  "mollusk-svm-error",
  "mollusk-svm-keys",
+ "solana-account",
  "solana-bpf-loader-program",
+ "solana-clock",
  "solana-compute-budget",
+ "solana-epoch-rewards",
+ "solana-epoch-schedule",
+ "solana-feature-set",
+ "solana-fee-structure",
+ "solana-hash",
+ "solana-instruction",
+ "solana-loader-v3-interface",
  "solana-log-collector",
  "solana-logger",
+ "solana-precompiles",
+ "solana-program-error",
  "solana-program-runtime",
- "solana-sdk",
+ "solana-pubkey",
+ "solana-rent",
+ "solana-sdk-ids",
+ "solana-slot-hashes",
+ "solana-stake-interface",
  "solana-system-program",
+ "solana-sysvar",
+ "solana-sysvar-id",
  "solana-timings",
+ "solana-transaction-context",
 ]
 
 [[package]]
 name = "mollusk-svm-error"
-version = "0.0.15"
-source = "git+https://github.com/kevinheavey/mollusk.git?rev=7ec873b6131a177f3ce9be526064321b12a12c21#7ec873b6131a177f3ce9be526064321b12a12c21"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13c8d71e29fb7e0047f3cffec055bc931011a7abfa3c1954fb18612d28a7c1f9"
 dependencies = [
- "solana-sdk",
+ "solana-pubkey",
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "mollusk-svm-keys"
-version = "0.0.15"
-source = "git+https://github.com/kevinheavey/mollusk.git?rev=7ec873b6131a177f3ce9be526064321b12a12c21#7ec873b6131a177f3ce9be526064321b12a12c21"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c08779697eeb0a288ec9338edf8b7a74417818aaef11fdadb5ebb0a3fe9075b"
 dependencies = [
  "mollusk-svm-error",
- "solana-sdk",
+ "solana-account",
+ "solana-instruction",
+ "solana-pubkey",
+ "solana-transaction-context",
 ]
 
 [[package]]
