@@ -84,6 +84,12 @@ const MAX_FORMATTED_DIGITS: usize = u8::MAX as usize + 2;
 
 /// Checks that the account is owned by the expected program.
 #[inline(always)]
+// JC: the previous implementation of the token program didn't hard-code the
+// expected program id, which made it possible for people to deploy their own
+// token programs.
+// Would it make performance worse to use the `program_id` from the entrypoint?
+// If so, we can stick with this, but if it doesn't add overhead, it'd be best
+// to keep the generic program id.
 fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
     if &TOKEN_PROGRAM_ID != account_info.owner() {
         Err(ProgramError::IncorrectProgramId)
@@ -111,6 +117,12 @@ fn validate_owner(
     {
         // SAFETY: the caller guarantees that there are no mutable borrows of `owner_account_info`
         // account data and the `load` validates that the account is initialized.
+        //
+        // JC nit: Since multiple borrows could still be theoretically possible if
+        // an account is self-owned, it might clearer to say that this is safe
+        // because `Multisig` accounts are only ever loaded in this function,
+        // which means that previous loads will have already failed by the time
+        // we get here.
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;
@@ -152,7 +164,21 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 
     // Validates the input.
 
+    // JC nit: I'm not totally sure this needs to be mutable, might be clearer
+    // to redefine it later or simply use `amount_str.len()` explicitly everywhere
     let mut length = amount_str.len();
+    // JC nit: clever! but can we rename this something like `max_after_decimal_length`?
+    // I got a bit confused about why this is "expected", and I think it'll make
+    // the check clearer.
+    //
+    // Alternatively, you can do something like:
+    // ```
+    // let max_input_digits = length + max(after_decimal.len(), decimals);
+    // ```
+    // To make the check totally clear.
+    //
+    // Or maybe even easier, remove this and just check against `length + decimals`
+    // since there's also a check for `after_decimals.len() > decimals` anyway.
     let expected_after_decimal_length = max(after_decimal.len(), decimals);
 
     if (amount_str.is_empty() && after_decimal.is_empty())
@@ -171,6 +197,7 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 
     // SAFETY: the total length of `amount_str` and `after_decimal` is less than
     // `MAX_DIGITS_U64`.
+    // JC nit: did you mean `MAX_FORMATTED_DIGITS`?
     unsafe {
         sol_memcpy(slice, amount_str.as_bytes(), length);
 
@@ -186,6 +213,8 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 
     // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same memory
     // layout as `u8`.
+    // JC nit: for safety, can we use a slice here instead? Or does it use up
+    // too many CUs?
     let ptr = unsafe { digits.as_mut_ptr().add(length) };
 
     for offset in 0..remaining {

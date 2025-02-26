@@ -37,6 +37,8 @@ pub fn process_instruction(
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
 
+    // JC: for readability, is it possible to have a u8 enum with the instruction
+    // type? I don't think it should add any compute usage
     match *discriminator {
         // 0 - InitializeMint
         0 => {

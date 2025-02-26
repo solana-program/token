@@ -10,6 +10,7 @@ pub fn process_transfer_checked(
     // expected u64 (8) + u8 (1)
     let (amount, decimals) = if instruction_data.len() == 9 {
         let (amount, decimals) = instruction_data.split_at(core::mem::size_of::<u64>());
+        // JC: feel free to unwrap since you checked the length earlier!
         (
             u64::from_le_bytes(
                 amount

@@ -11,10 +11,14 @@ use token_interface::{
     state::{load_mut_unchecked, mint::Mint, Initializable},
 };
 
+// JC nit: for consistency with the rest, can this implementation be moved to a
+// file under `shared/` like the others?
 #[inline(always)]
 pub fn process_initialize_mint(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
+    // JC nit: same as with initialize_account, can this have a different name
+    // like `get_rent_sysvar_with_syscall` or `rent_sysvar_account_provided`?
     rent_sysvar_account: bool,
 ) -> ProgramResult {
     // Validates the instruction data.
@@ -71,6 +75,8 @@ pub fn process_initialize_mint(
 }
 
 /// Instruction data for the `InitializeMint` instruction.
+/// JC: for legibility and safety, can this hold onto the ref instead of a pointer?
+/// Or does that introduce too many bounds checks and increase CUs a lot?
 pub struct InitializeMint<'a> {
     raw: *const u8,
 

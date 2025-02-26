@@ -1,7 +1,7 @@
 use pinocchio::{
     account_info::AccountInfo,
     program_error::ProgramError,
-    pubkey::{Pubkey, PUBKEY_BYTES},
+    pubkey::PUBKEY_BYTES,
     ProgramResult,
 };
 
@@ -13,12 +13,10 @@ pub fn process_initialize_account3(
     instruction_data: &[u8],
 ) -> ProgramResult {
     // SAFETY: validate `instruction_data` length.
-    let owner = unsafe {
-        if instruction_data.len() != PUBKEY_BYTES {
-            return Err(ProgramError::InvalidInstructionData);
-        } else {
-            &*(instruction_data.as_ptr() as *const Pubkey)
-        }
-    };
+    // JC Nit: same here, can this be done without unsafe? Like this?
+    if instruction_data.len() != PUBKEY_BYTES {
+        return Err(ProgramError::InvalidInstructionData);
+    }
+    let owner = instruction_data.try_into().unwrap();
     shared::initialize_account::process_initialize_account(accounts, Some(owner), false)
 }

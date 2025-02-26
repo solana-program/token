@@ -65,6 +65,9 @@ pub fn process_transfer(
     // remaining amount - the amount is only updated on the account if the transfer
     // is successful.
     let remaining_amount = if self_transfer {
+        // JC nit: the code in this branch gets executed for both branches, making
+        // this a bit harder to read. How about moving these lines outside of the
+        // the block, and only having an `if !self_transfer` branch?
         if source_account.is_frozen() {
             return Err(TokenError::AccountFrozen.into());
         }
@@ -76,6 +79,8 @@ pub fn process_transfer(
     } else {
         // SAFETY: scoped immutable borrow to `destination_account_info` account data and
         // `load` validates that the account is initialized.
+        // JC nit: Even more importantly, you've already checked that this account
+        // is different from source account!
         let destination_account =
             unsafe { load::<Account>(destination_account_info.borrow_data_unchecked())? };
 
@@ -116,6 +121,8 @@ pub fn process_transfer(
     if source_account.delegate() == Some(authority_info.key()) {
         validate_owner(authority_info.key(), authority_info, remaining)?;
 
+        // JC: very nice, you avoided an extra check that exists in SPL-Token
+        // currently
         let delegated_amount = source_account
             .delegated_amount()
             .checked_sub(amount)
@@ -144,9 +151,12 @@ pub fn process_transfer(
 
         // SAFETY: single mutable borrow to `destination_account_info` account data; the account
         // is guaranteed to be initialized and different than `source_account_info`.
+        // JC nit: can we be even clearer and say that it was already checked
+        // earlier?
         let destination_account = unsafe {
             load_mut_unchecked::<Account>(destination_account_info.borrow_mut_data_unchecked())?
         };
+        // JC nit: you might not need to do checked math here!
         let destination_amount = destination_account
             .amount()
             .checked_add(amount)
@@ -161,6 +171,8 @@ pub fn process_transfer(
                 .ok_or(TokenError::Overflow)?;
 
             // SAFETY: single mutable borrow to `destination_account_info` lamports.
+            // JC nit: can add that this account is already checked to be different
+            // from `source_account_info`, making it safe
             let destination_lamports =
                 unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
             *destination_lamports = destination_lamports

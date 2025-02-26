@@ -37,6 +37,9 @@ pub fn process_burn(
 
     // SAFETY: single mutable borrow to `mint_info` account data and
     // `load_mut` validates that the mint is initialized.
+    // JC nit: to be totally clear, we can again say that an account cannot be
+    // both a token account and a mint, so if duplicates are passed, one of them
+    // will fail the `load`
     let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint_info.key() != &source_account.mint {
@@ -78,6 +81,8 @@ pub fn process_burn(
     } else {
         source_account.set_amount(updated_source_amount);
 
+        // JC nit: I think we could safely unwrap this, but I'm not sure if
+        // we get any real performance benefits
         let mint_supply = mint
             .supply()
             .checked_sub(amount)

@@ -9,6 +9,8 @@ use token_interface::{
 use super::validate_owner;
 
 /// Incinerator (`1nc1nerator11111111111111111111111111111111`) address.
+/// JC nit: any reason to not use the one defined in the interface instead? Or
+/// is this defined elsewhere in the SDK?
 const INCINERATOR_ID: Pubkey = [
     0, 51, 144, 114, 141, 52, 17, 96, 121, 189, 201, 17, 191, 255, 0, 219, 212, 77, 46, 205, 204,
     247, 156, 166, 225, 0, 56, 225, 0, 0, 0, 0,
@@ -24,6 +26,7 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
     // Comparing whether the AccountInfo's "point" to the same account or
     // not - this is a faster comparison since it just checks the internal
     // raw pointer.
+    // JC: I love this, very clever!
     if source_account_info == destination_account_info {
         return Err(ProgramError::InvalidAccountData);
     } else {
