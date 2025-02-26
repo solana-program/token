@@ -3833,7 +3833,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
             &program_id,
             &incinerator_account_key,
             &mint_key,
-            &solana_program::incinerator::id(),
+            &solana_sdk_ids::incinerator::id(),
         )
         .unwrap(),
         vec![&mut incinerator_account, &mut mint_account],
@@ -3845,7 +3845,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
             &program_id,
             &system_account_key,
             &mint_key,
-            &solana_program::system_program::id(),
+            &solana_sdk_ids::system_program::id(),
         )
         .unwrap(),
         vec![&mut system_account, &mut mint_account],
@@ -3906,7 +3906,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
             close_account(
                 &program_id,
                 &incinerator_account_key,
-                &solana_program::incinerator::id(),
+                &solana_sdk_ids::incinerator::id(),
                 &owner_key,
                 &[]
             )
@@ -3925,7 +3925,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
             close_account(
                 &program_id,
                 &system_account_key,
-                &solana_program::incinerator::id(),
+                &solana_sdk_ids::incinerator::id(),
                 &owner_key,
                 &[]
             )
@@ -4022,7 +4022,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
         close_account(
             &program_id,
             &incinerator_account_key,
-            &solana_program::incinerator::id(),
+            &solana_sdk_ids::incinerator::id(),
             &owner_key,
             &[],
         )
@@ -4040,7 +4040,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
         close_account(
             &program_id,
             &system_account_key,
-            &solana_program::incinerator::id(),
+            &solana_sdk_ids::incinerator::id(),
             &owner_key,
             &[],
         )
