@@ -38,6 +38,7 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup
         with:
+          cargo-cache-key: cargo-programs
           solana: true
 
       - name: Format JS Client
@@ -45,6 +46,9 @@ jobs:
 
       - name: Lint JS Client
         run: pnpm clients:js:lint
+
+      - name: Build Programs
+        run: pnpm programs:build
 
       - name: Test JS Client
         run: pnpm clients:js:test
