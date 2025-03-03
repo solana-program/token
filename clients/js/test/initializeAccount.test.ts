@@ -5,7 +5,7 @@ import {
   generateKeyPairSigner,
   none,
   pipe,
-} from '@solana/web3.js';
+} from '@solana/kit';
 import test from 'ava';
 import {
   AccountState,
