@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["program"]
+exclude = ["p-token"]
 
 [workspace.lints.rust.unexpected_cfgs]
 level = "warn"

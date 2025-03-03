@@ -12,6 +12,10 @@ pub type COption<T> = ([u8; 4], T);
 ///
 /// It is up to the type implementing this trait to guarantee that the cast is safe,
 /// i.e., that the fields of the type are well aligned and there are no padding bytes.
+/// JC nit: typically, these are called `Pod`s, but that term is a little bit
+/// loaded with bytemuck unfortunately! We can probably come up with another
+/// name, maybe `PackedType` since the bits are packed, or `Transmutable` to
+/// indicate that it's safe to transmute.
 pub trait RawType {
     /// The length of the type.
     ///

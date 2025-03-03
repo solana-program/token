@@ -56,6 +56,12 @@ impl Account {
     }
 
     #[inline(always)]
+    // JC: I can't remember if we discussed this, but is this the current token
+    // program behavior? ie it only sets whether the option is set, without
+    // setting the value to all zeroes?
+    // To be clear, this behavior is totally fine to me, but if there's a
+    // difference we need to point it out. People may be relying on the previous
+    // behavior for things like `get_program_accounts`
     pub fn clear_delegate(&mut self) {
         self.delegate.0[0] = 0;
     }
@@ -110,6 +116,9 @@ impl Account {
     }
 
     #[inline(always)]
+    // JC: This is mentioned elsewhere with the delegate, but is this the current
+    // behavior? Or does it zero out the whole thing if the close authority is
+    // cleared?
     pub fn clear_close_authority(&mut self) {
         self.close_authority.0[0] = 0;
     }

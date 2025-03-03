@@ -14,6 +14,10 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
 
     // SAFETY: single mutable borrow to `source_account_info` account data and
     // `load_mut` validates that the account is initialized.
+    // JC nit: to be totally clear, we can again say that no account can be
+    // different account types, ie can't be a token account and a mint, or a
+    // token account and a multisig, so if duplicates are passed, one of them
+    // will fail the `load`
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 

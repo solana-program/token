@@ -7,6 +7,7 @@ pub fn process_mint_to_checked(accounts: &[AccountInfo], instruction_data: &[u8]
     // expected u64 (8) + u8 (1)
     let (amount, decimals) = if instruction_data.len() == 9 {
         let (amount, decimals) = instruction_data.split_at(core::mem::size_of::<u64>());
+        // JC nit: feel free to unwrap these since you just checked the length!
         (
             u64::from_le_bytes(
                 amount

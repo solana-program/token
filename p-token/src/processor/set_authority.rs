@@ -111,6 +111,9 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
     Ok(())
 }
 
+// JC nit: same as with the initialize data, can we use slices and avoid so
+// much unsafe code? Especially because we need to pull out the authority type
+// and the new authority no matter what
 struct SetAuthority<'a> {
     raw: *const u8,
 

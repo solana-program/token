@@ -20,6 +20,9 @@ use crate::processor::check_account_owner;
 pub fn process_initialize_account(
     accounts: &[AccountInfo],
     owner: Option<&Pubkey>,
+    // JC nit: can call this `rent_sysvar_account_in_accounts` or make it the
+    // opposite, ie. if it's *true* then use the syscall, so something like
+    // `get_rent_sysvar_with_syscall`
     rent_sysvar_account: bool,
 ) -> ProgramResult {
     // Accounts expected depend on whether we have the `rent_sysvar` account or not.
@@ -86,6 +89,10 @@ pub fn process_initialize_account(
         account.set_native(true);
         account.set_native_amount(minimum_balance);
         // SAFETY: single mutable borrow to `new_account_info` lamports.
+        // JC nit: up to you, but since you've already checked that
+        // `lamports() < minimum_balance` earlier, you don't actually need
+        // checked math. If it shaves CUs, go for it! But definitely add a
+        // comment explaining why
         unsafe {
             account.set_amount(
                 new_account_info
