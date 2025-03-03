@@ -62,6 +62,8 @@ jobs:
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ANZA_TEAM_PAT }}
 
       - name: Setup Environment
         uses: ./.github/actions/setup
