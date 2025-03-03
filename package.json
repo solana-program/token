@@ -26,10 +26,10 @@
     "rust:semver": "cargo semver-checks"
   },
   "devDependencies": {
-    "@codama/renderers-js": "^1.0.0",
-    "@codama/renderers-rust": "^1.0.0",
+    "@codama/renderers-js": "^1.2.7",
+    "@codama/renderers-rust": "^1.0.16",
     "@iarna/toml": "^2.2.5",
-    "codama": "^1.0.0",
+    "codama": "^1.2.8",
     "typescript": "^5.5.2",
     "zx": "^7.2.3"
   },

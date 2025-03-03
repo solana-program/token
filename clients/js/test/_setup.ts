@@ -22,7 +22,7 @@ import {
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
-} from '@solana/web3.js';
+} from '@solana/kit';
 import {
   TOKEN_PROGRAM_ADDRESS,
   getInitializeAccountInstruction,
