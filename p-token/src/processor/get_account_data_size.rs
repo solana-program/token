@@ -3,7 +3,7 @@ use pinocchio::{
 };
 use spl_token_interface::{
     error::TokenError,
-    state::{account::Account, load, mint::Mint, RawType},
+    state::{account::Account, load, mint::Mint, Transmutable},
 };
 
 use super::check_account_owner;

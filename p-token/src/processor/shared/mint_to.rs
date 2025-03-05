@@ -51,20 +51,19 @@ pub fn process_mint_to(
     }
 
     if amount == 0 {
+        // Validates the accounts' owner since we are not writing
+        // to these account.
         check_account_owner(mint_info)?;
         check_account_owner(destination_account_info)?;
     } else {
-        let destination_amount = destination_account
-            .amount()
-            .checked_add(amount)
-            .ok_or(TokenError::Overflow)?;
-        destination_account.set_amount(destination_amount);
-
         let mint_supply = mint
             .supply()
             .checked_add(amount)
             .ok_or(TokenError::Overflow)?;
         mint.set_supply(mint_supply);
+
+        // This should not fail since there is no overflow on the mint supply.
+        destination_account.set_amount(destination_account.amount() + amount);
     }
 
     Ok(())

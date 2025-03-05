@@ -8,11 +8,11 @@ pub mod multisig;
 /// Type alias for fields represented as `COption`.
 pub type COption<T> = ([u8; 4], T);
 
-/// Marker trait for types that can cast from a raw pointer.
+/// Marker trait for types that can be cast from a raw pointer.
 ///
 /// It is up to the type implementing this trait to guarantee that the cast is safe,
-/// i.e., that the fields of the type are well aligned and there are no padding bytes.
-pub trait RawType {
+/// i.e., the fields of the type are well aligned and there are no padding bytes.
+pub trait Transmutable {
     /// The length of the type.
     ///
     /// This must be equal to the size of each individual field in the type.
@@ -31,7 +31,7 @@ pub trait Initializable {
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
-pub unsafe fn load<T: Initializable + RawType>(bytes: &[u8]) -> Result<&T, ProgramError> {
+pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
     load_unchecked(bytes).and_then(|t: &T| {
         // checks if the data is initialized
         if t.is_initialized() {
@@ -50,7 +50,7 @@ pub unsafe fn load<T: Initializable + RawType>(bytes: &[u8]) -> Result<&T, Progr
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
-pub unsafe fn load_unchecked<T: RawType>(bytes: &[u8]) -> Result<&T, ProgramError> {
+pub unsafe fn load_unchecked<T: Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
     if bytes.len() != T::LEN {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -63,7 +63,7 @@ pub unsafe fn load_unchecked<T: RawType>(bytes: &[u8]) -> Result<&T, ProgramErro
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
-pub unsafe fn load_mut<T: Initializable + RawType>(
+pub unsafe fn load_mut<T: Initializable + Transmutable>(
     bytes: &mut [u8],
 ) -> Result<&mut T, ProgramError> {
     load_mut_unchecked(bytes).and_then(|t: &mut T| {
@@ -84,7 +84,9 @@ pub unsafe fn load_mut<T: Initializable + RawType>(
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
-pub unsafe fn load_mut_unchecked<T: RawType>(bytes: &mut [u8]) -> Result<&mut T, ProgramError> {
+pub unsafe fn load_mut_unchecked<T: Transmutable>(
+    bytes: &mut [u8],
+) -> Result<&mut T, ProgramError> {
     if bytes.len() != T::LEN {
         return Err(ProgramError::InvalidAccountData);
     }
