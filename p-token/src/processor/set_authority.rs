@@ -45,11 +45,11 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             return Err(TokenError::AccountFrozen.into());
         }
 
-        match authority_type {
+        match args.authority_type {
             AuthorityType::AccountOwner => {
                 validate_owner(&account.owner, authority_info, remaining)?;
 
-                if let Some(authority) = new_authority {
+                if let Some(authority) = args.new_authority {
                     account.owner = *authority;
                 } else {
                     return Err(TokenError::InvalidInstruction.into());
@@ -66,7 +66,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                 let authority = account.close_authority().unwrap_or(&account.owner);
                 validate_owner(authority, authority_info, remaining)?;
 
-                if let Some(authority) = new_authority {
+                if let Some(authority) = args.new_authority {
                     account.set_close_authority(authority);
                 } else {
                     account.clear_close_authority();
@@ -81,7 +81,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
         // `load_mut` validates that the mint is initialized.
         let mint = unsafe { load_mut::<Mint>(account_info.borrow_mut_data_unchecked())? };
 
-        match authority_type {
+        match args.authority_type {
             AuthorityType::MintTokens => {
                 // Once a mint's supply is fixed, it cannot be undone by setting a new
                 // mint_authority.
@@ -89,7 +89,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
 
                 validate_owner(mint_authority, authority_info, remaining)?;
 
-                if let Some(authority) = new_authority {
+                if let Some(authority) = args.new_authority {
                     mint.set_mint_authority(authority);
                 } else {
                     mint.clear_mint_authority();
@@ -104,7 +104,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
 
                 validate_owner(freeze_authority, authority_info, remaining)?;
 
-                if let Some(authority) = new_authority {
+                if let Some(authority) = args.new_authority {
                     mint.set_freeze_authority(authority);
                 } else {
                     mint.clear_freeze_authority();
