@@ -13,11 +13,11 @@ use spl_token_interface::{
 pub fn process_initialize_multisig(
     accounts: &[AccountInfo],
     m: u8,
-    rent_sysvar_account: bool,
+    rent_sysvar_account_provided: bool,
 ) -> ProgramResult {
     // Accounts expected depend on whether we have the `rent_sysvar` account or not.
 
-    let (multisig_info, rent_sysvar_info, remaining) = if rent_sysvar_account {
+    let (multisig_info, rent_sysvar_info, remaining) = if rent_sysvar_account_provided {
         let [multisig_info, rent_sysvar_info, remaining @ ..] = accounts else {
             return Err(ProgramError::NotEnoughAccountKeys);
         };
@@ -57,10 +57,10 @@ pub fn process_initialize_multisig(
     multisig.m = m;
     multisig.n = remaining.len() as u8;
 
-    if !Multisig::is_valid_signer_index(multisig.n as usize) {
+    if !Multisig::is_valid_signer_index(multisig.n) {
         return Err(TokenError::InvalidNumberOfProvidedSigners.into());
     }
-    if !Multisig::is_valid_signer_index(multisig.m as usize) {
+    if !Multisig::is_valid_signer_index(multisig.m) {
         return Err(TokenError::InvalidNumberOfRequiredSigners.into());
     }
 

@@ -1,5 +1,4 @@
 use core::{
-    cmp::max,
     mem::MaybeUninit,
     slice::{from_raw_parts, from_raw_parts_mut},
     str::from_utf8_unchecked,
@@ -14,7 +13,7 @@ use spl_token_interface::{
     state::{
         load,
         multisig::{Multisig, MAX_SIGNERS},
-        RawType,
+        Transmutable,
     },
 };
 
@@ -95,7 +94,8 @@ fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
 /// Validates owner(s) are present.
 ///
 /// Note that `owner_account_info` will be immutable borrowed when it represents
-/// a multisig account.
+/// a multisig account, therefore it should not have any mutable borrows when
+/// calling this function.
 #[inline(always)]
 fn validate_owner(
     expected_owner: &Pubkey,
@@ -110,11 +110,13 @@ fn validate_owner(
         && owner_account_info.owner() == &TOKEN_PROGRAM_ID
     {
         // SAFETY: the caller guarantees that there are no mutable borrows of `owner_account_info`
-        // account data and the `load` validates that the account is initialized.
+        // account data and the `load` validates that the account is initialized; additionally,
+        // `Multisig` accounts are only ever loaded in this function, which means that previous
+        // loads will have already failed by the time we get here.
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;
-        let mut matched = [false; MAX_SIGNERS];
+        let mut matched = [false; MAX_SIGNERS as usize];
 
         for signer in signers.iter() {
             for (position, key) in multisig.signers[0..multisig.n as usize].iter().enumerate() {
@@ -152,13 +154,12 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 
     // Validates the input.
 
-    let mut length = amount_str.len();
-    let expected_after_decimal_length = max(after_decimal.len(), decimals);
+    let length = amount_str.len();
 
     if (amount_str.is_empty() && after_decimal.is_empty())
         || parts.next().is_some()
         || after_decimal.len() > decimals
-        || (length + expected_after_decimal_length) > MAX_FORMATTED_DIGITS
+        || (length + decimals) > MAX_FORMATTED_DIGITS
     {
         return Err(ProgramError::InvalidArgument);
     }
@@ -170,7 +171,7 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
         unsafe { from_raw_parts_mut(digits.as_mut_ptr() as *mut _, MAX_FORMATTED_DIGITS) };
 
     // SAFETY: the total length of `amount_str` and `after_decimal` is less than
-    // `MAX_DIGITS_U64`.
+    // `MAX_FORMATTED_DIGITS`.
     unsafe {
         sol_memcpy(slice, amount_str.as_bytes(), length);
 
@@ -181,7 +182,7 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
         );
     }
 
-    length += after_decimal.len();
+    let length = amount_str.len() + after_decimal.len();
     let remaining = decimals.saturating_sub(after_decimal.len());
 
     // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same memory
@@ -195,11 +196,9 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
         }
     }
 
-    length += remaining;
-
     // SAFETY: `digits` only contains valid UTF-8 bytes.
     unsafe {
-        from_utf8_unchecked(from_raw_parts(digits.as_ptr() as _, length))
+        from_utf8_unchecked(from_raw_parts(digits.as_ptr() as _, length + remaining))
             .parse::<u64>()
             .map_err(|_| ProgramError::InvalidArgument)
     }

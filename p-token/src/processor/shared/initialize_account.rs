@@ -20,7 +20,7 @@ use crate::processor::check_account_owner;
 pub fn process_initialize_account(
     accounts: &[AccountInfo],
     owner: Option<&Pubkey>,
-    rent_sysvar_account: bool,
+    rent_sysvar_account_provided: bool,
 ) -> ProgramResult {
     // Accounts expected depend on whether we have the `rent_sysvar` account or not.
 
@@ -40,7 +40,7 @@ pub fn process_initialize_account(
 
     let new_account_info_data_len = new_account_info.data_len();
 
-    let minimum_balance = if rent_sysvar_account {
+    let minimum_balance = if rent_sysvar_account_provided {
         let rent_sysvar_info = remaining
             .first()
             .ok_or(ProgramError::NotEnoughAccountKeys)?;
@@ -85,15 +85,9 @@ pub fn process_initialize_account(
     if is_native_mint {
         account.set_native(true);
         account.set_native_amount(minimum_balance);
-        // SAFETY: single mutable borrow to `new_account_info` lamports.
-        unsafe {
-            account.set_amount(
-                new_account_info
-                    .borrow_lamports_unchecked()
-                    .checked_sub(minimum_balance)
-                    .ok_or(TokenError::Overflow)?,
-            );
-        }
+        // `new_account_info` lamports are already checked to be greater than or equal
+        // to the minimum balance.
+        account.set_amount(new_account_info.lamports() - minimum_balance);
     }
 
     Ok(())

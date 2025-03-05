@@ -64,6 +64,16 @@ pub fn process_transfer(
     // Implicitly validates that the account has enough tokens by calculating the
     // remaining amount - the amount is only updated on the account if the transfer
     // is successful.
+    //
+    // Note: the logic is partially duplicated for self transfers and transfers
+    // to different accounts to improve CU consumption:
+    //
+    //   - self-transfer: we only need to check that the source account is not frozen
+    //     and has enough tokens.
+    //
+    //   - transfers to different accounts: we need to check that the source and
+    //     destination accounts are not frozen, have the same mint, and the source
+    //     account has enough tokens.
     let remaining_amount = if self_transfer {
         if source_account.is_frozen() {
             return Err(TokenError::AccountFrozen.into());
@@ -75,7 +85,8 @@ pub fn process_transfer(
             .ok_or(TokenError::InsufficientFunds)?
     } else {
         // SAFETY: scoped immutable borrow to `destination_account_info` account data and
-        // `load` validates that the account is initialized.
+        // `load` validates that the account is initialized; additionally, the account
+        // is guaranteed to be different than `source_account_info`.
         let destination_account =
             unsafe { load::<Account>(destination_account_info.borrow_data_unchecked())? };
 
@@ -143,15 +154,12 @@ pub fn process_transfer(
         source_account.set_amount(remaining_amount);
 
         // SAFETY: single mutable borrow to `destination_account_info` account data; the account
-        // is guaranteed to be initialized and different than `source_account_info`.
+        // is guaranteed to be initialized and different than `source_account_info`; it was
+        // also already validated to be a token account.
         let destination_account = unsafe {
             load_mut_unchecked::<Account>(destination_account_info.borrow_mut_data_unchecked())?
         };
-        let destination_amount = destination_account
-            .amount()
-            .checked_add(amount)
-            .ok_or(TokenError::Overflow)?;
-        destination_account.set_amount(destination_amount);
+        destination_account.set_amount(destination_account.amount() + amount);
 
         if source_account.is_native() {
             // SAFETY: single mutable borrow to `source_account_info` lamports.
@@ -160,7 +168,8 @@ pub fn process_transfer(
                 .checked_sub(amount)
                 .ok_or(TokenError::Overflow)?;
 
-            // SAFETY: single mutable borrow to `destination_account_info` lamports.
+            // SAFETY: single mutable borrow to `destination_account_info` lamports; the account
+            // is already validated to be different from `source_account_info`.
             let destination_lamports =
                 unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
             *destination_lamports = destination_lamports

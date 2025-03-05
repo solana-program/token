@@ -1,12 +1,12 @@
 use pinocchio::pubkey::Pubkey;
 
-use super::{Initializable, RawType};
+use super::{Initializable, Transmutable};
 
 /// Minimum number of multisignature signers (min N)
-pub const MIN_SIGNERS: usize = 1;
+pub const MIN_SIGNERS: u8 = 1;
 
 /// Maximum number of multisignature signers (max N)
-pub const MAX_SIGNERS: usize = 11;
+pub const MAX_SIGNERS: u8 = 11;
 
 /// Multisignature data.
 #[repr(C)]
@@ -21,12 +21,12 @@ pub struct Multisig {
     is_initialized: u8,
 
     /// Signer public keys
-    pub signers: [Pubkey; MAX_SIGNERS],
+    pub signers: [Pubkey; MAX_SIGNERS as usize],
 }
 
 impl Multisig {
     /// Utility function that checks index is between [`MIN_SIGNERS`] and [`MAX_SIGNERS`].
-    pub fn is_valid_signer_index(index: usize) -> bool {
+    pub fn is_valid_signer_index(index: u8) -> bool {
         (MIN_SIGNERS..=MAX_SIGNERS).contains(&index)
     }
 
@@ -36,7 +36,7 @@ impl Multisig {
     }
 }
 
-impl RawType for Multisig {
+impl Transmutable for Multisig {
     /// The length of the `Mint` account data.
     const LEN: usize = core::mem::size_of::<Multisig>();
 }

@@ -1,4 +1,4 @@
-use pinocchio::{account_info::AccountInfo, msg, program_error::ProgramError, ProgramResult};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use spl_token_interface::{
     error::TokenError,
     state::{account::Account, load_unchecked, Initializable},
@@ -14,6 +14,6 @@ pub fn process_initialize_immutable_owner(accounts: &[AccountInfo]) -> ProgramRe
     if account.is_initialized() {
         return Err(TokenError::AlreadyInUse.into());
     }
-    msg!("Please upgrade to SPL Token 2022 for immutable owner support");
+    // Please upgrade to SPL Token 2022 for immutable owner support.
     Ok(())
 }
