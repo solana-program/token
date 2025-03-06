@@ -84,7 +84,7 @@ pnpm validator:stop
 
 ## Using external programs in your validator
 
-If your program requires any external programs to be running, you'll want them in your local validator.
+If your program requires any external programs to be running, you'll want to add them to your local validator.
 
 You can do this by adding their program addresses to the `program-dependencies` array in the `Cargo.toml` of your program.
 
