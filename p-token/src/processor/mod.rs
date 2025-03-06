@@ -171,8 +171,7 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
         );
     }
 
-    let remaining = decimals.saturating_sub(after_decimal.len());
-    let length = amount_str.len() + after_decimal.len() + remaining;
+    let length = amount_str.len() + decimals;
 
     // SAFETY: `digits` only contains valid UTF-8 bytes.
     unsafe {
