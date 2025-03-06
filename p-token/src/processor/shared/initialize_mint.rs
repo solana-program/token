@@ -1,4 +1,4 @@
-use core::{marker::PhantomData, mem::size_of};
+use core::mem::size_of;
 use pinocchio::{
     account_info::AccountInfo,
     program_error::ProgramError,
@@ -60,8 +60,8 @@ pub fn process_initialize_mint(
     // Initialize the mint.
 
     mint.set_initialized();
-    mint.set_mint_authority(args.mint_authority());
-    mint.decimals = args.decimals();
+    mint.set_mint_authority(&args.mint_authority);
+    mint.decimals = args.decimals;
 
     if let Some(freeze_authority) = args.freeze_authority() {
         mint.set_freeze_authority(freeze_authority);
@@ -71,50 +71,39 @@ pub fn process_initialize_mint(
 }
 
 /// Instruction data for the `InitializeMint` instruction.
-pub struct InitializeMint<'a> {
-    raw: *const u8,
+#[repr(C)]
+struct InitializeMint {
+    pub(crate) decimals: u8,
 
-    _data: PhantomData<&'a [u8]>,
+    pub(crate) mint_authority: Pubkey,
+
+    freeze_authority: (u8, Pubkey),
 }
 
-impl InitializeMint<'_> {
+impl InitializeMint {
     #[inline]
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<InitializeMint, ProgramError> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<&InitializeMint, ProgramError> {
         // The minimum expected size of the instruction data is either 34 or 66 bytes:
         //   - decimals (1 byte)
         //   - mint_authority (32 bytes)
         //   - option + freeze_authority (1 byte + 32 bytes)
-        if bytes.len() < 34 || (bytes[33] == 1 && bytes.len() < 66) {
-            return Err(ProgramError::InvalidInstructionData);
+        unsafe {
+            match bytes.len() {
+                34 if *bytes.get_unchecked(33) == 0 => {
+                    Ok(&*(bytes.as_ptr() as *const InitializeMint))
+                }
+                66 => Ok(&*(bytes.as_ptr() as *const InitializeMint)),
+                _ => Err(ProgramError::InvalidInstructionData),
+            }
         }
-
-        Ok(InitializeMint {
-            raw: bytes.as_ptr(),
-            _data: PhantomData,
-        })
-    }
-
-    #[inline]
-    pub fn decimals(&self) -> u8 {
-        // SAFETY: the `bytes` length was validated in `try_from_bytes`.
-        unsafe { *self.raw }
-    }
-
-    #[inline]
-    pub fn mint_authority(&self) -> &Pubkey {
-        // SAFETY: the `bytes` length was validated in `try_from_bytes`.
-        unsafe { &*(self.raw.add(1) as *const Pubkey) }
     }
 
     #[inline]
     pub fn freeze_authority(&self) -> Option<&Pubkey> {
-        // SAFETY: the `bytes` length was validated in `try_from_bytes`.
-        unsafe {
-            if *self.raw.add(33) == 0 {
-                Option::None
-            } else {
-                Option::Some(&*(self.raw.add(34) as *const Pubkey))
-            }
+        if self.freeze_authority.0 == 0 {
+            Option::None
+        } else {
+            Option::Some(&self.freeze_authority.1)
         }
     }
 }

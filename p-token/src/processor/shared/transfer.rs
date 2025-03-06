@@ -159,6 +159,8 @@ pub fn process_transfer(
         let destination_account = unsafe {
             load_mut_unchecked::<Account>(destination_account_info.borrow_mut_data_unchecked())?
         };
+        // Note: The amount of a token account is always within the range of the
+        // mint supply (`u64`).
         destination_account.set_amount(destination_account.amount() + amount);
 
         if source_account.is_native() {

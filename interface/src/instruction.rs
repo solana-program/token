@@ -5,6 +5,7 @@ use pinocchio::program_error::ProgramError;
 /// Instructions supported by the token program.
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(strum_macros::FromRepr, strum_macros::EnumIter))]
 pub enum TokenInstruction {
     /// Initializes a new mint and optionally deposits all the newly minted
     /// tokens in an account.
@@ -20,7 +21,7 @@ pub enum TokenInstruction {
     ///   0. `[writable]` The mint to initialize.
     ///   1. `[]` Rent sysvar.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u8` The number of base 10 digits to the right of the decimal place.
     ///   - `Pubkey` The authority/multisignature to mint tokens.
@@ -66,7 +67,7 @@ pub enum TokenInstruction {
     ///   1. `[]` Rent sysvar.
     ///   2. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u8` The number of signers (M) required to validate this multisignature account.
     InitializeMultisig,
@@ -89,7 +90,7 @@ pub enum TokenInstruction {
     ///   2. `[]` The source account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to transfer.
     Transfer,
@@ -110,7 +111,7 @@ pub enum TokenInstruction {
     ///   2. `[]` The source account's multisignature owner.
     ///   3. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens the delegate is approved for.
     Approve,
@@ -142,7 +143,7 @@ pub enum TokenInstruction {
     ///   1. `[]` The mint's or account's current multisignature authority.
     ///   2. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `AuthorityType` The type of authority to update.
     ///   - `Option<Pubkey>` The new authority.
@@ -164,7 +165,7 @@ pub enum TokenInstruction {
     ///   2. `[]` The mint's multisignature mint-tokens authority.
     ///   3. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of new tokens to mint.
     MintTo,
@@ -185,7 +186,7 @@ pub enum TokenInstruction {
     ///   2. `[]` The account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to burn.
     Burn,
@@ -264,7 +265,7 @@ pub enum TokenInstruction {
     ///   3. `[]` The source account's multisignature owner/delegate.
     ///   4. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to transfer.
     ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
@@ -292,7 +293,7 @@ pub enum TokenInstruction {
     ///   3. `[]` The source account's multisignature owner.
     ///   4. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens the delegate is approved for.
     ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
@@ -318,7 +319,7 @@ pub enum TokenInstruction {
     ///   2. `[]` The mint's multisignature mint-tokens authority.
     ///   3. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of new tokens to mint.
     ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
@@ -345,7 +346,7 @@ pub enum TokenInstruction {
     ///   2. `[]` The account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to burn.
     ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
@@ -362,7 +363,7 @@ pub enum TokenInstruction {
     ///   1. `[]` The mint this account will be associated with.
     ///   2. `[]` Rent sysvar.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///  - `Pubkey` The new account's owner/multisignature.
     InitializeAccount2,
@@ -387,7 +388,7 @@ pub enum TokenInstruction {
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     /// - `Pubkey` The new account's owner/multisignature.
     InitializeAccount3,
@@ -400,7 +401,7 @@ pub enum TokenInstruction {
     ///   0. `[writable]` The multisignature account to initialize.
     ///   1. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u8` The number of signers (M) required to validate this multisignature account.
     InitializeMultisig2,
@@ -412,7 +413,7 @@ pub enum TokenInstruction {
     ///
     ///   0. `[writable]` The mint to initialize.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u8` The number of base 10 digits to the right of the decimal place.
     ///   - `Pubkey` The authority/multisignature to mint tokens.
@@ -456,7 +457,7 @@ pub enum TokenInstruction {
     ///
     ///   0. `[]` The mint to calculate for
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to reformat.
     AmountToUiAmount,
@@ -472,7 +473,7 @@ pub enum TokenInstruction {
     ///
     ///   0. `[]` The mint to calculate for.
     ///
-    /// Instructions data expected by this instruction:
+    /// Data expected by this instruction:
     ///
     ///   - `&str` The `ui_amount` of tokens to reformat.
     UiAmountToAmount,
@@ -497,6 +498,7 @@ impl TryFrom<u8> for TokenInstruction {
 /// Specifies the authority type for `SetAuthority` instructions
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(strum_macros::FromRepr, strum_macros::EnumIter))]
 pub enum AuthorityType {
     /// Authority to mint new tokens
     MintTokens,
@@ -517,6 +519,36 @@ impl TryFrom<u8> for AuthorityType {
             // SAFETY: `value` is guaranteed to be in the range of the enum variants.
             0..=3 => Ok(unsafe { core::mem::transmute::<u8, AuthorityType>(value) }),
             _ => Err(ProgramError::InvalidInstructionData),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AuthorityType, TokenInstruction};
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn test_token_instruction_from_u8_exhaustive() {
+        for variant in TokenInstruction::iter() {
+            let variant_u8 = variant.clone() as u8;
+            assert_eq!(
+                TokenInstruction::from_repr(variant_u8),
+                Some(TokenInstruction::try_from(variant_u8).unwrap())
+            );
+            assert_eq!(TokenInstruction::try_from(variant_u8).unwrap(), variant);
+        }
+    }
+
+    #[test]
+    fn test_authority_type_from_u8_exhaustive() {
+        for variant in AuthorityType::iter() {
+            let variant_u8 = variant.clone() as u8;
+            assert_eq!(
+                AuthorityType::from_repr(variant_u8),
+                Some(AuthorityType::try_from(variant_u8).unwrap())
+            );
+            assert_eq!(AuthorityType::try_from(variant_u8).unwrap(), variant);
         }
     }
 }
