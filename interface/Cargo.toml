@@ -14,3 +14,7 @@ crate-type = ["rlib"]
 [dependencies]
 pinocchio = { version = "0.7", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }
 pinocchio-pubkey = { version = "0.2", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }
+
+[dev-dependencies]
+strum = "0.27"
+strum_macros = "0.27"

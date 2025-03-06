@@ -1,13 +1,12 @@
 //! Instruction types.
 
-use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
-
-use crate::error::TokenError;
+use pinocchio::program_error::ProgramError;
 
 /// Instructions supported by the token program.
-#[repr(C)]
+#[repr(u8)]
 #[derive(Clone, Debug, PartialEq)]
-pub enum TokenInstruction<'a> {
+#[cfg_attr(test, derive(strum_macros::FromRepr, strum_macros::EnumIter))]
+pub enum TokenInstruction {
     /// Initializes a new mint and optionally deposits all the newly minted
     /// tokens in an account.
     ///
@@ -20,15 +19,14 @@ pub enum TokenInstruction<'a> {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]` The mint to initialize.
-    ///   1. `[]` Rent sysvar
-    InitializeMint {
-        /// Number of base 10 digits to the right of the decimal place.
-        decimals: u8,
-        /// The authority/multisignature to mint tokens.
-        mint_authority: Pubkey,
-        /// The freeze authority/multisignature of the mint.
-        freeze_authority: Option<Pubkey>,
-    },
+    ///   1. `[]` Rent sysvar.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u8` The number of base 10 digits to the right of the decimal place.
+    ///   - `Pubkey` The authority/multisignature to mint tokens.
+    ///   - `Option<Pubkey>` The freeze authority/multisignature of the mint.
+    InitializeMint,
 
     /// Initializes a new account to hold tokens.  If this account is associated
     /// with the native mint then the token balance of the initialized account
@@ -47,7 +45,7 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
     ///   2. `[]` The new account's owner/multisignature.
-    ///   3. `[]` Rent sysvar
+    ///   3. `[]` Rent sysvar.
     InitializeAccount,
 
     /// Initializes a multisignature account with N provided signers.
@@ -66,13 +64,13 @@ pub enum TokenInstruction<'a> {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]` The multisignature account to initialize.
-    ///   1. `[]` Rent sysvar
+    ///   1. `[]` Rent sysvar.
     ///   2. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
-    InitializeMultisig {
-        /// The number of signers (M) required to validate this multisignature
-        /// account.
-        m: u8,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u8` The number of signers (M) required to validate this multisignature account.
+    InitializeMultisig,
 
     /// Transfers tokens from one account to another either directly or via a
     /// delegate.  If this account is associated with the native mint then equal
@@ -91,10 +89,11 @@ pub enum TokenInstruction<'a> {
     ///   1. `[writable]` The destination account.
     ///   2. `[]` The source account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
-    Transfer {
-        /// The amount of tokens to transfer.
-        amount: u64,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens to transfer.
+    Transfer,
 
     /// Approves a delegate.  A delegate is given the authority over tokens on
     /// behalf of the source account's owner.
@@ -110,11 +109,12 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]` The source account.
     ///   1. `[]` The delegate.
     ///   2. `[]` The source account's multisignature owner.
-    ///   3. `..+M` `[signer]` M signer accounts
-    Approve {
-        /// The amount of tokens the delegate is approved for.
-        amount: u64,
-    },
+    ///   3. `..+M` `[signer]` M signer accounts.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens the delegate is approved for.
+    Approve,
 
     /// Revokes the delegate's authority.
     ///
@@ -127,7 +127,7 @@ pub enum TokenInstruction<'a> {
     ///   * Multisignature owner
     ///   0. `[writable]` The source account.
     ///   1. `[]` The source account's multisignature owner.
-    ///   2. `..+M` `[signer]` M signer accounts
+    ///   2. `..+M` `[signer]` M signer accounts.
     Revoke,
 
     /// Sets a new authority of a mint or account.
@@ -141,13 +141,13 @@ pub enum TokenInstruction<'a> {
     ///   * Multisignature authority
     ///   0. `[writable]` The mint or account to change the authority of.
     ///   1. `[]` The mint's or account's current multisignature authority.
-    ///   2. `..+M` `[signer]` M signer accounts
-    SetAuthority {
-        /// The type of authority to update.
-        authority_type: AuthorityType,
-        /// The new authority
-        new_authority: Option<Pubkey>,
-    },
+    ///   2. `..+M` `[signer]` M signer accounts.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `AuthorityType` The type of authority to update.
+    ///   - `Option<Pubkey>` The new authority.
+    SetAuthority,
 
     /// Mints new tokens to an account.  The native mint does not support
     /// minting.
@@ -164,10 +164,11 @@ pub enum TokenInstruction<'a> {
     ///   1. `[writable]` The account to mint tokens to.
     ///   2. `[]` The mint's multisignature mint-tokens authority.
     ///   3. `..+M` `[signer]` M signer accounts.
-    MintTo {
-        /// The amount of new tokens to mint.
-        amount: u64,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of new tokens to mint.
+    MintTo,
 
     /// Burns tokens by removing them from an account.  `Burn` does not support
     /// accounts associated with the native mint, use `CloseAccount` instead.
@@ -184,10 +185,11 @@ pub enum TokenInstruction<'a> {
     ///   1. `[writable]` The token mint.
     ///   2. `[]` The account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
-    Burn {
-        /// The amount of tokens to burn.
-        amount: u64,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens to burn.
+    Burn,
 
     /// Close an account by transferring all its SOL to the destination account.
     /// Non-native accounts may only be closed if its token amount is zero.
@@ -262,12 +264,12 @@ pub enum TokenInstruction<'a> {
     ///   2. `[writable]` The destination account.
     ///   3. `[]` The source account's multisignature owner/delegate.
     ///   4. `..+M` `[signer]` M signer accounts.
-    TransferChecked {
-        /// The amount of tokens to transfer.
-        amount: u64,
-        /// Expected number of base 10 digits to the right of the decimal place.
-        decimals: u8,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens to transfer.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    TransferChecked,
 
     /// Approves a delegate.  A delegate is given the authority over tokens on
     /// behalf of the source account's owner.
@@ -289,13 +291,13 @@ pub enum TokenInstruction<'a> {
     ///   1. `[]` The token mint.
     ///   2. `[]` The delegate.
     ///   3. `[]` The source account's multisignature owner.
-    ///   4. `..+M` `[signer]` M signer accounts
-    ApproveChecked {
-        /// The amount of tokens the delegate is approved for.
-        amount: u64,
-        /// Expected number of base 10 digits to the right of the decimal place.
-        decimals: u8,
-    },
+    ///   4. `..+M` `[signer]` M signer accounts.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens the delegate is approved for.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    ApproveChecked,
 
     /// Mints new tokens to an account.  The native mint does not support
     /// minting.
@@ -316,12 +318,12 @@ pub enum TokenInstruction<'a> {
     ///   1. `[writable]` The account to mint tokens to.
     ///   2. `[]` The mint's multisignature mint-tokens authority.
     ///   3. `..+M` `[signer]` M signer accounts.
-    MintToChecked {
-        /// The amount of new tokens to mint.
-        amount: u64,
-        /// Expected number of base 10 digits to the right of the decimal place.
-        decimals: u8,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of new tokens to mint.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    MintToChecked,
 
     /// Burns tokens by removing them from an account.  [`BurnChecked`] does not
     /// support accounts associated with the native mint, use `CloseAccount`
@@ -343,12 +345,12 @@ pub enum TokenInstruction<'a> {
     ///   1. `[writable]` The token mint.
     ///   2. `[]` The account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
-    BurnChecked {
-        /// The amount of tokens to burn.
-        amount: u64,
-        /// Expected number of base 10 digits to the right of the decimal place.
-        decimals: u8,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens to burn.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    BurnChecked,
 
     /// Like [`InitializeAccount`], but the owner pubkey is passed via instruction
     /// data rather than the accounts list. This variant may be preferable
@@ -359,11 +361,12 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
-    ///   3. `[]` Rent sysvar
-    InitializeAccount2 {
-        /// The new account's owner/multisignature.
-        owner: Pubkey,
-    },
+    ///   2. `[]` Rent sysvar.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///  - `Pubkey` The new account's owner/multisignature.
+    InitializeAccount2,
 
     /// Given a wrapped / native token account (a token account containing SOL)
     /// updates its amount field based on the account's underlying `lamports`.
@@ -384,10 +387,11 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
-    InitializeAccount3 {
-        /// The new account's owner/multisignature.
-        owner: Pubkey,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    /// - `Pubkey` The new account's owner/multisignature.
+    InitializeAccount3,
 
     /// Like [`InitializeMultisig`], but does not require the Rent sysvar to be
     /// provided
@@ -396,11 +400,11 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[writable]` The multisignature account to initialize.
     ///   1. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
-    InitializeMultisig2 {
-        /// The number of signers (M) required to validate this multisignature
-        /// account.
-        m: u8,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u8` The number of signers (M) required to validate this multisignature account.
+    InitializeMultisig2,
 
     /// Like [`InitializeMint`], but does not require the Rent sysvar to be
     /// provided
@@ -408,14 +412,13 @@ pub enum TokenInstruction<'a> {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]` The mint to initialize.
-    InitializeMint2 {
-        /// Number of base 10 digits to the right of the decimal place.
-        decimals: u8,
-        /// The authority/multisignature to mint tokens.
-        mint_authority: Pubkey,
-        /// The freeze authority/multisignature of the mint.
-        freeze_authority: Option<Pubkey>,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u8` The number of base 10 digits to the right of the decimal place.
+    ///   - `Pubkey` The authority/multisignature to mint tokens.
+    ///   - `Option<Pubkey>` The freeze authority/multisignature of the mint.
+    InitializeMint2,
 
     /// Gets the required size of an account for the given mint as a
     /// little-endian `u64`.
@@ -425,8 +428,8 @@ pub enum TokenInstruction<'a> {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` The mint to calculate for
-    GetAccountDataSize, // typically, there's also data, but this program ignores it
+    ///   0. `[]` The mint to calculate for.
+    GetAccountDataSize,
 
     /// Initialize the Immutable Owner extension for the given token account
     ///
@@ -439,9 +442,6 @@ pub enum TokenInstruction<'a> {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]`  The account to initialize.
-    ///
-    /// Data expected by this instruction:
-    ///   None
     InitializeImmutableOwner,
 
     /// Convert an Amount of tokens to a `UiAmount` `string`, using the given
@@ -456,10 +456,11 @@ pub enum TokenInstruction<'a> {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[]` The mint to calculate for
-    AmountToUiAmount {
-        /// The amount of tokens to reformat.
-        amount: u64,
-    },
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of tokens to reformat.
+    AmountToUiAmount,
 
     /// Convert a `UiAmount` of tokens to a little-endian `u64` raw Amount, using
     /// the given mint. In this version of the program, the mint can only
@@ -470,19 +471,34 @@ pub enum TokenInstruction<'a> {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` The mint to calculate for
-    UiAmountToAmount {
-        /// The `ui_amount` of tokens to reformat.
-        ui_amount: &'a str,
-    },
+    ///   0. `[]` The mint to calculate for.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `&str` The `ui_amount` of tokens to reformat.
+    UiAmountToAmount,
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
     // token/js/src/instructions/types.ts to maintain @solana/spl-token compatibility
 }
 
+impl TryFrom<u8> for TokenInstruction {
+    type Error = ProgramError;
+
+    #[inline(always)]
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            // SAFETY: `value` is guaranteed to be in the range of the enum variants.
+            0..=24 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
+            _ => Err(ProgramError::InvalidInstructionData),
+        }
+    }
+}
+
 /// Specifies the authority type for `SetAuthority` instructions
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(strum_macros::FromRepr, strum_macros::EnumIter))]
 pub enum AuthorityType {
     /// Authority to mint new tokens
     MintTokens,
@@ -494,23 +510,45 @@ pub enum AuthorityType {
     CloseAccount,
 }
 
-impl AuthorityType {
-    pub fn into(&self) -> u8 {
-        match self {
-            AuthorityType::MintTokens => 0,
-            AuthorityType::FreezeAccount => 1,
-            AuthorityType::AccountOwner => 2,
-            AuthorityType::CloseAccount => 3,
+impl TryFrom<u8> for AuthorityType {
+    type Error = ProgramError;
+
+    #[inline(always)]
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            // SAFETY: `value` is guaranteed to be in the range of the enum variants.
+            0..=3 => Ok(unsafe { core::mem::transmute::<u8, AuthorityType>(value) }),
+            _ => Err(ProgramError::InvalidInstructionData),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AuthorityType, TokenInstruction};
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn test_token_instruction_from_u8_exhaustive() {
+        for variant in TokenInstruction::iter() {
+            let variant_u8 = variant.clone() as u8;
+            assert_eq!(
+                TokenInstruction::from_repr(variant_u8),
+                Some(TokenInstruction::try_from(variant_u8).unwrap())
+            );
+            assert_eq!(TokenInstruction::try_from(variant_u8).unwrap(), variant);
         }
     }
 
-    pub fn from(index: u8) -> Result<Self, ProgramError> {
-        match index {
-            0 => Ok(AuthorityType::MintTokens),
-            1 => Ok(AuthorityType::FreezeAccount),
-            2 => Ok(AuthorityType::AccountOwner),
-            3 => Ok(AuthorityType::CloseAccount),
-            _ => Err(TokenError::InvalidInstruction.into()),
+    #[test]
+    fn test_authority_type_from_u8_exhaustive() {
+        for variant in AuthorityType::iter() {
+            let variant_u8 = variant.clone() as u8;
+            assert_eq!(
+                AuthorityType::from_repr(variant_u8),
+                Some(AuthorityType::try_from(variant_u8).unwrap())
+            );
+            assert_eq!(AuthorityType::try_from(variant_u8).unwrap(), variant);
         }
     }
 }

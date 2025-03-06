@@ -1,8 +1,5 @@
 use pinocchio::{
-    account_info::AccountInfo,
-    program_error::ProgramError,
-    pubkey::{Pubkey, PUBKEY_BYTES},
-    ProgramResult,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 
 use super::shared;
@@ -12,13 +9,9 @@ pub fn process_initialize_account3(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    // SAFETY: validate `instruction_data` length.
-    let owner = unsafe {
-        if instruction_data.len() != PUBKEY_BYTES {
-            return Err(ProgramError::InvalidInstructionData);
-        } else {
-            &*(instruction_data.as_ptr() as *const Pubkey)
-        }
-    };
+    let owner: &Pubkey = instruction_data
+        .try_into()
+        .map_err(|_error| ProgramError::InvalidInstructionData)?;
+
     shared::initialize_account::process_initialize_account(accounts, Some(owner), false)
 }

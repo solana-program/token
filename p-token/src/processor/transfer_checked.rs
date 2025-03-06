@@ -11,16 +11,12 @@ pub fn process_transfer_checked(
     let (amount, decimals) = if instruction_data.len() == 9 {
         let (amount, decimals) = instruction_data.split_at(core::mem::size_of::<u64>());
         (
-            u64::from_le_bytes(
-                amount
-                    .try_into()
-                    .map_err(|_error| ProgramError::InvalidInstructionData)?,
-            ),
-            decimals.first(),
+            u64::from_le_bytes(amount.try_into().unwrap()),
+            decimals.first().copied(),
         )
     } else {
         return Err(ProgramError::InvalidInstructionData);
     };
 
-    shared::transfer::process_transfer(accounts, amount, decimals.copied())
+    shared::transfer::process_transfer(accounts, amount, decimals)
 }

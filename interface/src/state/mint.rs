@@ -1,6 +1,6 @@
 use pinocchio::pubkey::Pubkey;
 
-use super::{COption, Initializable, RawType};
+use super::{COption, Initializable, Transmutable};
 
 /// Internal representation of a mint data.
 #[repr(C)]
@@ -38,8 +38,8 @@ impl Mint {
     }
 
     #[inline(always)]
-    pub fn set_initialized(&mut self, value: bool) {
-        self.is_initialized = value as u8;
+    pub fn set_initialized(&mut self) {
+        self.is_initialized = 1;
     }
 
     #[inline(always)]
@@ -83,7 +83,7 @@ impl Mint {
     }
 }
 
-impl RawType for Mint {
+impl Transmutable for Mint {
     /// The length of the `Mint` account data.
     const LEN: usize = core::mem::size_of::<Mint>();
 }
