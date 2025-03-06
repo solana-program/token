@@ -125,12 +125,12 @@ impl SetAuthority<'_> {
         unsafe {
             match bytes.len() {
                 2 if *bytes.get_unchecked(1) == 0 => Ok(SetAuthority {
-                    authority_type: AuthorityType::from(*bytes.get_unchecked(0))?,
+                    authority_type: (*bytes.get_unchecked(0)).try_into()?,
                     new_authority: None,
                     _data: PhantomData,
                 }),
                 34 if *bytes.get_unchecked(1) == 1 => Ok(SetAuthority {
-                    authority_type: AuthorityType::from(*bytes.get_unchecked(0))?,
+                    authority_type: (*bytes.get_unchecked(0)).try_into()?,
                     new_authority: Some(&*(bytes.as_ptr().add(2) as *const Pubkey)),
                     _data: PhantomData,
                 }),

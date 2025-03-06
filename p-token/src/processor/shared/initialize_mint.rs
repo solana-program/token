@@ -80,10 +80,10 @@ pub struct InitializeMint<'a> {
 impl InitializeMint<'_> {
     #[inline]
     pub fn try_from_bytes(bytes: &[u8]) -> Result<InitializeMint, ProgramError> {
-        // The minimum expected size of the instruction data.
-        // - decimals (1 byte)
-        // - mint_authority (32 bytes)
-        // - option + freeze_authority (1 byte + 32 bytes)
+        // The minimum expected size of the instruction data is either 34 or 66 bytes:
+        //   - decimals (1 byte)
+        //   - mint_authority (32 bytes)
+        //   - option + freeze_authority (1 byte + 32 bytes)
         if bytes.len() < 34 || (bytes[33] == 1 && bytes.len() < 66) {
             return Err(ProgramError::InvalidInstructionData);
         }
