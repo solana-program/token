@@ -2,8 +2,6 @@
 
 use pinocchio::program_error::ProgramError;
 
-use crate::error::TokenError;
-
 /// Instructions supported by the token program.
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq)]
@@ -510,21 +508,15 @@ pub enum AuthorityType {
     CloseAccount,
 }
 
-impl AuthorityType {
-    pub fn into(&self) -> u8 {
-        match self {
-            AuthorityType::MintTokens => 0,
-            AuthorityType::FreezeAccount => 1,
-            AuthorityType::AccountOwner => 2,
-            AuthorityType::CloseAccount => 3,
-        }
-    }
+impl TryFrom<u8> for AuthorityType {
+    type Error = ProgramError;
 
     #[inline(always)]
-    pub fn from(value: u8) -> Result<Self, ProgramError> {
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
+            // SAFETY: `value` is guaranteed to be in the range of the enum variants.
             0..=3 => Ok(unsafe { core::mem::transmute::<u8, AuthorityType>(value) }),
-            _ => Err(TokenError::InvalidInstruction.into()),
+            _ => Err(ProgramError::InvalidInstructionData),
         }
     }
 }

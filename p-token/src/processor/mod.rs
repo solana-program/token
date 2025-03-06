@@ -1,10 +1,6 @@
-use core::{
-    mem::MaybeUninit,
-    slice::{from_raw_parts, from_raw_parts_mut},
-    str::from_utf8_unchecked,
-};
+use core::{slice::from_raw_parts, str::from_utf8_unchecked};
 use pinocchio::{
-    account_info::AccountInfo, memory::sol_memcpy, program_error::ProgramError, pubkey::Pubkey,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, syscalls::sol_memcpy_,
     ProgramResult,
 };
 use spl_token_interface::{
@@ -70,9 +66,6 @@ pub use thaw_account::process_thaw_account;
 pub use transfer::process_transfer;
 pub use transfer_checked::process_transfer_checked;
 pub use ui_amount_to_amount::process_ui_amount_to_amount;
-
-/// An uninitialized byte.
-const UNINIT_BYTE: MaybeUninit<u8> = MaybeUninit::uninit();
 
 /// Maximum number of digits in a formatted `u64`.
 ///
@@ -164,41 +157,26 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
         return Err(ProgramError::InvalidArgument);
     }
 
-    let mut digits = [UNINIT_BYTE; MAX_FORMATTED_DIGITS];
-    // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same
-    // memory layout as `u8`.
-    let slice: &mut [u8] =
-        unsafe { from_raw_parts_mut(digits.as_mut_ptr() as *mut _, MAX_FORMATTED_DIGITS) };
+    let mut digits = [b'0'; MAX_FORMATTED_DIGITS];
 
     // SAFETY: the total length of `amount_str` and `after_decimal` is less than
     // `MAX_FORMATTED_DIGITS`.
     unsafe {
-        sol_memcpy(slice, amount_str.as_bytes(), length);
+        sol_memcpy_(digits.as_mut_ptr(), amount_str.as_ptr(), length as u64);
 
-        sol_memcpy(
-            &mut slice[length..],
-            after_decimal.as_bytes(),
-            after_decimal.len(),
+        sol_memcpy_(
+            digits.as_mut_ptr().add(length),
+            after_decimal.as_ptr(),
+            after_decimal.len() as u64,
         );
     }
 
-    let length = amount_str.len() + after_decimal.len();
     let remaining = decimals.saturating_sub(after_decimal.len());
-
-    // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same memory
-    // layout as `u8`.
-    let ptr = unsafe { digits.as_mut_ptr().add(length) };
-
-    for offset in 0..remaining {
-        // SAFETY: `ptr` is within the bounds of `digits`.
-        unsafe {
-            (ptr.add(offset) as *mut u8).write(b'0');
-        }
-    }
+    let length = amount_str.len() + after_decimal.len() + remaining;
 
     // SAFETY: `digits` only contains valid UTF-8 bytes.
     unsafe {
-        from_utf8_unchecked(from_raw_parts(digits.as_ptr() as _, length + remaining))
+        from_utf8_unchecked(from_raw_parts(digits.as_ptr(), length))
             .parse::<u64>()
             .map_err(|_| ProgramError::InvalidArgument)
     }
