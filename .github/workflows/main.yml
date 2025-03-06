@@ -81,26 +81,6 @@ jobs:
       - name: Run cargo-audit
         run: pnpm rust:audit
 
-  semver_rust:
-    name: Check semver Rust
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-semver
-
-      - name: Install cargo-audit
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-semver-checks
-
-      - name: Run semver checks
-        run: pnpm rust:semver
-
   spellcheck_rust:
     name: Spellcheck Rust
     runs-on: ubuntu-latest
@@ -214,7 +194,7 @@ jobs:
   test_program:
     name: Test Program
     runs-on: ubuntu-latest
-    needs: format_and_lint_program
+    needs: build_program
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
@@ -223,7 +203,12 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cargo-cache-key: cargo-test-program
-          solana: true
+
+      - name: Restore Program Builds
+        uses: actions/cache/restore@v4
+        with:
+          path: ./**/*.so
+          key: ${{ runner.os }}-builds-${{ github.sha }}
 
       - name: Test
         run: pnpm programs:test

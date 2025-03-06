@@ -1,5 +1,3 @@
-#![cfg(feature = "test-sbf")]
-
 use {
     solana_sdk::{
         account::Account as SolanaAccount, program_pack::Pack, pubkey::Pubkey, rent::Rent,
