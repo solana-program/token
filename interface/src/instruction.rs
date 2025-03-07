@@ -487,7 +487,7 @@ pub enum TokenInstruction {
     ///
     /// Accounts follow a similar pattern, where accounts for each instruction are
     /// specified in sequence. Therefore, the number of accounts expected by this
-    /// instruction is variable – i.e., it depends on the instructions provided.
+    /// instruction is variable, i.e., it depends on the instructions provided.
     ///
     /// Both the number of accounts and instruction data length are used to identify
     /// the slice of accounts and instruction data for each instruction.
