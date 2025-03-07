@@ -45,6 +45,8 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
         _ => return Err(TokenError::InvalidState.into()),
     }
 
+    // Withdraws the excess lamports from the source account.
+
     let source_rent_exempt_reserve = Rent::get()?.minimum_balance(source_data.len());
 
     let transfer_amount = source_account_info
@@ -56,9 +58,11 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
     // SAFETY: single mutable borrow to `source_account_info` lamports.
     unsafe {
         // Moves the lamports out of the source account.
-        *source_account_info.borrow_mut_lamports_unchecked() = source_starting_lamports
-            .checked_sub(transfer_amount)
-            .ok_or(TokenError::Overflow)?;
+        //
+        // Note: The `transfer_amount` is guaranteed to be less than the source account's
+        // lamports.
+        *source_account_info.borrow_mut_lamports_unchecked() =
+            source_starting_lamports - transfer_amount;
     }
 
     let destination_starting_lamports = destination_info.lamports();
