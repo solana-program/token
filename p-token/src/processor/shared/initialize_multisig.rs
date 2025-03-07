@@ -13,6 +13,7 @@ use token_interface::{
 pub fn process_initialize_multisig(
     accounts: &[AccountInfo],
     m: u8,
+    // JC nit: same here, whatever name we choose for this variable
     rent_sysvar_account: bool,
 ) -> ProgramResult {
     // Accounts expected depend on whether we have the `rent_sysvar` account or not.
@@ -57,6 +58,9 @@ pub fn process_initialize_multisig(
     multisig.m = m;
     multisig.n = remaining.len() as u8;
 
+    // JC nit: just wondering, does it make any difference in CUs to change
+    // `is_valid_signer_index` to take in a `u8` instead of a `usize` and avoid
+    // widening?
     if !Multisig::is_valid_signer_index(multisig.n as usize) {
         return Err(TokenError::InvalidNumberOfProvidedSigners.into());
     }

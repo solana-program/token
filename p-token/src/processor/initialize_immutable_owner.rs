@@ -14,6 +14,7 @@ pub fn process_initialize_immutable_owner(accounts: &[AccountInfo]) -> ProgramRe
     if account.is_initialized() {
         return Err(TokenError::AlreadyInUse.into());
     }
+    // JC nit: People hate this for the CU waste, so let's remove it completely
     msg!("Please upgrade to SPL Token 2022 for immutable owner support");
     Ok(())
 }

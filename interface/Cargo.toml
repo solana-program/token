@@ -1,15 +1,15 @@
 [package]
 name = "token-interface"
 version = "0.0.0"
-edition = { workspace = true }
+edition = "2021"
 readme = "./README.md"
-license = { workspace = true }
-repository = { workspace = true }
+license = "Apache-2.0"
+#repository = { workspace = true }
 publish = false
 
 [lib]
 crate-type = ["rlib"]
 
 [dependencies]
-pinocchio = { workspace = true }
-pinocchio-pubkey = { workspace = true }
+pinocchio = { path = "../../../pinocchio/sdk/pinocchio" }
+pinocchio-pubkey = { path = "../../../pinocchio/sdk/pubkey" }

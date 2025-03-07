@@ -51,6 +51,7 @@ pub fn process_mint_to(
     }
 
     if amount == 0 {
+        // JC nit: please add a comment here explaining what this is for
         check_account_owner(mint_info)?;
         check_account_owner(destination_account_info)?;
     } else {
@@ -60,6 +61,10 @@ pub fn process_mint_to(
             .ok_or(TokenError::Overflow)?;
         destination_account.set_amount(destination_amount);
 
+        // JC nit: if you do this checked addition first, ie. before adding the
+        // amount to `destination_account`, then you don't need to do checked
+        // math there! If there's no overflow on the supply, then there can't
+        // be an overflow on the destination account
         let mint_supply = mint
             .supply()
             .checked_add(amount)

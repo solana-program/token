@@ -13,6 +13,8 @@ pub fn process_initialize_account2(
     instruction_data: &[u8],
 ) -> ProgramResult {
     // SAFETY: validate `instruction_data` length.
+    // JC nit: can this be done as efficiently without using unsafe? meaning,
+    // just reinterpreting the slice as a ref to an array?
     let owner = unsafe {
         if instruction_data.len() != PUBKEY_BYTES {
             return Err(ProgramError::InvalidInstructionData);

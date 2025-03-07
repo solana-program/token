@@ -9,6 +9,8 @@ pub fn process_burn_checked(accounts: &[AccountInfo], instruction_data: &[u8]) -
         let (amount, decimals) = instruction_data.split_at(core::mem::size_of::<u64>());
         (
             u64::from_le_bytes(
+                // JC: this should be unwrappabable since the length was just checked
+                // and the split amount is valid -- if it gives CU gains, go for it!
                 amount
                     .try_into()
                     .map_err(|_error| ProgramError::InvalidInstructionData)?,

@@ -38,11 +38,17 @@ impl Mint {
     }
 
     #[inline(always)]
+    // JC nit: since there's never a case of `uninitializing` a mint, maybe this
+    // could not take the value and just set `is_initialized` to `1`
     pub fn set_initialized(&mut self, value: bool) {
         self.is_initialized = value as u8;
     }
 
     #[inline(always)]
+    // JC: this one worries me in particular, for people who might be doing
+    // `get_program_accounts` with just their mint authority -- if we don't
+    // clear the whole 36 bytes, they might get false positives. But either way,
+    // this might be the behavior now, in which case, no problem!
     pub fn clear_mint_authority(&mut self) {
         self.mint_authority.0[0] = 0;
     }
@@ -63,6 +69,8 @@ impl Mint {
     }
 
     #[inline(always)]
+    // JC: same as with the other COption<Pubkey> fields, check that this is the
+    // current behavior
     pub fn clear_freeze_authority(&mut self) {
         self.freeze_authority.0[0] = 0;
     }
