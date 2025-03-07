@@ -2845,6 +2845,7 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "spl-token 4.0.2",
+ "spl-token-2022 7.0.0",
  "spl-token-interface",
  "test-case",
 ]
