@@ -2840,6 +2840,7 @@ name = "pinocchio-token-program"
 version = "0.0.0"
 dependencies = [
  "assert_matches",
+ "num-traits",
  "pinocchio",
  "pinocchio-log",
  "solana-program-test",
