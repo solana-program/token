@@ -39,7 +39,6 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
             inner_process_instruction(
                 accounts.get_unchecked(..expected_accounts),
                 instruction_data.get_unchecked(IX_HEADER_SIZE..data_offset),
-                //*instruction_data.get_unchecked(IX_HEADER_SIZE),
             )?;
         }
 
@@ -48,10 +47,6 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
             break;
         }
 
-        // SAFETY: Both `accounts` and `instruction_data` will have at least the
-        // expected number of accounts and the data offset, respectively.
-        //accounts = unsafe { accounts.get_unchecked(expected_accounts..) };
-        //instruction_data = unsafe { instruction_data.get_unchecked(data_offset..) };
         accounts = &accounts[expected_accounts..];
         instruction_data = &instruction_data[data_offset..];
     }
