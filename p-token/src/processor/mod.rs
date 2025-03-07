@@ -16,6 +16,7 @@ use spl_token_interface::{
 pub mod amount_to_ui_amount;
 pub mod approve;
 pub mod approve_checked;
+pub mod batch;
 pub mod burn;
 pub mod burn_checked;
 pub mod close_account;
@@ -44,6 +45,7 @@ pub mod shared;
 pub use amount_to_ui_amount::process_amount_to_ui_amount;
 pub use approve::process_approve;
 pub use approve_checked::process_approve_checked;
+pub use batch::process_batch;
 pub use burn::process_burn;
 pub use burn_checked::process_burn_checked;
 pub use close_account::process_close_account;

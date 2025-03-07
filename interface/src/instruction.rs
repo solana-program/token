@@ -477,6 +477,21 @@ pub enum TokenInstruction {
     ///
     ///   - `&str` The `ui_amount` of tokens to reformat.
     UiAmountToAmount,
+
+    /// Executes a batch of instructions. The instructions to be executed are specified
+    /// in sequence on the instruction data. Each instruction provides:
+    ///   - `u8`: number of accounts
+    ///   - `u8`: instruction data length (includes the discriminator)
+    ///   - `u8`: instruction discriminator
+    ///   - `[u8]`: instruction data
+    ///
+    /// Accounts follow a similar pattern, where accounts for each instruction are
+    /// specified in sequence. Therefore, the number of accounts expected by this
+    /// instruction is variable – i.e., it depends on the instructions provided.
+    ///
+    /// Both the number of accounts and instruction data length are used to identify
+    /// the slice of accounts and instruction data for each instruction.
+    Batch = 255,
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
     // token/js/src/instructions/types.ts to maintain @solana/spl-token compatibility
@@ -485,11 +500,10 @@ pub enum TokenInstruction {
 impl TryFrom<u8> for TokenInstruction {
     type Error = ProgramError;
 
-    #[inline(always)]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             // SAFETY: `value` is guaranteed to be in the range of the enum variants.
-            0..=24 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
+            0..=24 | 255 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
             _ => Err(ProgramError::InvalidInstructionData),
         }
     }
