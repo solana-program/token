@@ -22,6 +22,7 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
 
     match source_data.len() {
         Account::LEN => {
+            // SAFETY: `source_data` has the same length as `Account`.
             let account = unsafe { load::<Account>(source_data)? };
 
             if account.is_native() {
@@ -31,6 +32,7 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
             validate_owner(&account.owner, authority_info, remaining)?;
         }
         Mint::LEN => {
+            // SAFETY: `source_data` has the same length as `Mint`.
             let mint = unsafe { load::<Mint>(source_data)? };
 
             if let Some(mint_authority) = mint.mint_authority() {
