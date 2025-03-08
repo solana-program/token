@@ -1,5 +1,3 @@
-#![cfg(feature = "test-sbf")]
-
 //! Program state processor tests
 
 use {

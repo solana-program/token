@@ -4,7 +4,7 @@
     "programs:build": "zx ./scripts/rust/build-sbf.mjs program",
     "programs:format": "zx ./scripts/rust/format.mjs program",
     "programs:lint": "zx ./scripts/rust/lint.mjs program",
-    "programs:test": "zx ./scripts/rust/test-sbf.mjs program",
+    "programs:test": "zx ./scripts/rust/test.mjs program",
     "solana:check": "zx ./scripts/check-solana-version.mjs",
     "solana:link": "zx ./scripts/link-solana-version.mjs",
     "generate": "pnpm generate:clients",
@@ -18,11 +18,11 @@
     "clients:js:test": "zx ./scripts/js/test.mjs",
     "clients:rust:format": "zx ./scripts/rust/format.mjs clients/rust",
     "clients:rust:lint": "zx ./scripts/rust/lint.mjs clients/rust",
-    "clients:rust:publish": "zx ./scripts/rust/publish.mjs clients/rust",
-    "clients:rust:test": "zx ./scripts/rust/test-sbf.mjs clients/rust",
+    "clients:rust:test": "zx ./scripts/rust/test.mjs clients/rust",
     "template:upgrade": "zx ./scripts/upgrade-template.mjs",
     "rust:spellcheck": "cargo spellcheck --code 1",
     "rust:audit": "zx ./scripts/rust/audit.mjs",
+    "rust:publish": "zx ./scripts/rust/publish.mjs",
     "rust:semver": "cargo semver-checks"
   },
   "devDependencies": {
