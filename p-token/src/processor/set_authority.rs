@@ -13,7 +13,22 @@ use super::validate_owner;
 pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
     // Validates the instruction data.
 
-    let args = SetAuthority::try_from_bytes(instruction_data)?;
+    // SAFETY: The expected size of the instruction data is either 2 or 34 bytes:
+    //   - authority_type (1 byte)
+    //   - option + new_authority (1 byte + 32 bytes)
+    let (authority_type, new_authority) = unsafe {
+        match instruction_data.len() {
+            2 if *instruction_data.get_unchecked(1) == 0 => (
+                AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
+                None,
+            ),
+            34 if *instruction_data.get_unchecked(1) == 1 => (
+                AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
+                Some(&*(instruction_data.as_ptr().add(2) as *const Pubkey)),
+            ),
+            _ => return Err(ProgramError::InvalidInstructionData),
+        }
+    };
 
     // Validates the accounts.
 
@@ -30,11 +45,11 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             return Err(TokenError::AccountFrozen.into());
         }
 
-        match args.authority_type()? {
+        match authority_type {
             AuthorityType::AccountOwner => {
                 validate_owner(&account.owner, authority_info, remaining)?;
 
-                if let Some(authority) = args.new_authority() {
+                if let Some(authority) = new_authority {
                     account.owner = *authority;
                 } else {
                     return Err(TokenError::InvalidInstruction.into());
@@ -51,7 +66,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                 let authority = account.close_authority().unwrap_or(&account.owner);
                 validate_owner(authority, authority_info, remaining)?;
 
-                if let Some(authority) = args.new_authority() {
+                if let Some(authority) = new_authority {
                     account.set_close_authority(authority);
                 } else {
                     account.clear_close_authority();
@@ -66,7 +81,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
         // `load_mut` validates that the mint is initialized.
         let mint = unsafe { load_mut::<Mint>(account_info.borrow_mut_data_unchecked())? };
 
-        match args.authority_type()? {
+        match authority_type {
             AuthorityType::MintTokens => {
                 // Once a mint's supply is fixed, it cannot be undone by setting a new
                 // mint_authority.
@@ -74,7 +89,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
 
                 validate_owner(mint_authority, authority_info, remaining)?;
 
-                if let Some(authority) = args.new_authority() {
+                if let Some(authority) = new_authority {
                     mint.set_mint_authority(authority);
                 } else {
                     mint.clear_mint_authority();
@@ -89,7 +104,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
 
                 validate_owner(freeze_authority, authority_info, remaining)?;
 
-                if let Some(authority) = args.new_authority() {
+                if let Some(authority) = new_authority {
                     mint.set_freeze_authority(authority);
                 } else {
                     mint.clear_freeze_authority();
@@ -104,41 +119,4 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
     }
 
     Ok(())
-}
-
-#[repr(C)]
-struct SetAuthority {
-    authority_type: u8,
-
-    new_authority: (u8, Pubkey),
-}
-
-impl SetAuthority {
-    #[inline]
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<&SetAuthority, ProgramError> {
-        // The minimum expected size of the instruction data is either 2 or 34 bytes:
-        //   - authority_type (1 byte)
-        //   - option + new_authority (1 byte + 32 bytes)
-        unsafe {
-            match bytes.len() {
-                2 if *bytes.get_unchecked(1) == 0 => Ok(&*(bytes.as_ptr() as *const SetAuthority)),
-                34 => Ok(&*(bytes.as_ptr() as *const SetAuthority)),
-                _ => Err(ProgramError::InvalidInstructionData),
-            }
-        }
-    }
-
-    #[inline]
-    pub fn authority_type(&self) -> Result<AuthorityType, ProgramError> {
-        self.authority_type.try_into()
-    }
-
-    #[inline]
-    pub fn new_authority(&self) -> Option<&Pubkey> {
-        if self.new_authority.0 == 0 {
-            Option::None
-        } else {
-            Option::Some(&self.new_authority.1)
-        }
-    }
 }

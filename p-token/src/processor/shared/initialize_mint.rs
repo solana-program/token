@@ -19,7 +19,25 @@ pub fn process_initialize_mint(
 ) -> ProgramResult {
     // Validates the instruction data.
 
-    let args = InitializeMint::try_from_bytes(instruction_data)?;
+    // SAFETY: The minimum size of the instruction data is either 34 or 66 bytes:
+    //   - decimals (1 byte)
+    //   - mint_authority (32 bytes)
+    //   - option + freeze_authority (1 byte + 32 bytes)
+    let (decimals, mint_authority, freeze_authority) = unsafe {
+        match instruction_data.len() {
+            34 if *instruction_data.get_unchecked(33) == 0 => (
+                *instruction_data.get_unchecked(0),
+                &*(instruction_data.as_ptr().add(1) as *const Pubkey),
+                None,
+            ),
+            66 if *instruction_data.get_unchecked(33) == 1 => (
+                *instruction_data.get_unchecked(0),
+                &*(instruction_data.as_ptr().add(1) as *const Pubkey),
+                Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey)),
+            ),
+            _ => return Err(ProgramError::InvalidInstructionData),
+        }
+    };
 
     // Validates the accounts.
 
@@ -60,50 +78,12 @@ pub fn process_initialize_mint(
     // Initialize the mint.
 
     mint.set_initialized();
-    mint.set_mint_authority(&args.mint_authority);
-    mint.decimals = args.decimals;
+    mint.set_mint_authority(mint_authority);
+    mint.decimals = decimals;
 
-    if let Some(freeze_authority) = args.freeze_authority() {
+    if let Some(freeze_authority) = freeze_authority {
         mint.set_freeze_authority(freeze_authority);
     }
 
     Ok(())
-}
-
-/// Instruction data for the `InitializeMint` instruction.
-#[repr(C)]
-struct InitializeMint {
-    pub(crate) decimals: u8,
-
-    pub(crate) mint_authority: Pubkey,
-
-    freeze_authority: (u8, Pubkey),
-}
-
-impl InitializeMint {
-    #[inline]
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<&InitializeMint, ProgramError> {
-        // The minimum expected size of the instruction data is either 34 or 66 bytes:
-        //   - decimals (1 byte)
-        //   - mint_authority (32 bytes)
-        //   - option + freeze_authority (1 byte + 32 bytes)
-        unsafe {
-            match bytes.len() {
-                34 if *bytes.get_unchecked(33) == 0 => {
-                    Ok(&*(bytes.as_ptr() as *const InitializeMint))
-                }
-                66 => Ok(&*(bytes.as_ptr() as *const InitializeMint)),
-                _ => Err(ProgramError::InvalidInstructionData),
-            }
-        }
-    }
-
-    #[inline]
-    pub fn freeze_authority(&self) -> Option<&Pubkey> {
-        if self.freeze_authority.0 == 0 {
-            Option::None
-        } else {
-            Option::Some(&self.freeze_authority.1)
-        }
-    }
 }
