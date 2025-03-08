@@ -5,4 +5,4 @@ pub mod account;
 #[allow(dead_code)]
 pub mod mint;
 
-pub const TOKEN_PROGRAM_ID: Pubkey = Pubkey::new_from_array(token_interface::program::ID);
+pub const TOKEN_PROGRAM_ID: Pubkey = Pubkey::new_from_array(spl_token_interface::program::ID);
