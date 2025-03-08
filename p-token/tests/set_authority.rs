@@ -16,7 +16,7 @@ use spl_token::instruction::AuthorityType;
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
 async fn set_authority(token_program: Pubkey) {
-    let mut context = ProgramTest::new("token_program", TOKEN_PROGRAM_ID, None)
+    let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
 
