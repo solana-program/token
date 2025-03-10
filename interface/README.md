@@ -22,4 +22,4 @@ This will add the `spl-token-interface` dependency to your `Cargo.toml` file.
 
 ## Documentation
 
-Read more about the SPL Token program on the crate [documentation](https://docs.rs/spl-token-interface).
+Read more about the SPL Token interface on the crate [documentation](https://docs.rs/spl-token-interface).
