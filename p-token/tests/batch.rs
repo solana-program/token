@@ -1,5 +1,3 @@
-#![cfg(feature = "test-sbf")]
-
 mod setup;
 
 use crate::setup::TOKEN_PROGRAM_ID;
