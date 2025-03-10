@@ -257,6 +257,13 @@ fn inner_process_remaining_instruction(
 
             process_ui_amount_to_amount(accounts, instruction_data)
         }
+        // 38 - WithdrawExcessLamports
+        38 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: WithdrawExcessLamports");
+
+            process_withdraw_excess_lamports(accounts)
+        }
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }
