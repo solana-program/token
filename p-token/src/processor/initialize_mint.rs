@@ -6,7 +6,7 @@ use pinocchio::{
     sysvars::{rent::Rent, Sysvar},
     ProgramResult,
 };
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     state::{load_mut_unchecked, mint::Mint, Initializable},
 };

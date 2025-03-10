@@ -2,7 +2,7 @@ use core::str::from_utf8;
 use pinocchio::{
     account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
 };
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     state::{load, mint::Mint},
 };

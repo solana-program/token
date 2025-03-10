@@ -1,7 +1,7 @@
 use pinocchio::{
     account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     state::{account::Account, load},
 };

@@ -8,7 +8,7 @@ use pinocchio::{
     account_info::AccountInfo, memory::sol_memcpy, program_error::ProgramError, pubkey::Pubkey,
     ProgramResult,
 };
-use token_interface::{
+use spl_token_interface::{
     error::TokenError,
     program::ID as TOKEN_PROGRAM_ID,
     state::{

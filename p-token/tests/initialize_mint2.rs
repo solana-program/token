@@ -14,7 +14,7 @@ use solana_sdk::{
     system_instruction,
     transaction::Transaction,
 };
-use token_interface::state::mint::Mint;
+use spl_token_interface::state::mint::Mint;
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
