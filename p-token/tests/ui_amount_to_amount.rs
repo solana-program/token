@@ -1,5 +1,3 @@
-#![cfg(feature = "test-sbf")]
-
 mod setup;
 
 use setup::{mint, TOKEN_PROGRAM_ID};

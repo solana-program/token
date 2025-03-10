@@ -13,7 +13,6 @@ crate-type = ["cdylib"]
 
 [features]
 logging = []
-test-sbf = []
 
 [dependencies]
 pinocchio = { version = "0.7", git = "https://github.com/febo/pinocchio.git", branch = "febo/close-unstable" }

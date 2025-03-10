@@ -1,5 +1,3 @@
-#![cfg(feature = "test-sbf")]
-
 mod setup;
 
 use std::mem::size_of;
