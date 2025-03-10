@@ -2,7 +2,6 @@ use pinocchio::{
     account_info::AccountInfo, default_panic_handler, no_allocator, program_entrypoint,
     program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
-use spl_token_interface::instruction::TokenInstruction;
 
 use crate::processor::*;
 
@@ -67,9 +66,9 @@ pub(crate) fn inner_process_instruction(
         return Err(ProgramError::InvalidInstructionData);
     };
 
-    match instruction {
+    match *discriminator {
         // 0 - InitializeMint
-        TokenInstruction::InitializeMint => {
+        0 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeMint");
 
@@ -83,21 +82,21 @@ pub(crate) fn inner_process_instruction(
             process_initialize_account(accounts)
         }
         // 3 - Transfer
-        TokenInstruction::Transfer => {
+        3 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Transfer");
 
             process_transfer(accounts, instruction_data)
         }
         // 7 - MintTo
-        TokenInstruction::MintTo => {
+        7 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: MintTo");
 
             process_mint_to(accounts, instruction_data)
         }
         // 9 - CloseAccount
-        TokenInstruction::CloseAccount => {
+        9 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: CloseAccount");
 
@@ -111,14 +110,14 @@ pub(crate) fn inner_process_instruction(
             process_initialize_account2(accounts, instruction_data)
         }
         // 18 - InitializeAccount3
-        TokenInstruction::InitializeAccount3 => {
+        18 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeAccount3");
 
             process_initialize_account3(accounts, instruction_data)
         }
         // 20 - InitializeMint2
-        TokenInstruction::InitializeMint2 => {
+        20 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeMint2");
 
@@ -136,123 +135,123 @@ pub(crate) fn inner_process_instruction(
 fn inner_process_remaining_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
-    instruction: TokenInstruction,
+    discriminator: u8,
 ) -> ProgramResult {
     match discriminator {
         // 2 - InitializeMultisig
-        TokenInstruction::InitializeMultisig => {
+        2 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeMultisig");
 
             process_initialize_multisig(accounts, instruction_data)
         }
         // 4 - Approve
-        TokenInstruction::Approve => {
+        4 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Approve");
 
             process_approve(accounts, instruction_data)
         }
         // 5 - Revoke
-        TokenInstruction::Revoke => {
+        5 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Revoke");
 
             process_revoke(accounts, instruction_data)
         }
         // 6 - SetAuthority
-        TokenInstruction::SetAuthority => {
+        6 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: SetAuthority");
 
             process_set_authority(accounts, instruction_data)
         }
         // 8 - Burn
-        TokenInstruction::Burn => {
+        8 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Burn");
 
             process_burn(accounts, instruction_data)
         }
         // 10 - FreezeAccount
-        TokenInstruction::FreezeAccount => {
+        10 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: FreezeAccount");
 
             process_freeze_account(accounts)
         }
         // 11 - ThawAccount
-        TokenInstruction::ThawAccount => {
+        11 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: ThawAccount");
 
             process_thaw_account(accounts)
         }
         // 12 - TransferChecked
-        TokenInstruction::TransferChecked => {
+        12 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: TransferChecked");
 
             process_transfer_checked(accounts, instruction_data)
         }
         // 13 - ApproveChecked
-        TokenInstruction::ApproveChecked => {
+        13 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: ApproveChecked");
 
             process_approve_checked(accounts, instruction_data)
         }
         // 14 - MintToChecked
-        TokenInstruction::MintToChecked => {
+        14 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: MintToChecked");
 
             process_mint_to_checked(accounts, instruction_data)
         }
         // 15 - BurnChecked
-        TokenInstruction::BurnChecked => {
+        15 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: BurnChecked");
 
             process_burn_checked(accounts, instruction_data)
         }
         // 17 - SyncNative
-        TokenInstruction::SyncNative => {
+        17 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: SyncNative");
 
             process_sync_native(accounts)
         }
         // 19 - InitializeMultisig2
-        TokenInstruction::InitializeMultisig2 => {
+        19 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeMultisig2");
 
             process_initialize_multisig2(accounts, instruction_data)
         }
         // 21 - GetAccountDataSize
-        TokenInstruction::GetAccountDataSize => {
+        21 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: GetAccountDataSize");
 
             process_get_account_data_size(accounts)
         }
         // 22 - InitializeImmutableOwner
-        TokenInstruction::InitializeImmutableOwner => {
+        22 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeImmutableOwner");
 
             process_initialize_immutable_owner(accounts)
         }
         // 23 - AmountToUiAmount
-        TokenInstruction::AmountToUiAmount => {
+        23 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: AmountToUiAmount");
 
             process_amount_to_ui_amount(accounts, instruction_data)
         }
         // 24 - UiAmountToAmount
-        TokenInstruction::UiAmountToAmount => {
+        24 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: UiAmountToAmount");
 
