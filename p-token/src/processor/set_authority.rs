@@ -1,12 +1,10 @@
-use core::marker::PhantomData;
-
 use pinocchio::{
     account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 use spl_token_interface::{
     error::TokenError,
     instruction::AuthorityType,
-    state::{account::Account, load_mut, mint::Mint, RawType},
+    state::{account::Account, load_mut, mint::Mint, Transmutable},
 };
 
 use super::validate_owner;
@@ -15,10 +13,22 @@ use super::validate_owner;
 pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
     // Validates the instruction data.
 
-    let args = SetAuthority::try_from_bytes(instruction_data)?;
-
-    let authority_type = args.authority_type()?;
-    let new_authority = args.new_authority();
+    // SAFETY: The expected size of the instruction data is either 2 or 34 bytes:
+    //   - authority_type (1 byte)
+    //   - option + new_authority (1 byte + 32 bytes)
+    let (authority_type, new_authority) = unsafe {
+        match instruction_data.len() {
+            2 if *instruction_data.get_unchecked(1) == 0 => (
+                AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
+                None,
+            ),
+            34 if *instruction_data.get_unchecked(1) == 1 => (
+                AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
+                Some(&*(instruction_data.as_ptr().add(2) as *const Pubkey)),
+            ),
+            _ => return Err(ProgramError::InvalidInstructionData),
+        }
+    };
 
     // Validates the accounts.
 
@@ -109,45 +119,4 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
     }
 
     Ok(())
-}
-
-struct SetAuthority<'a> {
-    raw: *const u8,
-
-    _data: PhantomData<&'a [u8]>,
-}
-
-impl SetAuthority<'_> {
-    #[inline(always)]
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<SetAuthority, ProgramError> {
-        // The minimum expected size of the instruction data.
-        // - authority_type (1 byte)
-        // - option + new_authority (1 byte + 32 bytes)
-        if bytes.len() < 2 || (bytes[1] == 1 && bytes.len() < 34) {
-            return Err(ProgramError::InvalidInstructionData);
-        }
-
-        Ok(SetAuthority {
-            raw: bytes.as_ptr(),
-            _data: PhantomData,
-        })
-    }
-
-    #[inline(always)]
-    pub fn authority_type(&self) -> Result<AuthorityType, ProgramError> {
-        // SAFETY: `bytes` length is validated in `try_from_bytes`.
-        unsafe { AuthorityType::from(*self.raw) }
-    }
-
-    #[inline(always)]
-    pub fn new_authority(&self) -> Option<&Pubkey> {
-        // SAFETY: `bytes` length is validated in `try_from_bytes`.
-        unsafe {
-            if *self.raw.add(1) == 0 {
-                Option::None
-            } else {
-                Option::Some(&*(self.raw.add(2) as *const Pubkey))
-            }
-        }
-    }
 }

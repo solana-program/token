@@ -1,18 +1,13 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use spl_token_interface::{
     error::TokenError,
-    state::{account::Account, load},
+    state::{
+        account::{Account, INCINERATOR_ID},
+        load,
+    },
 };
 
 use super::validate_owner;
-
-/// Incinerator (`1nc1nerator11111111111111111111111111111111`) address.
-const INCINERATOR_ID: Pubkey = [
-    0, 51, 144, 114, 141, 52, 17, 96, 121, 189, 201, 17, 191, 255, 0, 219, 212, 77, 46, 205, 204,
-    247, 156, 166, 225, 0, 56, 225, 0, 0, 0, 0,
-];
 
 #[inline(always)]
 pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {

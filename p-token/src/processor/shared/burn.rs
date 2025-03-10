@@ -36,7 +36,9 @@ pub fn process_burn(
         .ok_or(TokenError::InsufficientFunds)?;
 
     // SAFETY: single mutable borrow to `mint_info` account data and
-    // `load_mut` validates that the mint is initialized.
+    // `load_mut` validates that the mint is initialized; additionally, an
+    // account cannot be both a token account and a mint, so if duplicates are
+    // passed in, one of them will fail the `load_mut` check.
     let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint_info.key() != &source_account.mint {
@@ -77,11 +79,9 @@ pub fn process_burn(
         check_account_owner(mint_info)?;
     } else {
         source_account.set_amount(updated_source_amount);
-
-        let mint_supply = mint
-            .supply()
-            .checked_sub(amount)
-            .ok_or(TokenError::Overflow)?;
+        // Note: The amount of a token account is always within the range of the
+        // mint supply (`u64`).
+        let mint_supply = mint.supply().checked_sub(amount).unwrap();
         mint.set_supply(mint_supply);
     }
 

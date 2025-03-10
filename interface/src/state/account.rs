@@ -1,9 +1,9 @@
 use pinocchio::pubkey::Pubkey;
 
-use super::{account_state::AccountState, COption, Initializable, RawType};
+use super::{account_state::AccountState, COption, Initializable, Transmutable};
 
 /// Incinerator address.
-const INCINERATOR_ID: Pubkey =
+pub const INCINERATOR_ID: Pubkey =
     pinocchio_pubkey::pubkey!("1nc1nerator11111111111111111111111111111111");
 
 /// System program id.
@@ -140,7 +140,7 @@ impl Account {
     }
 }
 
-impl RawType for Account {
+impl Transmutable for Account {
     const LEN: usize = core::mem::size_of::<Account>();
 }
 

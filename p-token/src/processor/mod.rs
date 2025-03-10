@@ -1,11 +1,6 @@
-use core::{
-    cmp::max,
-    mem::MaybeUninit,
-    slice::{from_raw_parts, from_raw_parts_mut},
-    str::from_utf8_unchecked,
-};
+use core::{slice::from_raw_parts, str::from_utf8_unchecked};
 use pinocchio::{
-    account_info::AccountInfo, memory::sol_memcpy, program_error::ProgramError, pubkey::Pubkey,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, syscalls::sol_memcpy_,
     ProgramResult,
 };
 use spl_token_interface::{
@@ -14,7 +9,7 @@ use spl_token_interface::{
     state::{
         load,
         multisig::{Multisig, MAX_SIGNERS},
-        RawType,
+        Transmutable,
     },
 };
 
@@ -72,9 +67,6 @@ pub use transfer::process_transfer;
 pub use transfer_checked::process_transfer_checked;
 pub use ui_amount_to_amount::process_ui_amount_to_amount;
 
-/// An uninitialized byte.
-const UNINIT_BYTE: MaybeUninit<u8> = MaybeUninit::uninit();
-
 /// Maximum number of digits in a formatted `u64`.
 ///
 /// The maximum number of digits is equal to the maximum number
@@ -95,7 +87,8 @@ fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
 /// Validates owner(s) are present.
 ///
 /// Note that `owner_account_info` will be immutable borrowed when it represents
-/// a multisig account.
+/// a multisig account, therefore it should not have any mutable borrows when
+/// calling this function.
 #[inline(always)]
 fn validate_owner(
     expected_owner: &Pubkey,
@@ -110,11 +103,13 @@ fn validate_owner(
         && owner_account_info.owner() == &TOKEN_PROGRAM_ID
     {
         // SAFETY: the caller guarantees that there are no mutable borrows of `owner_account_info`
-        // account data and the `load` validates that the account is initialized.
+        // account data and the `load` validates that the account is initialized; additionally,
+        // `Multisig` accounts are only ever loaded in this function, which means that previous
+        // loads will have already failed by the time we get here.
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;
-        let mut matched = [false; MAX_SIGNERS];
+        let mut matched = [false; MAX_SIGNERS as usize];
 
         for signer in signers.iter() {
             for (position, key) in multisig.signers[0..multisig.n as usize].iter().enumerate() {
@@ -152,54 +147,35 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 
     // Validates the input.
 
-    let mut length = amount_str.len();
-    let expected_after_decimal_length = max(after_decimal.len(), decimals);
+    let length = amount_str.len();
 
     if (amount_str.is_empty() && after_decimal.is_empty())
         || parts.next().is_some()
         || after_decimal.len() > decimals
-        || (length + expected_after_decimal_length) > MAX_FORMATTED_DIGITS
+        || (length + decimals) > MAX_FORMATTED_DIGITS
     {
         return Err(ProgramError::InvalidArgument);
     }
 
-    let mut digits = [UNINIT_BYTE; MAX_FORMATTED_DIGITS];
-    // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same
-    // memory layout as `u8`.
-    let slice: &mut [u8] =
-        unsafe { from_raw_parts_mut(digits.as_mut_ptr() as *mut _, MAX_FORMATTED_DIGITS) };
+    let mut digits = [b'0'; MAX_FORMATTED_DIGITS];
 
     // SAFETY: the total length of `amount_str` and `after_decimal` is less than
-    // `MAX_DIGITS_U64`.
+    // `MAX_FORMATTED_DIGITS`.
     unsafe {
-        sol_memcpy(slice, amount_str.as_bytes(), length);
+        sol_memcpy_(digits.as_mut_ptr(), amount_str.as_ptr(), length as u64);
 
-        sol_memcpy(
-            &mut slice[length..],
-            after_decimal.as_bytes(),
-            after_decimal.len(),
+        sol_memcpy_(
+            digits.as_mut_ptr().add(length),
+            after_decimal.as_ptr(),
+            after_decimal.len() as u64,
         );
     }
 
-    length += after_decimal.len();
-    let remaining = decimals.saturating_sub(after_decimal.len());
-
-    // SAFETY: `digits` is an array of `MaybeUninit<u8>`, which has the same memory
-    // layout as `u8`.
-    let ptr = unsafe { digits.as_mut_ptr().add(length) };
-
-    for offset in 0..remaining {
-        // SAFETY: `ptr` is within the bounds of `digits`.
-        unsafe {
-            (ptr.add(offset) as *mut u8).write(b'0');
-        }
-    }
-
-    length += remaining;
+    let length = amount_str.len() + decimals;
 
     // SAFETY: `digits` only contains valid UTF-8 bytes.
     unsafe {
-        from_utf8_unchecked(from_raw_parts(digits.as_ptr() as _, length))
+        from_utf8_unchecked(from_raw_parts(digits.as_ptr(), length))
             .parse::<u64>()
             .map_err(|_| ProgramError::InvalidArgument)
     }

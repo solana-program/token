@@ -28,7 +28,9 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
     }
 
     // SAFETY: single immutable borrow of `mint_info` account data and
-    // `load` validates that the mint is initialized.
+    // `load` validates that the mint is initialized; additionally, an
+    // account cannot be both a token account and a mint, so if duplicates are
+    // passed in, one of them will fail the `load` check.
     let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
     match mint.freeze_authority() {
