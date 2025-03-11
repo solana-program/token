@@ -1,17 +1,17 @@
 mod setup;
 
-use std::mem::size_of;
-
+use assert_matches::assert_matches;
 use setup::{mint, TOKEN_PROGRAM_ID};
-use solana_program_test::{tokio, ProgramTest};
+use solana_program_test::{tokio, BanksClientError, ProgramTest};
 use solana_sdk::{
     instruction::InstructionError,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_instruction,
-    transaction::Transaction,
+    transaction::{Transaction, TransactionError},
 };
 use spl_token_interface::state::{account::Account, mint::Mint, multisig::Multisig};
+use std::mem::size_of;
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
@@ -417,7 +417,13 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: 
 
     // The we expect an error.
 
-    assert_custom_error!(error, spl_token::error::TokenError::OwnerMismatch);
+    assert_matches!(
+        error,
+        BanksClientError::TransactionError(TransactionError::InstructionError(
+            _,
+            InstructionError::Custom(4) // TokenError::OwnerMismatch
+        ))
+    );
 }
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
@@ -527,7 +533,13 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_progra
 
     // The we expect an error.
 
-    assert_custom_error!(error, spl_token::error::TokenError::OwnerMismatch);
+    assert_matches!(
+        error,
+        BanksClientError::TransactionError(TransactionError::InstructionError(
+            _,
+            InstructionError::Custom(4) // TokenError::OwnerMismatch
+        ))
+    );
 }
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
@@ -628,7 +640,13 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority(token_progr
 
     // The we expect an error.
 
-    assert_custom_error!(error, spl_token::error::TokenError::OwnerMismatch);
+    assert_matches!(
+        error,
+        BanksClientError::TransactionError(TransactionError::InstructionError(
+            _,
+            InstructionError::Custom(4) // TokenError::OwnerMismatch
+        ))
+    );
 }
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
@@ -728,5 +746,11 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer(token_progra
 
     // The we expect an error.
 
-    assert_instruction_error!(error, InstructionError::MissingRequiredSignature);
+    assert_matches!(
+        error,
+        BanksClientError::TransactionError(TransactionError::InstructionError(
+            _,
+            InstructionError::MissingRequiredSignature
+        ))
+    );
 }
