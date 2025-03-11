@@ -478,6 +478,18 @@ pub enum TokenInstruction {
     ///   - `&str` The `ui_amount` of tokens to reformat.
     UiAmountToAmount,
 
+    /// This instruction is to be used to rescue SOL sent to any `TokenProgram`
+    /// owned account by sending them to any other account, leaving behind only
+    /// lamports for rent exemption.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writable]` Source Account owned by the token program
+    ///   1. `[writable]` Destination account
+    ///   2. `[signer]` Authority
+    ///   3. `..+M` `[signer]` M signer accounts.
+    WithdrawExcessLamports = 38,
+
     /// Executes a batch of instructions. The instructions to be executed are specified
     /// in sequence on the instruction data. Each instruction provides:
     ///   - `u8`: number of accounts
@@ -506,7 +518,7 @@ impl TryFrom<u8> for TokenInstruction {
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             // SAFETY: `value` is guaranteed to be in the range of the enum variants.
-            0..=24 | 255 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
+            0..=24 | 38 | 255 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
             _ => Err(ProgramError::InvalidInstructionData),
         }
     }

@@ -39,6 +39,7 @@ pub mod thaw_account;
 pub mod transfer;
 pub mod transfer_checked;
 pub mod ui_amount_to_amount;
+pub mod withdraw_excess_lamports;
 // Shared processors.
 pub mod shared;
 
@@ -68,6 +69,7 @@ pub use thaw_account::process_thaw_account;
 pub use transfer::process_transfer;
 pub use transfer_checked::process_transfer_checked;
 pub use ui_amount_to_amount::process_ui_amount_to_amount;
+pub use withdraw_excess_lamports::process_withdraw_excess_lamports;
 
 /// Maximum number of digits in a formatted `u64`.
 ///
