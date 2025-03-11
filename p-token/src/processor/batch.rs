@@ -23,7 +23,7 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
         let expected_accounts = unsafe { *instruction_data.get_unchecked(0) as usize };
         let data_offset = IX_HEADER_SIZE + unsafe { *instruction_data.get_unchecked(1) as usize };
 
-        if instruction_data.len() < data_offset || data_offset == 0 {
+        if instruction_data.len() < data_offset || data_offset == IX_HEADER_SIZE {
             return Err(ProgramError::InvalidInstructionData);
         }
 
@@ -34,13 +34,15 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
         // Process the instruction.
 
         // SAFETY: The instruction data and accounts lengths are already validated so all
-        // the slices are guaranteed to be valid.
-        unsafe {
-            inner_process_instruction(
+        // slices are guaranteed to be valid.
+        let (ix_accounts, ix_data) = unsafe {
+            (
                 accounts.get_unchecked(..expected_accounts),
                 instruction_data.get_unchecked(IX_HEADER_SIZE..data_offset),
-            )?;
-        }
+            )
+        };
+
+        inner_process_instruction(ix_accounts, ix_data)?;
 
         if data_offset == instruction_data.len() {
             // The batch is complete.

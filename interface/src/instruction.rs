@@ -491,6 +491,9 @@ pub enum TokenInstruction {
     ///
     /// Both the number of accounts and instruction data length are used to identify
     /// the slice of accounts and instruction data for each instruction.
+    ///
+    /// Note that it is not sound to have a `batch` instruction that contains other
+    /// `batch` instruction; an error will be raised when this is detected.
     Batch = 255,
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
