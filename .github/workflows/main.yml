@@ -254,6 +254,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cargo-cache-key: cargo-fixtures-ptoken
+          solana: true
 
       - name: Restore Program Builds
         uses: actions/cache/restore@v4
