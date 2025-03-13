@@ -25,7 +25,10 @@
     "rust:publish": "zx ./scripts/rust/publish.mjs",
     "rust:semver": "cargo semver-checks",
     "p-token:build": "zx ./scripts/rust/build-sbf.mjs p-token",
-    "p-token:test": "zx ./scripts/rust/test.mjs p-token"
+    "p-token:test": "zx ./scripts/rust/test.mjs p-token",
+    "fixtures:clean": "zx ./scripts/rust/fixtures.mjs clean",
+    "fixtures:generate": "zx ./scripts/rust/fixtures.mjs generate",
+    "fixtures:run": "zx ./scripts/rust/fixtures.mjs run"
   },
   "devDependencies": {
     "@codama/renderers-js": "^1.2.7",
