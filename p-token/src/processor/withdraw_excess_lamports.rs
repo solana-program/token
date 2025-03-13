@@ -13,6 +13,7 @@ use {
 };
 
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResult {
     let [source_account_info, destination_info, authority_info, remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);

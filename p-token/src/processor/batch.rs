@@ -10,6 +10,7 @@ use {
 ///  * length of the instruction data
 const IX_HEADER_SIZE: usize = 2;
 
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) -> ProgramResult {
     loop {
         // Validates the instruction data and accounts offset.
@@ -20,8 +21,8 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
         }
 
         // SAFETY: The instruction data is guaranteed to have at least two bytes
-        // (header)
-        // + one byte (discriminator).
+        // (header) + one byte (discriminator) and the values are within the bounds
+        // of an `usize`.
         let expected_accounts = unsafe { *instruction_data.get_unchecked(0) as usize };
         let data_offset = IX_HEADER_SIZE + unsafe { *instruction_data.get_unchecked(1) as usize };
 

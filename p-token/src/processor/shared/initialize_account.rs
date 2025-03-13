@@ -18,6 +18,7 @@ use {
 };
 
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_initialize_account(
     accounts: &[AccountInfo],
     owner: Option<&Pubkey>,

@@ -87,6 +87,7 @@ fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
 /// a multisig account, therefore it should not have any mutable borrows when
 /// calling this function.
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 fn validate_owner(
     expected_owner: &Pubkey,
     owner_account_info: &AccountInfo,
@@ -132,6 +133,7 @@ fn validate_owner(
 
 /// Try to convert a UI representation of a token amount to its raw amount using
 /// the given decimals field
+#[allow(clippy::arithmetic_side_effects)]
 fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, ProgramError> {
     let decimals = decimals as usize;
     let mut parts = ui_amount.split('.');
