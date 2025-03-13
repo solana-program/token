@@ -1,11 +1,12 @@
-use std::mem::size_of;
-
-use solana_program_test::{BanksClientError, ProgramTestContext};
-use solana_sdk::{
-    program_error::ProgramError, pubkey::Pubkey, signature::Keypair, signer::Signer,
-    system_instruction, transaction::Transaction,
+use {
+    solana_program_test::{BanksClientError, ProgramTestContext},
+    solana_sdk::{
+        program_error::ProgramError, pubkey::Pubkey, signature::Keypair, signer::Signer,
+        system_instruction, transaction::Transaction,
+    },
+    spl_token_interface::state::mint::Mint,
+    std::mem::size_of,
 };
-use spl_token_interface::state::mint::Mint;
 
 pub async fn initialize(
     context: &mut ProgramTestContext,

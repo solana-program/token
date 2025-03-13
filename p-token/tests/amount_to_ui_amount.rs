@@ -1,8 +1,10 @@
 mod setup;
 
-use setup::{mint, TOKEN_PROGRAM_ID};
-use solana_program_test::{tokio, ProgramTest};
-use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
+use {
+    setup::{mint, TOKEN_PROGRAM_ID},
+    solana_program_test::{tokio, ProgramTest},
+    solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction},
+};
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]

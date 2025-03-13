@@ -1,20 +1,21 @@
-use pinocchio::{
-    account_info::AccountInfo,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    sysvars::{rent::Rent, Sysvar},
-    ProgramResult,
-};
-use spl_token_interface::{
-    error::TokenError,
-    native_mint::is_native_mint,
-    state::{
-        account::Account, account_state::AccountState, load, load_mut_unchecked, mint::Mint,
-        Initializable,
+use {
+    crate::processor::check_account_owner,
+    pinocchio::{
+        account_info::AccountInfo,
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        sysvars::{rent::Rent, Sysvar},
+        ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        native_mint::is_native_mint,
+        state::{
+            account::Account, account_state::AccountState, load, load_mut_unchecked, mint::Mint,
+            Initializable,
+        },
     },
 };
-
-use crate::processor::check_account_owner;
 
 #[inline(always)]
 pub fn process_initialize_account(
@@ -44,8 +45,8 @@ pub fn process_initialize_account(
         let rent_sysvar_info = remaining
             .first()
             .ok_or(ProgramError::NotEnoughAccountKeys)?;
-        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length are
-        // checked by `from_account_info_unchecked`.
+        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length
+        // are checked by `from_account_info_unchecked`.
         let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
         rent.minimum_balance(new_account_info_data_len)
     } else {

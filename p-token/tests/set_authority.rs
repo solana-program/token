@@ -1,15 +1,17 @@
 mod setup;
 
-use setup::{mint, TOKEN_PROGRAM_ID};
-use solana_program_test::{tokio, ProgramTest};
-use solana_sdk::{
-    program_option::COption,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    transaction::Transaction,
+use {
+    setup::{mint, TOKEN_PROGRAM_ID},
+    solana_program_test::{tokio, ProgramTest},
+    solana_sdk::{
+        program_option::COption,
+        program_pack::Pack,
+        pubkey::Pubkey,
+        signature::{Keypair, Signer},
+        transaction::Transaction,
+    },
+    spl_token::instruction::AuthorityType,
 };
-use spl_token::instruction::AuthorityType;
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]

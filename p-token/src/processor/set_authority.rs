@@ -1,13 +1,14 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+use {
+    super::validate_owner,
+    pinocchio::{
+        account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        instruction::AuthorityType,
+        state::{account::Account, load_mut, mint::Mint, Transmutable},
+    },
 };
-use spl_token_interface::{
-    error::TokenError,
-    instruction::AuthorityType,
-    state::{account::Account, load_mut, mint::Mint, Transmutable},
-};
-
-use super::validate_owner;
 
 #[inline(always)]
 pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {

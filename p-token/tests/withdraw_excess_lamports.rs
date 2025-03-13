@@ -1,17 +1,19 @@
 mod setup;
 
-use assert_matches::assert_matches;
-use setup::{mint, TOKEN_PROGRAM_ID};
-use solana_program_test::{tokio, BanksClientError, ProgramTest};
-use solana_sdk::{
-    instruction::InstructionError,
-    pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    system_instruction,
-    transaction::{Transaction, TransactionError},
+use {
+    assert_matches::assert_matches,
+    setup::{mint, TOKEN_PROGRAM_ID},
+    solana_program_test::{tokio, BanksClientError, ProgramTest},
+    solana_sdk::{
+        instruction::InstructionError,
+        pubkey::Pubkey,
+        signature::{Keypair, Signer},
+        system_instruction,
+        transaction::{Transaction, TransactionError},
+    },
+    spl_token_interface::state::{account::Account, mint::Mint, multisig::Multisig},
+    std::mem::size_of,
 };
-use spl_token_interface::state::{account::Account, mint::Mint, multisig::Multisig};
-use std::mem::size_of;
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]

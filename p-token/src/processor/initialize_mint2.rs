@@ -1,6 +1,7 @@
-use pinocchio::{account_info::AccountInfo, ProgramResult};
-
-use super::shared::initialize_mint::process_initialize_mint;
+use {
+    super::shared::initialize_mint::process_initialize_mint,
+    pinocchio::{account_info::AccountInfo, ProgramResult},
+};
 
 #[inline(always)]
 pub fn process_initialize_mint2(

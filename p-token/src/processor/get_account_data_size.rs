@@ -1,12 +1,14 @@
-use pinocchio::{
-    account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
+use {
+    super::check_account_owner,
+    pinocchio::{
+        account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
+        ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        state::{account::Account, load, mint::Mint, Transmutable},
+    },
 };
-use spl_token_interface::{
-    error::TokenError,
-    state::{account::Account, load, mint::Mint, Transmutable},
-};
-
-use super::check_account_owner;
 
 #[inline(always)]
 pub fn process_get_account_data_size(accounts: &[AccountInfo]) -> ProgramResult {

@@ -1,15 +1,16 @@
-use pinocchio::{
-    account_info::AccountInfo,
-    program_error::ProgramError,
-    sysvars::{rent::Rent, Sysvar},
-    ProgramResult,
+use {
+    super::validate_owner,
+    pinocchio::{
+        account_info::AccountInfo,
+        program_error::ProgramError,
+        sysvars::{rent::Rent, Sysvar},
+        ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        state::{account::Account, load, mint::Mint, multisig::Multisig, Transmutable},
+    },
 };
-use spl_token_interface::{
-    error::TokenError,
-    state::{account::Account, load, mint::Mint, multisig::Multisig, Transmutable},
-};
-
-use super::validate_owner;
 
 #[inline(always)]
 pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResult {
@@ -61,8 +62,8 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
     unsafe {
         // Moves the lamports out of the source account.
         //
-        // Note: The `transfer_amount` is guaranteed to be less than the source account's
-        // lamports.
+        // Note: The `transfer_amount` is guaranteed to be less than the source
+        // account's lamports.
         *source_account_info.borrow_mut_lamports_unchecked() =
             source_starting_lamports - transfer_amount;
     }

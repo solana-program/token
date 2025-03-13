@@ -1,14 +1,16 @@
-use core::str::from_utf8_unchecked;
-use pinocchio::{
-    account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
+use {
+    super::{check_account_owner, MAX_FORMATTED_DIGITS},
+    core::str::from_utf8_unchecked,
+    pinocchio::{
+        account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
+        ProgramResult,
+    },
+    pinocchio_log::logger::{Argument, Logger},
+    spl_token_interface::{
+        error::TokenError,
+        state::{load, mint::Mint},
+    },
 };
-use pinocchio_log::logger::{Argument, Logger};
-use spl_token_interface::{
-    error::TokenError,
-    state::{load, mint::Mint},
-};
-
-use super::{check_account_owner, MAX_FORMATTED_DIGITS};
 
 #[inline(always)]
 pub fn process_amount_to_ui_amount(

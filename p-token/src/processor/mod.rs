@@ -1,15 +1,17 @@
-use core::{slice::from_raw_parts, str::from_utf8_unchecked};
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, syscalls::sol_memcpy_,
-    ProgramResult,
-};
-use spl_token_interface::{
-    error::TokenError,
-    program::ID as TOKEN_PROGRAM_ID,
-    state::{
-        load,
-        multisig::{Multisig, MAX_SIGNERS},
-        Transmutable,
+use {
+    core::{slice::from_raw_parts, str::from_utf8_unchecked},
+    pinocchio::{
+        account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey,
+        syscalls::sol_memcpy_, ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        program::ID as TOKEN_PROGRAM_ID,
+        state::{
+            load,
+            multisig::{Multisig, MAX_SIGNERS},
+            Transmutable,
+        },
     },
 };
 
@@ -43,33 +45,24 @@ pub mod withdraw_excess_lamports;
 // Shared processors.
 pub mod shared;
 
-pub use amount_to_ui_amount::process_amount_to_ui_amount;
-pub use approve::process_approve;
-pub use approve_checked::process_approve_checked;
-pub use batch::process_batch;
-pub use burn::process_burn;
-pub use burn_checked::process_burn_checked;
-pub use close_account::process_close_account;
-pub use freeze_account::process_freeze_account;
-pub use get_account_data_size::process_get_account_data_size;
-pub use initialize_account::process_initialize_account;
-pub use initialize_account2::process_initialize_account2;
-pub use initialize_account3::process_initialize_account3;
-pub use initialize_immutable_owner::process_initialize_immutable_owner;
-pub use initialize_mint::process_initialize_mint;
-pub use initialize_mint2::process_initialize_mint2;
-pub use initialize_multisig::process_initialize_multisig;
-pub use initialize_multisig2::process_initialize_multisig2;
-pub use mint_to::process_mint_to;
-pub use mint_to_checked::process_mint_to_checked;
-pub use revoke::process_revoke;
-pub use set_authority::process_set_authority;
-pub use sync_native::process_sync_native;
-pub use thaw_account::process_thaw_account;
-pub use transfer::process_transfer;
-pub use transfer_checked::process_transfer_checked;
-pub use ui_amount_to_amount::process_ui_amount_to_amount;
-pub use withdraw_excess_lamports::process_withdraw_excess_lamports;
+pub use {
+    amount_to_ui_amount::process_amount_to_ui_amount, approve::process_approve,
+    approve_checked::process_approve_checked, batch::process_batch, burn::process_burn,
+    burn_checked::process_burn_checked, close_account::process_close_account,
+    freeze_account::process_freeze_account, get_account_data_size::process_get_account_data_size,
+    initialize_account::process_initialize_account,
+    initialize_account2::process_initialize_account2,
+    initialize_account3::process_initialize_account3,
+    initialize_immutable_owner::process_initialize_immutable_owner,
+    initialize_mint::process_initialize_mint, initialize_mint2::process_initialize_mint2,
+    initialize_multisig::process_initialize_multisig,
+    initialize_multisig2::process_initialize_multisig2, mint_to::process_mint_to,
+    mint_to_checked::process_mint_to_checked, revoke::process_revoke,
+    set_authority::process_set_authority, sync_native::process_sync_native,
+    thaw_account::process_thaw_account, transfer::process_transfer,
+    transfer_checked::process_transfer_checked, ui_amount_to_amount::process_ui_amount_to_amount,
+    withdraw_excess_lamports::process_withdraw_excess_lamports,
+};
 
 /// Maximum number of digits in a formatted `u64`.
 ///
@@ -106,10 +99,11 @@ fn validate_owner(
     if owner_account_info.data_len() == Multisig::LEN
         && owner_account_info.owner() == &TOKEN_PROGRAM_ID
     {
-        // SAFETY: the caller guarantees that there are no mutable borrows of `owner_account_info`
-        // account data and the `load` validates that the account is initialized; additionally,
-        // `Multisig` accounts are only ever loaded in this function, which means that previous
-        // loads will have already failed by the time we get here.
+        // SAFETY: the caller guarantees that there are no mutable borrows of
+        // `owner_account_info` account data and the `load` validates that the
+        // account is initialized; additionally, `Multisig` accounts are only
+        // ever loaded in this function, which means that previous loads will
+        // have already failed by the time we get here.
         let multisig = unsafe { load::<Multisig>(owner_account_info.borrow_data_unchecked())? };
 
         let mut num_signers = 0;

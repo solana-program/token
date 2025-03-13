@@ -1,15 +1,17 @@
 mod setup;
 
-use setup::TOKEN_PROGRAM_ID;
-use solana_program_test::{tokio, ProgramTest};
-use solana_sdk::{
-    program_pack::Pack,
-    pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    system_instruction,
-    transaction::Transaction,
+use {
+    setup::TOKEN_PROGRAM_ID,
+    solana_program_test::{tokio, ProgramTest},
+    solana_sdk::{
+        program_pack::Pack,
+        pubkey::Pubkey,
+        signature::{Keypair, Signer},
+        system_instruction,
+        transaction::Transaction,
+    },
+    spl_token::state::Multisig,
 };
-use spl_token::state::Multisig;
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]

@@ -1,10 +1,11 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use spl_token_interface::{
-    error::TokenError,
-    state::{account::Account, load_mut, mint::Mint},
+use {
+    crate::processor::{check_account_owner, validate_owner},
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    spl_token_interface::{
+        error::TokenError,
+        state::{account::Account, load_mut, mint::Mint},
+    },
 };
-
-use crate::processor::{check_account_owner, validate_owner};
 
 #[inline(always)]
 pub fn process_mint_to(

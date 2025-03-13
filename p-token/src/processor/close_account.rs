@@ -1,13 +1,14 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use spl_token_interface::{
-    error::TokenError,
-    state::{
-        account::{Account, INCINERATOR_ID},
-        load,
+use {
+    super::validate_owner,
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    spl_token_interface::{
+        error::TokenError,
+        state::{
+            account::{Account, INCINERATOR_ID},
+            load,
+        },
     },
 };
-
-use super::validate_owner;
 
 #[inline(always)]
 pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {

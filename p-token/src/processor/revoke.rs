@@ -1,10 +1,11 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use spl_token_interface::{
-    error::TokenError,
-    state::{account::Account, load_mut},
+use {
+    super::validate_owner,
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    spl_token_interface::{
+        error::TokenError,
+        state::{account::Account, load_mut},
+    },
 };
-
-use super::validate_owner;
 
 #[inline(always)]
 pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> ProgramResult {
