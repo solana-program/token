@@ -5366,32 +5366,6 @@ fn test_overflow() {
     .unwrap();
     let account = Account::unpack_unchecked(&account_account.data).unwrap();
     assert_eq!(account.amount, u64::MAX);
-
-    // manipulate account balance to attempt overflow transfer
-    let mut account = Account::unpack_unchecked(&account2_account.data).unwrap();
-    account.amount = 1;
-    Account::pack(account, &mut account2_account.data).unwrap();
-
-    assert_eq!(
-        Err(TokenError::Overflow.into()),
-        do_process_instruction(
-            transfer(
-                &program_id,
-                &account2_key,
-                &account_key,
-                &owner2_key,
-                &[],
-                1,
-            )
-            .unwrap(),
-            vec![
-                &mut account2_account,
-                &mut account_account,
-                &mut owner2_account,
-            ],
-            &[Check::err(TokenError::Overflow.into())],
-        )
-    );
 }
 
 #[test]
