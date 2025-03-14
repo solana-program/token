@@ -242,8 +242,8 @@ jobs:
       - name: Test
         run: pnpm programs:test
 
-  test_fixtures_ptoken:
-    name: Test Fixtures p-token
+  conformance_ptoken:
+    name: Conformance Test for p-token
     runs-on: ubuntu-latest
     needs: build_ptoken
     steps:

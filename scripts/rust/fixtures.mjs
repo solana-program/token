@@ -32,20 +32,15 @@ async function clean() {
 
 async function generate() {
   if (existsSync(FIXTURES_DIR)) {
-    throw new Error(`Fixtures directory already exist: ${FIXTURES_DIR}`);
+    echo(chalk.yellow('[ WARNING ]'), `Fixtures directory already exists.`);
+  } else {
+    await $`mkdir ${FIXTURES_DIR}`;
+
+    // Fixtures are generated from the SPL Token program.
+    cd(SPL_TOKEN_DIR);
+
+    await $`RUST_LOG=error EJECT_FUZZ_FIXTURES=${FIXTURES_DIR} cargo test-sbf --features mollusk-svm/fuzz`;
   }
-
-  await $`mkdir ${FIXTURES_DIR}`;
-
-  // Fixtures are generated from the SPL Token program.
-  cd(SPL_TOKEN_DIR);
-
-  await $`RUST_LOG=error EJECT_FUZZ_FIXTURES=${FIXTURES_DIR} cargo test-sbf --features mollusk-svm/fuzz`;
-
-  await fs.writeFile(
-    path.join(FIXTURES_DIR, 'config.json'),
-    '{"checks": [{ "programResult": null }, { "returnData": null }, {"allResultingAccounts": { "data": true, "executable": true, "lamports": true, "owner": true, "space": true }}]}'
-  );
 }
 
 async function run(args) {
@@ -58,14 +53,9 @@ async function run(args) {
     throw new Error('The name of the program file must be provided.');
   }
 
-  if (
-    (await $`mollusk execute-fixture ${path.join(SBF_OUTPUT_DIR, programName + '.so')} ${FIXTURES_DIR} TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA -c ${FIXTURES_DIR}/config.json`.pipe(
-      $`grep 'FAIL'`
-    ).exitCode) === 0
-  ) {
-    // If `grep` finds a match (exit code 0), it means we found failing fixtures.
-    throw new Error('There are failing fixtures.');
-  } else {
-    echo(chalk.green('[ SUCCESS ]'), `All fixtures passed.`);
-  }
+  await $`mollusk execute-fixture                     \
+    ${path.join(SBF_OUTPUT_DIR, programName + '.so')} \
+    ${FIXTURES_DIR}                                   \
+    TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA       \
+    --ignore-compute-units`;
 }
