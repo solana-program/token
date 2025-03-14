@@ -2806,12 +2806,12 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "pinocchio"
 version = "0.7.1"
-source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Fclose-unstable#246a026bb74c501ba83ea18201000e56c097cb0d"
+source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Ferror-to-str#8654493702f9d1ec54456931932eb18fe6169c60"
 
 [[package]]
 name = "pinocchio-log"
 version = "0.3.0"
-source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Fclose-unstable#246a026bb74c501ba83ea18201000e56c097cb0d"
+source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Ferror-to-str#8654493702f9d1ec54456931932eb18fe6169c60"
 dependencies = [
  "pinocchio-log-macro",
 ]
@@ -2819,7 +2819,7 @@ dependencies = [
 [[package]]
 name = "pinocchio-log-macro"
 version = "0.3.0"
-source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Fclose-unstable#246a026bb74c501ba83ea18201000e56c097cb0d"
+source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Ferror-to-str#8654493702f9d1ec54456931932eb18fe6169c60"
 dependencies = [
  "quote",
  "regex",
@@ -2829,7 +2829,7 @@ dependencies = [
 [[package]]
 name = "pinocchio-pubkey"
 version = "0.2.2"
-source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Fclose-unstable#246a026bb74c501ba83ea18201000e56c097cb0d"
+source = "git+https://github.com/febo/pinocchio.git?branch=febo%2Ferror-to-str#8654493702f9d1ec54456931932eb18fe6169c60"
 dependencies = [
  "five8_const",
  "pinocchio",
