@@ -1,16 +1,25 @@
-use {
-    crate::processor::*,
-    pinocchio::{
-        account_info::AccountInfo, default_panic_handler, no_allocator, program_entrypoint,
-        program_error::ProgramError, pubkey::Pubkey, ProgramResult,
-    },
+use pinocchio::{
+    account_info::AccountInfo,
+    default_panic_handler, no_allocator, program_entrypoint,
+    program_error::{ProgramError, ToStr},
+    pubkey::Pubkey,
+    ProgramResult,
 };
+use spl_token_interface::error::TokenError;
+
+use crate::processor::*;
 
 program_entrypoint!(process_instruction);
 // Do not allocate memory.
 no_allocator!();
 // Use the default panic handler.
 default_panic_handler!();
+
+/// Log an error.
+#[cold]
+fn log_error(error: &ProgramError) {
+    pinocchio::log::sol_log(error.to_str::<TokenError>());
+}
 
 /// Process an instruction.
 ///
@@ -29,15 +38,17 @@ pub fn process_instruction(
         return Err(ProgramError::InvalidInstructionData);
     };
 
-    if *discriminator == 255 {
+    let result = if *discriminator == 255 {
         // 255 - Batch
         #[cfg(feature = "logging")]
         pinocchio::msg!("Instruction: Batch");
 
-        return process_batch(accounts, remaining);
-    }
+        process_batch(accounts, remaining)
+    } else {
+        inner_process_instruction(accounts, instruction_data)
+    };
 
-    inner_process_instruction(accounts, instruction_data)
+    result.inspect_err(log_error)
 }
 
 /// Process a "regular" instruction.
