@@ -1,8 +1,9 @@
-use pinocchio::{
-    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+use {
+    super::shared,
+    pinocchio::{
+        account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+    },
 };
-
-use super::shared;
 
 #[inline(always)]
 pub fn process_initialize_account2(

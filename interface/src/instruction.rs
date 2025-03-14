@@ -65,11 +65,13 @@ pub enum TokenInstruction {
     ///
     ///   0. `[writable]` The multisignature account to initialize.
     ///   1. `[]` Rent sysvar.
-    ///   2. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
+    ///   2. `..+N` `[signer]` The signer accounts, must equal to N where `1 <=
+    ///      N <= 11`.
     ///
     /// Data expected by this instruction:
     ///
-    ///   - `u8` The number of signers (M) required to validate this multisignature account.
+    ///   - `u8` The number of signers (M) required to validate this
+    ///     multisignature account.
     InitializeMultisig,
 
     /// Transfers tokens from one account to another either directly or via a
@@ -268,7 +270,8 @@ pub enum TokenInstruction {
     /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to transfer.
-    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal
+    ///     place.
     TransferChecked,
 
     /// Approves a delegate.  A delegate is given the authority over tokens on
@@ -296,7 +299,8 @@ pub enum TokenInstruction {
     /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens the delegate is approved for.
-    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal
+    ///     place.
     ApproveChecked,
 
     /// Mints new tokens to an account.  The native mint does not support
@@ -322,7 +326,8 @@ pub enum TokenInstruction {
     /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of new tokens to mint.
-    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal
+    ///     place.
     MintToChecked,
 
     /// Burns tokens by removing them from an account.  [`BurnChecked`] does not
@@ -349,13 +354,14 @@ pub enum TokenInstruction {
     /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of tokens to burn.
-    ///   - `u8` Expected number of base 10 digits to the right of the decimal place.
+    ///   - `u8` Expected number of base 10 digits to the right of the decimal
+    ///     place.
     BurnChecked,
 
-    /// Like [`InitializeAccount`], but the owner pubkey is passed via instruction
-    /// data rather than the accounts list. This variant may be preferable
-    /// when using Cross Program Invocation from an instruction that does
-    /// not need the owner's `AccountInfo` otherwise.
+    /// Like [`InitializeAccount`], but the owner pubkey is passed via
+    /// instruction data rather than the accounts list. This variant may be
+    /// preferable when using Cross Program Invocation from an instruction
+    /// that does not need the owner's `AccountInfo` otherwise.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -399,11 +405,13 @@ pub enum TokenInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]` The multisignature account to initialize.
-    ///   1. `..+N` `[signer]` The signer accounts, must equal to N where `1 <= N <= 11`.
+    ///   1. `..+N` `[signer]` The signer accounts, must equal to N where `1 <=
+    ///      N <= 11`.
     ///
     /// Data expected by this instruction:
     ///
-    ///   - `u8` The number of signers (M) required to validate this multisignature account.
+    ///   - `u8` The number of signers (M) required to validate this
+    ///     multisignature account.
     InitializeMultisig2,
 
     /// Like [`InitializeMint`], but does not require the Rent sysvar to be
@@ -462,9 +470,9 @@ pub enum TokenInstruction {
     ///   - `u64` The amount of tokens to reformat.
     AmountToUiAmount,
 
-    /// Convert a `UiAmount` of tokens to a little-endian `u64` raw Amount, using
-    /// the given mint. In this version of the program, the mint can only
-    /// specify the number of decimals.
+    /// Convert a `UiAmount` of tokens to a little-endian `u64` raw Amount,
+    /// using the given mint. In this version of the program, the mint can
+    /// only specify the number of decimals.
     ///
     /// Return data can be fetched using `sol_get_return_data` and deserializing
     /// the return data as a little-endian `u64`.
@@ -490,22 +498,26 @@ pub enum TokenInstruction {
     ///   3. `..+M` `[signer]` M signer accounts.
     WithdrawExcessLamports = 38,
 
-    /// Executes a batch of instructions. The instructions to be executed are specified
-    /// in sequence on the instruction data. Each instruction provides:
+    /// Executes a batch of instructions. The instructions to be executed are
+    /// specified in sequence on the instruction data. Each instruction
+    /// provides:
     ///   - `u8`: number of accounts
     ///   - `u8`: instruction data length (includes the discriminator)
     ///   - `u8`: instruction discriminator
     ///   - `[u8]`: instruction data
     ///
-    /// Accounts follow a similar pattern, where accounts for each instruction are
-    /// specified in sequence. Therefore, the number of accounts expected by this
-    /// instruction is variable, i.e., it depends on the instructions provided.
+    /// Accounts follow a similar pattern, where accounts for each instruction
+    /// are specified in sequence. Therefore, the number of accounts
+    /// expected by this instruction is variable, i.e., it depends on the
+    /// instructions provided.
     ///
-    /// Both the number of accounts and instruction data length are used to identify
-    /// the slice of accounts and instruction data for each instruction.
+    /// Both the number of accounts and instruction data length are used to
+    /// identify the slice of accounts and instruction data for each
+    /// instruction.
     ///
-    /// Note that it is not sound to have a `batch` instruction that contains other
-    /// `batch` instruction; an error will be raised when this is detected.
+    /// Note that it is not sound to have a `batch` instruction that contains
+    /// other `batch` instruction; an error will be raised when this is
+    /// detected.
     Batch = 255,
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
@@ -554,8 +566,10 @@ impl TryFrom<u8> for AuthorityType {
 
 #[cfg(test)]
 mod tests {
-    use super::{AuthorityType, TokenInstruction};
-    use strum::IntoEnumIterator;
+    use {
+        super::{AuthorityType, TokenInstruction},
+        strum::IntoEnumIterator,
+    };
 
     #[test]
     fn test_token_instruction_from_u8_exhaustive() {

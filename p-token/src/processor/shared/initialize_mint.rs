@@ -1,14 +1,16 @@
-use core::mem::size_of;
-use pinocchio::{
-    account_info::AccountInfo,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    sysvars::{rent::Rent, Sysvar},
-    ProgramResult,
-};
-use spl_token_interface::{
-    error::TokenError,
-    state::{load_mut_unchecked, mint::Mint, Initializable},
+use {
+    core::mem::size_of,
+    pinocchio::{
+        account_info::AccountInfo,
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        sysvars::{rent::Rent, Sysvar},
+        ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        state::{load_mut_unchecked, mint::Mint, Initializable},
+    },
 };
 
 #[inline(always)]
@@ -63,8 +65,8 @@ pub fn process_initialize_mint(
     // Check rent-exempt status of the mint account.
 
     let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
-        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length are
-        // checked by `from_account_info_unchecked`.
+        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length
+        // are checked by `from_account_info_unchecked`.
         let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
         rent.is_exempt(mint_info.lamports(), size_of::<Mint>())
     } else {

@@ -1,10 +1,11 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use spl_token_interface::{
-    error::TokenError,
-    state::{account::Account, load, load_mut, mint::Mint},
+use {
+    crate::processor::validate_owner,
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    spl_token_interface::{
+        error::TokenError,
+        state::{account::Account, load, load_mut, mint::Mint},
+    },
 };
-
-use crate::processor::validate_owner;
 
 #[inline(always)]
 pub fn process_approve(
@@ -12,8 +13,8 @@ pub fn process_approve(
     amount: u64,
     expected_decimals: Option<u8>,
 ) -> ProgramResult {
-    // Accounts expected depend on whether we have the mint `decimals` or not; when we have the
-    // mint `decimals`, we expect the mint account to be present.
+    // Accounts expected depend on whether we have the mint `decimals` or not; when
+    // we have the mint `decimals`, we expect the mint account to be present.
 
     let (source_account_info, expected_mint_info, delegate_info, owner_info, remaining) =
         if let Some(expected_decimals) = expected_decimals {

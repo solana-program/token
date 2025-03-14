@@ -1,13 +1,15 @@
-use core::str::from_utf8;
-use pinocchio::{
-    account_info::AccountInfo, program::set_return_data, program_error::ProgramError, ProgramResult,
+use {
+    super::{check_account_owner, try_ui_amount_into_amount},
+    core::str::from_utf8,
+    pinocchio::{
+        account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
+        ProgramResult,
+    },
+    spl_token_interface::{
+        error::TokenError,
+        state::{load, mint::Mint},
+    },
 };
-use spl_token_interface::{
-    error::TokenError,
-    state::{load, mint::Mint},
-};
-
-use super::{check_account_owner, try_ui_amount_into_amount};
 
 #[inline(always)]
 pub fn process_ui_amount_to_amount(

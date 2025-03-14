@@ -1,19 +1,21 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use spl_token_interface::{
-    error::TokenError,
-    state::{account::Account, load, load_mut, load_mut_unchecked, mint::Mint},
+use {
+    crate::processor::{check_account_owner, validate_owner},
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    spl_token_interface::{
+        error::TokenError,
+        state::{account::Account, load, load_mut, load_mut_unchecked, mint::Mint},
+    },
 };
 
-use crate::processor::{check_account_owner, validate_owner};
-
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_transfer(
     accounts: &[AccountInfo],
     amount: u64,
     expected_decimals: Option<u8>,
 ) -> ProgramResult {
-    // Accounts expected depend on whether we have the mint `decimals` or not; when we have the
-    // mint `decimals`, we expect the mint account to be present.
+    // Accounts expected depend on whether we have the mint `decimals` or not; when
+    // we have the mint `decimals`, we expect the mint account to be present.
 
     let (
         source_account_info,
@@ -68,8 +70,8 @@ pub fn process_transfer(
     // Note: the logic is partially duplicated for self transfers and transfers
     // to different accounts to improve CU consumption:
     //
-    //   - self-transfer: we only need to check that the source account is not frozen
-    //     and has enough tokens.
+    //   - self-transfer: we only need to check that the source account is not
+    //     frozen and has enough tokens.
     //
     //   - transfers to different accounts: we need to check that the source and
     //     destination accounts are not frozen, have the same mint, and the source
@@ -84,9 +86,9 @@ pub fn process_transfer(
             .checked_sub(amount)
             .ok_or(TokenError::InsufficientFunds)?
     } else {
-        // SAFETY: scoped immutable borrow to `destination_account_info` account data and
-        // `load` validates that the account is initialized; additionally, the account
-        // is guaranteed to be different than `source_account_info`.
+        // SAFETY: scoped immutable borrow to `destination_account_info` account data
+        // and `load` validates that the account is initialized; additionally,
+        // the account is guaranteed to be different than `source_account_info`.
         let destination_account =
             unsafe { load::<Account>(destination_account_info.borrow_data_unchecked())? };
 
@@ -153,9 +155,10 @@ pub fn process_transfer(
 
         source_account.set_amount(remaining_amount);
 
-        // SAFETY: single mutable borrow to `destination_account_info` account data; the account
-        // is guaranteed to be initialized and different than `source_account_info`; it was
-        // also already validated to be a token account.
+        // SAFETY: single mutable borrow to `destination_account_info` account data; the
+        // account is guaranteed to be initialized and different than
+        // `source_account_info`; it was also already validated to be a token
+        // account.
         let destination_account = unsafe {
             load_mut_unchecked::<Account>(destination_account_info.borrow_mut_data_unchecked())?
         };
@@ -170,8 +173,9 @@ pub fn process_transfer(
                 .checked_sub(amount)
                 .ok_or(TokenError::Overflow)?;
 
-            // SAFETY: single mutable borrow to `destination_account_info` lamports; the account
-            // is already validated to be different from `source_account_info`.
+            // SAFETY: single mutable borrow to `destination_account_info` lamports; the
+            // account is already validated to be different from
+            // `source_account_info`.
             let destination_lamports =
                 unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
             *destination_lamports = destination_lamports

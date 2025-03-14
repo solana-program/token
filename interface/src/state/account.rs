@@ -1,6 +1,7 @@
-use pinocchio::pubkey::Pubkey;
-
-use super::{account_state::AccountState, COption, Initializable, Transmutable};
+use {
+    super::{account_state::AccountState, COption, Initializable, Transmutable},
+    pinocchio::pubkey::Pubkey,
+};
 
 /// Incinerator address.
 pub const INCINERATOR_ID: Pubkey =

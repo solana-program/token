@@ -1,9 +1,10 @@
-use pinocchio::{
-    account_info::AccountInfo, default_panic_handler, no_allocator, program_entrypoint,
-    program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+use {
+    crate::processor::*,
+    pinocchio::{
+        account_info::AccountInfo, default_panic_handler, no_allocator, program_entrypoint,
+        program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+    },
 };
-
-use crate::processor::*;
 
 program_entrypoint!(process_instruction);
 // Do not allocate memory.
@@ -13,10 +14,11 @@ default_panic_handler!();
 
 /// Process an instruction.
 ///
-/// In the first stage, the entrypoint checks the discriminator of the instruction data
-/// to determine whether the instruction is a "batch" instruction or a "regular" instruction.
-/// This avoids nesting of "batch" instructions, since it is not sound to have a "batch"
-/// instruction inside another "batch" instruction.
+/// In the first stage, the entrypoint checks the discriminator of the
+/// instruction data to determine whether the instruction is a "batch"
+/// instruction or a "regular" instruction. This avoids nesting of "batch"
+/// instructions, since it is not sound to have a "batch" instruction inside
+/// another "batch" instruction.
 #[inline(always)]
 pub fn process_instruction(
     _program_id: &Pubkey,
@@ -40,20 +42,21 @@ pub fn process_instruction(
 
 /// Process a "regular" instruction.
 ///
-/// The processor of the token program is divided into two parts to reduce the overhead
-/// of having a large `match` statement. The first part of the processor handles the
-/// most common instructions, while the second part handles the remaining instructions.
+/// The processor of the token program is divided into two parts to reduce the
+/// overhead of having a large `match` statement. The first part of the
+/// processor handles the most common instructions, while the second part
+/// handles the remaining instructions.
 ///
-/// The rationale is to reduce the overhead of making multiple comparisons for popular
-/// instructions.
+/// The rationale is to reduce the overhead of making multiple comparisons for
+/// popular instructions.
 ///
 /// Instructions on the first part of the inner processor:
 ///
-/// -  `0`: `InitializeMint`
-/// -  `1`: `InitializeAccount`
-/// -  `3`: `Transfer`
-/// -  `7`: `MintTo`
-/// -  `9`: `CloseAccount`
+/// - `0`: `InitializeMint`
+/// - `1`: `InitializeAccount`
+/// - `3`: `Transfer`
+/// - `7`: `MintTo`
+/// - `9`: `CloseAccount`
 /// - `16`: `InitializeAccount2`
 /// - `18`: `InitializeAccount3`
 /// - `20`: `InitializeMint2`
@@ -129,9 +132,10 @@ pub(crate) fn inner_process_instruction(
 
 /// Process a remaining "regular" instruction.
 ///
-/// This function is called by the [`inner_process_instruction`] function if the discriminator
-/// does not match any of the common instructions. This function is used to reduce the
-/// overhead of having a large `match` statement in the [`inner_process_instruction`] function.
+/// This function is called by the [`inner_process_instruction`] function if the
+/// discriminator does not match any of the common instructions. This function
+/// is used to reduce the overhead of having a large `match` statement in the
+/// [`inner_process_instruction`] function.
 fn inner_process_remaining_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],

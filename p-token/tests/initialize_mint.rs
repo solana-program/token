@@ -1,18 +1,19 @@
 mod setup;
 
-use std::mem::size_of;
-
-use setup::TOKEN_PROGRAM_ID;
-use solana_program_test::{tokio, ProgramTest};
-use solana_sdk::{
-    program_option::COption,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    system_instruction,
-    transaction::Transaction,
+use {
+    setup::TOKEN_PROGRAM_ID,
+    solana_program_test::{tokio, ProgramTest},
+    solana_sdk::{
+        program_option::COption,
+        program_pack::Pack,
+        pubkey::Pubkey,
+        signature::{Keypair, Signer},
+        system_instruction,
+        transaction::Transaction,
+    },
+    spl_token_interface::state::mint::Mint,
+    std::mem::size_of,
 };
-use spl_token_interface::state::mint::Mint;
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]

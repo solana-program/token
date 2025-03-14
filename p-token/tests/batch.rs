@@ -1,15 +1,17 @@
 mod setup;
 
-use crate::setup::TOKEN_PROGRAM_ID;
-use solana_program_test::{tokio, ProgramTest};
-use solana_sdk::{
-    instruction::{AccountMeta, Instruction},
-    program_error::ProgramError,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    system_instruction,
-    transaction::Transaction,
+use {
+    crate::setup::TOKEN_PROGRAM_ID,
+    solana_program_test::{tokio, ProgramTest},
+    solana_sdk::{
+        instruction::{AccountMeta, Instruction},
+        program_error::ProgramError,
+        program_pack::Pack,
+        pubkey::Pubkey,
+        signature::{Keypair, Signer},
+        system_instruction,
+        transaction::Transaction,
+    },
 };
 
 fn batch_instruction(instructions: Vec<Instruction>) -> Result<Instruction, ProgramError> {

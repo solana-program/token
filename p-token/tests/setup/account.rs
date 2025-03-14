@@ -1,7 +1,9 @@
-use solana_program_test::ProgramTestContext;
-use solana_sdk::{
-    pubkey::Pubkey, signature::Keypair, signer::Signer, system_instruction,
-    transaction::Transaction,
+use {
+    solana_program_test::ProgramTestContext,
+    solana_sdk::{
+        pubkey::Pubkey, signature::Keypair, signer::Signer, system_instruction,
+        transaction::Transaction,
+    },
 };
 
 pub async fn initialize(

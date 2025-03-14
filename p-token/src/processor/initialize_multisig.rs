@@ -1,6 +1,7 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-
-use super::shared;
+use {
+    super::shared,
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+};
 
 #[inline(always)]
 pub fn process_initialize_multisig(

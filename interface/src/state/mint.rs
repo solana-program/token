@@ -1,6 +1,7 @@
-use pinocchio::pubkey::Pubkey;
-
-use super::{COption, Initializable, Transmutable};
+use {
+    super::{COption, Initializable, Transmutable},
+    pinocchio::pubkey::Pubkey,
+};
 
 /// Internal representation of a mint data.
 #[repr(C)]

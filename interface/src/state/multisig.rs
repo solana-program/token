@@ -1,6 +1,7 @@
-use pinocchio::pubkey::Pubkey;
-
-use super::{Initializable, Transmutable};
+use {
+    super::{Initializable, Transmutable},
+    pinocchio::pubkey::Pubkey,
+};
 
 /// Minimum number of multisignature signers (min N)
 pub const MIN_SIGNERS: u8 = 1;
@@ -25,7 +26,8 @@ pub struct Multisig {
 }
 
 impl Multisig {
-    /// Utility function that checks index is between [`MIN_SIGNERS`] and [`MAX_SIGNERS`].
+    /// Utility function that checks index is between [`MIN_SIGNERS`] and
+    /// [`MAX_SIGNERS`].
     pub fn is_valid_signer_index(index: u8) -> bool {
         (MIN_SIGNERS..=MAX_SIGNERS).contains(&index)
     }

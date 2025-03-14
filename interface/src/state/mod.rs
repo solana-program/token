@@ -10,8 +10,9 @@ pub type COption<T> = ([u8; 4], T);
 
 /// Marker trait for types that can be cast from a raw pointer.
 ///
-/// It is up to the type implementing this trait to guarantee that the cast is safe,
-/// i.e., the fields of the type are well aligned and there are no padding bytes.
+/// It is up to the type implementing this trait to guarantee that the cast is
+/// safe, i.e., the fields of the type are well aligned and there are no padding
+/// bytes.
 pub trait Transmutable {
     /// The length of the type.
     ///

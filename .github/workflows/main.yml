@@ -61,6 +61,44 @@ jobs:
       - name: Lint
         run: pnpm programs:lint
 
+  format_and_lint_interface:
+    name: Format & Lint Interface
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+
+      - name: Format
+        run: pnpm interface:format
+
+      - name: Lint
+        run: pnpm interface:lint
+
+  format_and_lint_ptoken:
+    name: Format & Lint p-token
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+
+      - name: Format
+        run: pnpm p-token:format
+
+      - name: Lint
+        run: pnpm p-token:lint
+              
   audit_rust:
     name: Audit Rust
     runs-on: ubuntu-latest
@@ -154,6 +192,7 @@ jobs:
   build_ptoken:
     name: Build p-token
     runs-on: ubuntu-latest
+    needs: [format_and_lint_interface, format_and_lint_ptoken]
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
