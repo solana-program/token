@@ -13,7 +13,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 pinocchio = "0.8"
-pinocchio-pubkey = "0.2"
+pinocchio-pubkey = "0.2.4"
 
 [dev-dependencies]
 strum = "0.27"
