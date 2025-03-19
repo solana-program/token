@@ -1,3 +1,5 @@
+#![no_std]
+
 pub mod error;
 pub mod instruction;
 pub mod native_mint;
