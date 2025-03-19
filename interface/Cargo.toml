@@ -12,8 +12,8 @@ readme = "./README.md"
 crate-type = ["rlib"]
 
 [dependencies]
-pinocchio = { version = "0.7", git = "https://github.com/febo/pinocchio.git", branch = "febo/error-to-str" }
-pinocchio-pubkey = { version = "0.2", git = "https://github.com/febo/pinocchio.git", branch = "febo/error-to-str" }
+pinocchio = "0.8"
+pinocchio-pubkey = "0.2"
 
 [dev-dependencies]
 strum = "0.27"
