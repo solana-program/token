@@ -1,13 +1,14 @@
-use pinocchio::{
-    account_info::AccountInfo,
-    default_panic_handler, no_allocator, program_entrypoint,
-    program_error::{ProgramError, ToStr},
-    pubkey::Pubkey,
-    ProgramResult,
+use {
+    crate::processor::*,
+    pinocchio::{
+        account_info::AccountInfo,
+        default_panic_handler, no_allocator, program_entrypoint,
+        program_error::{ProgramError, ToStr},
+        pubkey::Pubkey,
+        ProgramResult,
+    },
+    spl_token_interface::error::TokenError,
 };
-use spl_token_interface::error::TokenError;
-
-use crate::processor::*;
 
 program_entrypoint!(process_instruction);
 // Do not allocate memory.
