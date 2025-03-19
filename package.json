@@ -33,7 +33,6 @@
     "fixtures:run": "zx ./scripts/rust/fixtures.mjs run",
     "interface:format": "zx ./scripts/rust/format.mjs interface",
     "interface:lint": "zx ./scripts/rust/lint.mjs interface"
-
   },
   "devDependencies": {
     "@codama/renderers-js": "^1.2.7",
