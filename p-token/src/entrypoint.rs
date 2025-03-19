@@ -2,7 +2,7 @@ use {
     crate::processor::*,
     pinocchio::{
         account_info::AccountInfo,
-        default_panic_handler, no_allocator, program_entrypoint,
+        no_allocator, nostd_panic_handler, program_entrypoint,
         program_error::{ProgramError, ToStr},
         pubkey::Pubkey,
         ProgramResult,
@@ -13,8 +13,8 @@ use {
 program_entrypoint!(process_instruction);
 // Do not allocate memory.
 no_allocator!();
-// Use the default panic handler.
-default_panic_handler!();
+// Use the no_std panic handler.
+nostd_panic_handler!();
 
 /// Log an error.
 #[cold]
