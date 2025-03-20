@@ -23,7 +23,7 @@
     "rust:spellcheck": "cargo spellcheck --code 1",
     "rust:audit": "zx ./scripts/rust/audit.mjs",
     "rust:publish": "zx ./scripts/rust/publish.mjs",
-    "rust:semver": "cargo semver-checks",
+    "rust:semver": "zx ./scripts/rust/semver.mjs",
     "p-token:build": "zx ./scripts/rust/build-sbf.mjs p-token",
     "p-token:format": "zx ./scripts/rust/format.mjs p-token",
     "p-token:lint": "zx ./scripts/rust/lint.mjs p-token",
