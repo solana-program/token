@@ -68,7 +68,7 @@ jobs:
         run: pnpm zx ./scripts/rust/test.mjs "${{ inputs.package_path }}"
 
       - name: Check semver
-        run: pnpm rust:semver ${{ inputs.package_path }} --release-type ${{ inputs.level }}
+        run: pnpm rust:semver --manifest-path "${{ inputs.package_path }}/Cargo.toml" --release-type ${{ inputs.level }}
 
   publish:
     name: Publish Rust Crate
