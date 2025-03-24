@@ -67,8 +67,30 @@ jobs:
       - name: Test
         run: pnpm zx ./scripts/rust/test.mjs "${{ inputs.package_path }}"
 
+  semver_check:
+    name: Check Semver
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-publish-semver-${{ inputs.package_path }}
+          cargo-cache-fallback-key: cargo-publish-semver
+
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks,cargo-release
+
+      - name: Set Version
+        run: |
+          cargo release ${{ inputs.level }} --manifest-path " ${{ inputs.crate }}/Cargo.toml" --no-tag --no-publish --no-push --no-confirm --execute
+
       - name: Check semver
-        run: pnpm rust:semver --manifest-path "${{ inputs.package_path }}/Cargo.toml" --release-type ${{ inputs.level }}
+        run: pnpm rust:semver --manifest-path "${{ inputs.package_path }}/Cargo.toml"
 
   publish:
     name: Publish Rust Crate
