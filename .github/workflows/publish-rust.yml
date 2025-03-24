@@ -22,6 +22,15 @@ on:
           - patch
           - minor
           - major
+          - rc
+          - beta
+          - alpha
+          - release
+          - version
+      version:
+        description: Version (used with level "version")
+        required: false
+        type: string
       dry_run:
         description: Dry run
         required: true
@@ -82,7 +91,12 @@ jobs:
 
       - name: Set Version
         run: |
-          cargo release ${{ inputs.level }} --manifest-path " ${{ inputs.crate }}/Cargo.toml" --no-tag --no-publish --no-push --no-confirm --execute
+          if [ "${{ inputs.level }}" == "version" ]; then
+            LEVEL=${{ inputs.version }}
+          else
+            LEVEL=${{ inputs.level }}
+          fi
+          cargo release $LEVEL --manifest-path " ${{ inputs.package_path }}/Cargo.toml" --no-tag --no-publish --no-push --no-confirm --execute
 
       - name: Check semver
         run: pnpm rust:semver --manifest-path "${{ inputs.package_path }}/Cargo.toml"
@@ -130,13 +144,19 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
+          if [ "${{ inputs.level }}" == "version" ]; then
+            LEVEL=${{ inputs.version }}
+          else
+            LEVEL=${{ inputs.level }}
+          fi
+
           if [ "${{ inputs.dry_run }}" == "true" ]; then
             OPTIONS="--dry-run"
           else
             OPTIONS=""
           fi
 
-          pnpm rust:publish "${{ inputs.package_path }}" "${{ inputs.level }}" $OPTIONS
+          pnpm rust:publish "${{ inputs.package_path }}" $LEVEL $OPTIONS
 
       - name: Generate a changelog
         if: github.event.inputs.create_release == 'true'
