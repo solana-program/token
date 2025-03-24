@@ -96,7 +96,7 @@ jobs:
           else
             LEVEL=${{ inputs.level }}
           fi
-          cargo release $LEVEL --manifest-path " ${{ inputs.package_path }}/Cargo.toml" --no-tag --no-publish --no-push --no-confirm --execute
+          cargo release $LEVEL --manifest-path "${{ inputs.package_path }}/Cargo.toml" --no-tag --no-publish --no-push --no-confirm --execute
 
       - name: Check semver
         run: pnpm rust:semver --manifest-path "${{ inputs.package_path }}/Cargo.toml"
