@@ -50,11 +50,6 @@ jobs:
           cargo-cache-key: cargo-test-publish-${{ inputs.package_path }}
           cargo-cache-fallback-key: cargo-test-publish
 
-      - name: Install cargo-audit
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-semver-checks
-
       - name: Format
         run: pnpm zx ./scripts/rust/format.mjs "${{ inputs.package_path }}"
 
@@ -111,8 +106,10 @@ jobs:
           cargo-cache-key: cargo-publish-${{ inputs.package_path }}
           cargo-cache-fallback-key: cargo-publish
 
-      - name: Install Cargo Release
-        run: which cargo-release || cargo install cargo-release
+      - name: Install cargo-release
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-release
 
       - name: Ensure CARGO_REGISTRY_TOKEN variable is set
         env:
