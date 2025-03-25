@@ -110,12 +110,33 @@ pub(crate) fn inner_process_instruction(
 
             process_mint_to(accounts, instruction_data)
         }
+        // 8 - Burn
+        8 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: Burn");
+
+            process_burn(accounts, instruction_data)
+        }
         // 9 - CloseAccount
         9 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: CloseAccount");
 
             process_close_account(accounts)
+        }
+        // 12 - TransferChecked
+        12 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: TransferChecked");
+
+            process_transfer_checked(accounts, instruction_data)
+        }
+        // 15 - BurnChecked
+        15 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: BurnChecked");
+
+            process_burn_checked(accounts, instruction_data)
         }
         // 16 - InitializeAccount2
         16 => {
@@ -182,13 +203,6 @@ fn inner_process_remaining_instruction(
 
             process_set_authority(accounts, instruction_data)
         }
-        // 8 - Burn
-        8 => {
-            #[cfg(feature = "logging")]
-            pinocchio::msg!("Instruction: Burn");
-
-            process_burn(accounts, instruction_data)
-        }
         // 10 - FreezeAccount
         10 => {
             #[cfg(feature = "logging")]
@@ -203,13 +217,6 @@ fn inner_process_remaining_instruction(
 
             process_thaw_account(accounts)
         }
-        // 12 - TransferChecked
-        12 => {
-            #[cfg(feature = "logging")]
-            pinocchio::msg!("Instruction: TransferChecked");
-
-            process_transfer_checked(accounts, instruction_data)
-        }
         // 13 - ApproveChecked
         13 => {
             #[cfg(feature = "logging")]
@@ -223,13 +230,6 @@ fn inner_process_remaining_instruction(
             pinocchio::msg!("Instruction: MintToChecked");
 
             process_mint_to_checked(accounts, instruction_data)
-        }
-        // 15 - BurnChecked
-        15 => {
-            #[cfg(feature = "logging")]
-            pinocchio::msg!("Instruction: BurnChecked");
-
-            process_burn_checked(accounts, instruction_data)
         }
         // 17 - SyncNative
         17 => {

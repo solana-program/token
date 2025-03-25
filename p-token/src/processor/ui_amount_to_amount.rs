@@ -11,7 +11,6 @@ use {
     },
 };
 
-#[inline(always)]
 pub fn process_ui_amount_to_amount(
     accounts: &[AccountInfo],
     instruction_data: &[u8],

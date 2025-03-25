@@ -3,7 +3,6 @@ use {
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
 };
 
-#[inline(always)]
 pub fn process_initialize_multisig2(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
