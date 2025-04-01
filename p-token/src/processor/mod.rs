@@ -18,6 +18,7 @@ use {
 pub mod amount_to_ui_amount;
 pub mod approve;
 pub mod approve_checked;
+#[cfg(feature = "new-instructions")]
 pub mod batch;
 pub mod burn;
 pub mod burn_checked;
@@ -41,13 +42,14 @@ pub mod thaw_account;
 pub mod transfer;
 pub mod transfer_checked;
 pub mod ui_amount_to_amount;
+#[cfg(feature = "new-instructions")]
 pub mod withdraw_excess_lamports;
 // Shared processors.
 pub mod shared;
 
 pub use {
     amount_to_ui_amount::process_amount_to_ui_amount, approve::process_approve,
-    approve_checked::process_approve_checked, batch::process_batch, burn::process_burn,
+    approve_checked::process_approve_checked, burn::process_burn,
     burn_checked::process_burn_checked, close_account::process_close_account,
     freeze_account::process_freeze_account, get_account_data_size::process_get_account_data_size,
     initialize_account::process_initialize_account,
@@ -61,8 +63,10 @@ pub use {
     set_authority::process_set_authority, sync_native::process_sync_native,
     thaw_account::process_thaw_account, transfer::process_transfer,
     transfer_checked::process_transfer_checked, ui_amount_to_amount::process_ui_amount_to_amount,
-    withdraw_excess_lamports::process_withdraw_excess_lamports,
 };
+
+#[cfg(feature = "new-instructions")]
+pub use {batch::process_batch, withdraw_excess_lamports::process_withdraw_excess_lamports};
 
 /// Maximum number of digits in a formatted `u64`.
 ///

@@ -1,3 +1,5 @@
+#![cfg(feature = "new-instructions")]
+
 mod setup;
 
 use {

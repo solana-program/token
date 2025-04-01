@@ -35,10 +35,13 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let [discriminator, remaining @ ..] = instruction_data else {
+    #[cfg(feature = "new-instructions")]
+    let [discriminator, remaining @ ..] = instruction_data
+    else {
         return Err(TokenError::InvalidInstruction.into());
     };
 
+    #[cfg(feature = "new-instructions")]
     let result = if *discriminator == 255 {
         // 255 - Batch
         #[cfg(feature = "logging")]
@@ -48,6 +51,9 @@ pub fn process_instruction(
     } else {
         inner_process_instruction(accounts, instruction_data)
     };
+
+    #[cfg(not(feature = "new-instructions"))]
+    let result = inner_process_instruction(accounts, instruction_data);
 
     result.inspect_err(log_error)
 }
@@ -273,6 +279,7 @@ fn inner_process_remaining_instruction(
 
             process_ui_amount_to_amount(accounts, instruction_data)
         }
+        #[cfg(feature = "new-instructions")]
         // 38 - WithdrawExcessLamports
         38 => {
             #[cfg(feature = "logging")]

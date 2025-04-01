@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 
 [features]
 logging = []
+new-instructions = []
 
 [dependencies]
 pinocchio = "0.8"

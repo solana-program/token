@@ -1,3 +1,4 @@
+#![cfg(feature = "new-instructions")]
 #![allow(clippy::arithmetic_side_effects)]
 
 mod setup;
