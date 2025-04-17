@@ -18,7 +18,7 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    // SAFETY: single mutable borrow to `source_account_info` account data
+    // SAFETY: single immutable borrow to `source_account_info` account data
     let source_data = unsafe { source_account_info.borrow_data_unchecked() };
 
     match source_data.len() {
@@ -36,10 +36,25 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
             // SAFETY: `source_data` has the same length as `Mint`.
             let mint = unsafe { load::<Mint>(source_data)? };
 
-            if let Some(mint_authority) = mint.mint_authority() {
-                validate_owner(mint_authority, authority_info, remaining)?;
-            } else {
-                return Err(TokenError::AuthorityTypeNotSupported.into());
+            match mint.mint_authority() {
+                Some(mint_authority) => {
+                    validate_owner(mint_authority, authority_info, remaining)?;
+                }
+                None if source_account_info == authority_info => {
+                    // Comparing whether the AccountInfo's "point" to the same account or
+                    // not - this is a faster comparison since it just checks the internal
+                    // raw pointer.
+                    //
+                    // This is a special case where there is no mint authority set but the mint
+                    // account is the same as the authority account and, therefore, needs to be
+                    // a signer.
+                    if !authority_info.is_signer() {
+                        return Err(ProgramError::MissingRequiredSignature);
+                    }
+                }
+                _ => {
+                    return Err(TokenError::AuthorityTypeNotSupported.into());
+                }
             }
         }
         Multisig::LEN => {
