@@ -19,7 +19,7 @@ pub fn process_amount_to_ui_amount(
     let amount = u64::from_le_bytes(
         instruction_data
             .try_into()
-            .map_err(|_error| ProgramError::InvalidInstructionData)?,
+            .map_err(|_error| TokenError::InvalidInstruction)?,
     );
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;

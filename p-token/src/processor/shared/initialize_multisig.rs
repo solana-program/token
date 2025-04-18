@@ -46,7 +46,7 @@ pub fn process_initialize_multisig(
     let multisig =
         unsafe { load_mut_unchecked::<Multisig>(multisig_info.borrow_mut_data_unchecked())? };
 
-    if multisig.is_initialized() {
+    if multisig.is_initialized()? {
         return Err(TokenError::AlreadyInUse.into());
     }
 

@@ -1,6 +1,6 @@
 use {
     super::{COption, Initializable, Transmutable},
-    pinocchio::pubkey::Pubkey,
+    pinocchio::{program_error::ProgramError, pubkey::Pubkey},
 };
 
 /// Internal representation of a mint data.
@@ -10,7 +10,7 @@ pub struct Mint {
     /// be provided during mint creation. If no mint authority is present
     /// then the mint has a fixed supply and no further tokens may be
     /// minted.
-    pub mint_authority: COption<Pubkey>,
+    mint_authority: COption<Pubkey>,
 
     /// Total supply of tokens.
     supply: [u8; 8],
@@ -24,7 +24,7 @@ pub struct Mint {
     // Indicates whether the freeze authority is present or not.
     //freeze_authority_option: [u8; 4],
     /// Optional authority to freeze token accounts.
-    pub freeze_authority: COption<Pubkey>,
+    freeze_authority: COption<Pubkey>,
 }
 
 impl Mint {
@@ -55,11 +55,11 @@ impl Mint {
     }
 
     #[inline(always)]
-    pub fn mint_authority(&self) -> Option<&Pubkey> {
-        if self.mint_authority.0[0] == 1 {
-            Some(&self.mint_authority.1)
-        } else {
-            None
+    pub fn mint_authority(&self) -> Result<Option<&Pubkey>, ProgramError> {
+        match self.mint_authority.0 {
+            [0, 0, 0, 0] => Ok(None),
+            [1, 0, 0, 0] => Ok(Some(&self.mint_authority.1)),
+            _ => Err(ProgramError::InvalidAccountData),
         }
     }
 
@@ -75,11 +75,11 @@ impl Mint {
     }
 
     #[inline(always)]
-    pub fn freeze_authority(&self) -> Option<&Pubkey> {
-        if self.freeze_authority.0[0] == 1 {
-            Some(&self.freeze_authority.1)
-        } else {
-            None
+    pub fn freeze_authority(&self) -> Result<Option<&Pubkey>, ProgramError> {
+        match self.freeze_authority.0 {
+            [0, 0, 0, 0] => Ok(None),
+            [1, 0, 0, 0] => Ok(Some(&self.freeze_authority.1)),
+            _ => Err(ProgramError::InvalidAccountData),
         }
     }
 }
@@ -91,7 +91,11 @@ impl Transmutable for Mint {
 
 impl Initializable for Mint {
     #[inline(always)]
-    fn is_initialized(&self) -> bool {
-        self.is_initialized == 1
+    fn is_initialized(&self) -> Result<bool, ProgramError> {
+        match self.is_initialized {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(ProgramError::InvalidAccountData),
+        }
     }
 }

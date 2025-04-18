@@ -18,7 +18,7 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
-    if freeze == source_account.is_frozen() {
+    if freeze == source_account.is_frozen()? {
         return Err(TokenError::InvalidState.into());
     }
     if source_account.is_native() {
@@ -34,16 +34,16 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
     // passed in, one of them will fail the `load` check.
     let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
-    match mint.freeze_authority() {
+    match mint.freeze_authority()? {
         Some(authority) => validate_owner(authority, authority_info, remaining),
         None => Err(TokenError::MintCannotFreeze.into()),
     }?;
 
-    source_account.state = if freeze {
+    source_account.set_account_state(if freeze {
         AccountState::Frozen
     } else {
         AccountState::Initialized
-    };
+    });
 
     Ok(())
 }

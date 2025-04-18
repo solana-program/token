@@ -15,8 +15,7 @@ pub fn process_ui_amount_to_amount(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let ui_amount =
-        from_utf8(instruction_data).map_err(|_error| ProgramError::InvalidInstructionData)?;
+    let ui_amount = from_utf8(instruction_data).map_err(|_error| TokenError::InvalidInstruction)?;
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;

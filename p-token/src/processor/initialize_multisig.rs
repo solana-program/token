@@ -1,6 +1,7 @@
 use {
     super::shared,
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{account_info::AccountInfo, ProgramResult},
+    spl_token_interface::error::TokenError,
 };
 
 #[inline(always)]
@@ -10,7 +11,7 @@ pub fn process_initialize_multisig(
 ) -> ProgramResult {
     let m = instruction_data
         .first()
-        .ok_or(ProgramError::InvalidInstructionData)?;
+        .ok_or(TokenError::InvalidInstruction)?;
 
     shared::initialize_multisig::process_initialize_multisig(accounts, *m, true)
 }

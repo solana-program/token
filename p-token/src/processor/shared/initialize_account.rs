@@ -62,7 +62,7 @@ pub fn process_initialize_account(
     let account =
         unsafe { load_mut_unchecked::<Account>(new_account_info.borrow_mut_data_unchecked())? };
 
-    if account.is_initialized() {
+    if account.is_initialized()? {
         return Err(TokenError::AlreadyInUse.into());
     }
 
@@ -80,7 +80,7 @@ pub fn process_initialize_account(
         };
     }
 
-    account.state = AccountState::Initialized;
+    account.set_account_state(AccountState::Initialized);
     account.mint = *mint_info.key();
     account.owner = *owner;
 

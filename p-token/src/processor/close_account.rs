@@ -33,7 +33,7 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
         }
 
         let authority = source_account
-            .close_authority()
+            .close_authority()?
             .unwrap_or(&source_account.owner);
 
         if !source_account.is_owned_by_system_program_or_incinerator() {

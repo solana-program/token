@@ -27,7 +27,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                 AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
                 Some(&*(instruction_data.as_ptr().add(2) as *const Pubkey)),
             ),
-            _ => return Err(ProgramError::InvalidInstructionData),
+            _ => return Err(TokenError::InvalidInstruction.into()),
         }
     };
 
@@ -42,7 +42,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
         // `load_mut` validates that the account is initialized.
         let account = unsafe { load_mut::<Account>(account_info.borrow_mut_data_unchecked())? };
 
-        if account.is_frozen() {
+        if account.is_frozen()? {
             return Err(TokenError::AccountFrozen.into());
         }
 
@@ -64,7 +64,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                 }
             }
             AuthorityType::CloseAccount => {
-                let authority = account.close_authority().unwrap_or(&account.owner);
+                let authority = account.close_authority()?.unwrap_or(&account.owner);
                 validate_owner(authority, authority_info, remaining)?;
 
                 if let Some(authority) = new_authority {
@@ -86,7 +86,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             AuthorityType::MintTokens => {
                 // Once a mint's supply is fixed, it cannot be undone by setting a new
                 // mint_authority.
-                let mint_authority = mint.mint_authority().ok_or(TokenError::FixedSupply)?;
+                let mint_authority = mint.mint_authority()?.ok_or(TokenError::FixedSupply)?;
 
                 validate_owner(mint_authority, authority_info, remaining)?;
 
@@ -100,7 +100,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
                 // Once a mint's freeze authority is disabled, it cannot be re-enabled by
                 // setting a new freeze_authority.
                 let freeze_authority = mint
-                    .freeze_authority()
+                    .freeze_authority()?
                     .ok_or(TokenError::MintCannotFreeze)?;
 
                 validate_owner(freeze_authority, authority_info, remaining)?;
