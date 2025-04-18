@@ -1,8 +1,6 @@
 //! Instruction types.
 
-use pinocchio::program_error::ProgramError;
-
-use crate::error::TokenError;
+use {crate::error::TokenError, pinocchio::program_error::ProgramError};
 
 /// Instructions supported by the token program.
 #[repr(u8)]
