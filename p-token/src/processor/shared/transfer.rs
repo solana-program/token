@@ -77,7 +77,7 @@ pub fn process_transfer(
     //     destination accounts are not frozen, have the same mint, and the source
     //     account has enough tokens.
     let remaining_amount = if self_transfer {
-        if source_account.is_frozen() {
+        if source_account.is_frozen()? {
             return Err(TokenError::AccountFrozen.into());
         }
 
@@ -92,7 +92,7 @@ pub fn process_transfer(
         let destination_account =
             unsafe { load::<Account>(destination_account_info.borrow_data_unchecked())? };
 
-        if source_account.is_frozen() || destination_account.is_frozen() {
+        if source_account.is_frozen()? || destination_account.is_frozen()? {
             return Err(TokenError::AccountFrozen.into());
         }
 
@@ -126,7 +126,7 @@ pub fn process_transfer(
 
     // Validates the authority (delegate or owner).
 
-    if source_account.delegate() == Some(authority_info.key()) {
+    if source_account.delegate()? == Some(authority_info.key()) {
         validate_owner(authority_info.key(), authority_info, remaining)?;
 
         let delegated_amount = source_account

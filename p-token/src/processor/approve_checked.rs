@@ -1,6 +1,7 @@
 use {
     super::shared,
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{account_info::AccountInfo, ProgramResult},
+    spl_token_interface::error::TokenError,
 };
 
 #[inline(always)]
@@ -13,7 +14,7 @@ pub fn process_approve_checked(accounts: &[AccountInfo], instruction_data: &[u8]
             decimals.first().copied(),
         )
     } else {
-        return Err(ProgramError::InvalidInstructionData);
+        return Err(TokenError::InvalidInstruction.into());
     };
 
     shared::approve::process_approve(accounts, amount, decimals)

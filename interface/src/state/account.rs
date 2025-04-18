@@ -1,6 +1,6 @@
 use {
     super::{account_state::AccountState, COption, Initializable, Transmutable},
-    pinocchio::pubkey::Pubkey,
+    pinocchio::{program_error::ProgramError, pubkey::Pubkey},
 };
 
 /// Incinerator address.
@@ -27,7 +27,7 @@ pub struct Account {
     delegate: COption<Pubkey>,
 
     /// The account's state.
-    pub state: AccountState,
+    state: u8,
 
     /// Indicates whether this account represents a native token or not.
     is_native: [u8; 4],
@@ -46,6 +46,16 @@ pub struct Account {
 }
 
 impl Account {
+    #[inline(always)]
+    pub fn set_account_state(&mut self, state: AccountState) {
+        self.state = state as u8;
+    }
+
+    #[inline(always)]
+    pub fn account_state(&self) -> Result<AccountState, ProgramError> {
+        AccountState::try_from(self.state)
+    }
+
     #[inline(always)]
     pub fn set_amount(&mut self, amount: u64) {
         self.amount = amount.to_le_bytes();
@@ -68,11 +78,11 @@ impl Account {
     }
 
     #[inline(always)]
-    pub fn delegate(&self) -> Option<&Pubkey> {
-        if self.delegate.0[0] == 1 {
-            Some(&self.delegate.1)
-        } else {
-            None
+    pub fn delegate(&self) -> Result<Option<&Pubkey>, ProgramError> {
+        match self.delegate.0 {
+            [0, 0, 0, 0] => Ok(None),
+            [1, 0, 0, 0] => Ok(Some(&self.delegate.1)),
+            _ => Err(ProgramError::InvalidAccountData),
         }
     }
 
@@ -122,17 +132,17 @@ impl Account {
     }
 
     #[inline(always)]
-    pub fn close_authority(&self) -> Option<&Pubkey> {
-        if self.close_authority.0[0] == 1 {
-            Some(&self.close_authority.1)
-        } else {
-            None
+    pub fn close_authority(&self) -> Result<Option<&Pubkey>, ProgramError> {
+        match self.close_authority.0 {
+            [0, 0, 0, 0] => Ok(None),
+            [1, 0, 0, 0] => Ok(Some(&self.close_authority.1)),
+            _ => Err(ProgramError::InvalidAccountData),
         }
     }
 
     #[inline(always)]
-    pub fn is_frozen(&self) -> bool {
-        self.state == AccountState::Frozen
+    pub fn is_frozen(&self) -> Result<bool, ProgramError> {
+        Ok(AccountState::try_from(self.state)? == AccountState::Frozen)
     }
 
     #[inline(always)]
@@ -147,7 +157,7 @@ impl Transmutable for Account {
 
 impl Initializable for Account {
     #[inline(always)]
-    fn is_initialized(&self) -> bool {
-        self.state != AccountState::Uninitialized
+    fn is_initialized(&self) -> Result<bool, ProgramError> {
+        Ok(AccountState::try_from(self.state)? != AccountState::Uninitialized)
     }
 }

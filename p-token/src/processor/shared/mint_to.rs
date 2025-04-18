@@ -25,7 +25,7 @@ pub fn process_mint_to(
     let destination_account =
         unsafe { load_mut::<Account>(destination_account_info.borrow_mut_data_unchecked())? };
 
-    if destination_account.is_frozen() {
+    if destination_account.is_frozen()? {
         return Err(TokenError::AccountFrozen.into());
     }
 
@@ -47,7 +47,7 @@ pub fn process_mint_to(
         }
     }
 
-    match mint.mint_authority() {
+    match mint.mint_authority()? {
         Some(mint_authority) => validate_owner(mint_authority, owner_info, remaining)?,
         None => return Err(TokenError::FixedSupply.into()),
     }

@@ -1,6 +1,6 @@
 //! Instruction types.
 
-use pinocchio::program_error::ProgramError;
+use {crate::error::TokenError, pinocchio::program_error::ProgramError};
 
 /// Instructions supported by the token program.
 #[repr(u8)]
@@ -531,7 +531,7 @@ impl TryFrom<u8> for TokenInstruction {
         match value {
             // SAFETY: `value` is guaranteed to be in the range of the enum variants.
             0..=24 | 38 | 255 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
-            _ => Err(ProgramError::InvalidInstructionData),
+            _ => Err(TokenError::InvalidInstruction.into()),
         }
     }
 }
@@ -559,7 +559,7 @@ impl TryFrom<u8> for AuthorityType {
         match value {
             // SAFETY: `value` is guaranteed to be in the range of the enum variants.
             0..=3 => Ok(unsafe { core::mem::transmute::<u8, AuthorityType>(value) }),
-            _ => Err(ProgramError::InvalidInstructionData),
+            _ => Err(TokenError::InvalidInstruction.into()),
         }
     }
 }

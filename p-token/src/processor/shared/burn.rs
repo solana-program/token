@@ -22,7 +22,7 @@ pub fn process_burn(
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
-    if source_account.is_frozen() {
+    if source_account.is_frozen()? {
         return Err(TokenError::AccountFrozen.into());
     }
     if source_account.is_native() {
@@ -53,7 +53,7 @@ pub fn process_burn(
     }
 
     if !source_account.is_owned_by_system_program_or_incinerator() {
-        match source_account.delegate() {
+        match source_account.delegate()? {
             Some(delegate) if authority_info.key() == delegate => {
                 validate_owner(delegate, authority_info, remaining)?;
 

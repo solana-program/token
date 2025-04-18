@@ -37,7 +37,7 @@ pub fn process_initialize_mint(
                 &*(instruction_data.as_ptr().add(1) as *const Pubkey),
                 Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey)),
             ),
-            _ => return Err(ProgramError::InvalidInstructionData),
+            _ => return Err(TokenError::InvalidInstruction.into()),
         }
     };
 
@@ -58,7 +58,7 @@ pub fn process_initialize_mint(
     // SAFETY: single mutable borrow to `mint_info` account data.
     let mint = unsafe { load_mut_unchecked::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
-    if mint.is_initialized() {
+    if mint.is_initialized()? {
         return Err(TokenError::AlreadyInUse.into());
     }
 
