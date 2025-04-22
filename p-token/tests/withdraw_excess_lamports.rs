@@ -18,9 +18,8 @@ use {
     std::mem::size_of,
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn withdraw_excess_lamports_from_mint(token_program: Pubkey) {
+async fn withdraw_excess_lamports_from_mint() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -37,7 +36,7 @@ async fn withdraw_excess_lamports_from_mint(token_program: Pubkey) {
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
+    let initialize_ix = spl_token::instruction::initialize_mint(
         &spl_token::ID,
         &account.pubkey(),
         &mint_authority.pubkey(),
@@ -45,8 +44,6 @@ async fn withdraw_excess_lamports_from_mint(token_program: Pubkey) {
         0,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize a mint account with excess lamports.
 
@@ -56,7 +53,7 @@ async fn withdraw_excess_lamports_from_mint(token_program: Pubkey) {
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -96,7 +93,7 @@ async fn withdraw_excess_lamports_from_mint(token_program: Pubkey) {
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -116,9 +113,8 @@ async fn withdraw_excess_lamports_from_mint(token_program: Pubkey) {
     assert_eq!(destination.lamports, excess_lamports);
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn withdraw_excess_lamports_from_account(token_program: Pubkey) {
+async fn withdraw_excess_lamports_from_account() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -134,7 +130,7 @@ async fn withdraw_excess_lamports_from_account(token_program: Pubkey) {
         &mut context,
         mint_authority,
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -148,15 +144,13 @@ async fn withdraw_excess_lamports_from_account(token_program: Pubkey) {
     let account_size = size_of::<Account>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_account(
+    let initialize_ix = spl_token::instruction::initialize_account(
         &spl_token::ID,
         &account.pubkey(),
         &mint,
         &owner.pubkey(),
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // When a new mint account is created and initialized.
 
@@ -166,7 +160,7 @@ async fn withdraw_excess_lamports_from_account(token_program: Pubkey) {
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -206,7 +200,7 @@ async fn withdraw_excess_lamports_from_account(token_program: Pubkey) {
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -226,9 +220,8 @@ async fn withdraw_excess_lamports_from_account(token_program: Pubkey) {
     assert_eq!(destination.lamports, excess_lamports);
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn withdraw_excess_lamports_from_multisig(token_program: Pubkey) {
+async fn withdraw_excess_lamports_from_multisig() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -249,15 +242,13 @@ async fn withdraw_excess_lamports_from_multisig(token_program: Pubkey) {
     let rent = context.banks_client.get_rent().await.unwrap();
     let account_size = size_of::<Multisig>();
 
-    let mut initialize_ix = spl_token::instruction::initialize_multisig(
+    let initialize_ix = spl_token::instruction::initialize_multisig(
         &spl_token::ID,
         &multisig.pubkey(),
         &signers,
         3,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize the multisig account.
 
@@ -267,7 +258,7 @@ async fn withdraw_excess_lamports_from_multisig(token_program: Pubkey) {
             &multisig.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -307,7 +298,7 @@ async fn withdraw_excess_lamports_from_multisig(token_program: Pubkey) {
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -327,9 +318,8 @@ async fn withdraw_excess_lamports_from_multisig(token_program: Pubkey) {
     assert_eq!(destination.lamports, excess_lamports);
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: Pubkey) {
+async fn fail_withdraw_excess_lamports_from_mint_wrong_authority() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -346,7 +336,7 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: 
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
+    let initialize_ix = spl_token::instruction::initialize_mint(
         &spl_token::ID,
         &account.pubkey(),
         &mint_authority.pubkey(),
@@ -354,8 +344,6 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: 
         0,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize a mint account with excess lamports.
 
@@ -365,7 +353,7 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: 
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -406,7 +394,7 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: 
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -431,9 +419,8 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority(token_program: 
     );
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_program: Pubkey) {
+async fn fail_withdraw_excess_lamports_from_account_wrong_authority() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -449,7 +436,7 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_progra
         &mut context,
         mint_authority,
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -463,15 +450,13 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_progra
     let account_size = size_of::<Account>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_account(
+    let initialize_ix = spl_token::instruction::initialize_account(
         &spl_token::ID,
         &account.pubkey(),
         &mint,
         &owner.pubkey(),
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // When a new mint account is created and initialized.
 
@@ -481,7 +466,7 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_progra
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -522,7 +507,7 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_progra
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -547,9 +532,8 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority(token_progra
     );
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority(token_program: Pubkey) {
+async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -570,15 +554,13 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority(token_progr
     let rent = context.banks_client.get_rent().await.unwrap();
     let account_size = size_of::<Multisig>();
 
-    let mut initialize_ix = spl_token::instruction::initialize_multisig(
+    let initialize_ix = spl_token::instruction::initialize_multisig(
         &spl_token::ID,
         &multisig.pubkey(),
         &signers,
         3,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize the multisig account.
 
@@ -588,7 +570,7 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority(token_progr
             &multisig.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -629,7 +611,7 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority(token_progr
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -654,9 +636,8 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority(token_progr
     );
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_multisig_missing_signer(token_program: Pubkey) {
+async fn fail_withdraw_excess_lamports_from_multisig_missing_signer() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -677,15 +658,13 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer(token_progra
     let rent = context.banks_client.get_rent().await.unwrap();
     let account_size = size_of::<Multisig>();
 
-    let mut initialize_ix = spl_token::instruction::initialize_multisig(
+    let initialize_ix = spl_token::instruction::initialize_multisig(
         &spl_token::ID,
         &multisig.pubkey(),
         &signers,
         3,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize the multisig account.
 
@@ -695,7 +674,7 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer(token_progra
             &multisig.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -735,7 +714,7 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer(token_progra
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -760,9 +739,8 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer(token_progra
     );
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pubkey) {
+async fn withdraw_excess_lamports_from_mint_with_no_authority() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -779,7 +757,7 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
+    let initialize_ix = spl_token::instruction::initialize_mint(
         &spl_token::ID,
         &mint_account.pubkey(),
         &mint_authority.pubkey(),
@@ -787,8 +765,6 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
         0,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize a mint account with excess lamports.
 
@@ -798,7 +774,7 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
             &mint_account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -827,7 +803,7 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
 
     // And we remove the mint authority.
 
-    let mut set_authority_ix = spl_token::instruction::set_authority(
+    let set_authority_ix = spl_token::instruction::set_authority(
         &spl_token::ID,
         &mint_account.pubkey(),
         None,
@@ -836,8 +812,6 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
         &[&mint_authority.pubkey()],
     )
     .unwrap();
-    // Switches the program id to the token program.
-    set_authority_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[set_authority_ix],
@@ -873,7 +847,7 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -893,11 +867,8 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
     assert_eq!(destination.lamports, excess_lamports);
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_signer(
-    token_program: Pubkey,
-) {
+async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_signer() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -914,7 +885,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
+    let initialize_ix = spl_token::instruction::initialize_mint(
         &spl_token::ID,
         &mint_account.pubkey(),
         &mint_authority.pubkey(),
@@ -922,8 +893,6 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
         0,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize a mint account with excess lamports.
 
@@ -933,7 +902,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
             &mint_account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -973,7 +942,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],
@@ -998,11 +967,8 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
     );
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority_signer(
-    token_program: Pubkey,
-) {
+async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority_signer() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -1019,7 +985,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
+    let initialize_ix = spl_token::instruction::initialize_mint(
         &spl_token::ID,
         &mint_account.pubkey(),
         &mint_authority.pubkey(),
@@ -1027,8 +993,6 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
         0,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // And we initialize a mint account with excess lamports.
 
@@ -1038,7 +1002,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
             &mint_account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
@@ -1067,7 +1031,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
 
     // And we remove the mint authority.
 
-    let mut set_authority_ix = spl_token::instruction::set_authority(
+    let set_authority_ix = spl_token::instruction::set_authority(
         &spl_token::ID,
         &mint_account.pubkey(),
         None,
@@ -1076,8 +1040,6 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
         &[&mint_authority.pubkey()],
     )
     .unwrap();
-    // Switches the program id to the token program.
-    set_authority_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[set_authority_ix],
@@ -1113,7 +1075,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
     )
     .unwrap();
     // Switches the program id to the token program.
-    withdraw_ix.program_id = token_program;
+    withdraw_ix.program_id = TOKEN_PROGRAM_ID;
 
     let tx = Transaction::new_signed_with_payer(
         &[withdraw_ix],

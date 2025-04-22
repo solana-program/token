@@ -13,9 +13,8 @@ use {
     spl_token::instruction::AuthorityType,
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn set_authority(token_program: Pubkey) {
+async fn set_authority() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -29,7 +28,7 @@ async fn set_authority(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority.pubkey()),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -38,7 +37,7 @@ async fn set_authority(token_program: Pubkey) {
 
     let new_authority = Pubkey::new_unique();
 
-    let mut set_authority_ix = spl_token::instruction::set_authority(
+    let set_authority_ix = spl_token::instruction::set_authority(
         &spl_token::ID,
         &mint,
         Some(&new_authority),
@@ -47,7 +46,6 @@ async fn set_authority(token_program: Pubkey) {
         &[],
     )
     .unwrap();
-    set_authority_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[set_authority_ix],

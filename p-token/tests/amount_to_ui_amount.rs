@@ -6,9 +6,8 @@ use {
     solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction},
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn amount_to_ui_amount(token_program: Pubkey) {
+async fn amount_to_ui_amount() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -22,15 +21,13 @@ async fn amount_to_ui_amount(token_program: Pubkey) {
         &mut context,
         mint_authority,
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
 
-    let mut amount_to_ui_amount_ix =
+    let amount_to_ui_amount_ix =
         spl_token::instruction::amount_to_ui_amount(&spl_token::ID, &mint, 1000).unwrap();
-    // Switches the program id to the token program.
-    amount_to_ui_amount_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[amount_to_ui_amount_ix],

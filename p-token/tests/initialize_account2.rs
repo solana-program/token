@@ -12,9 +12,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn initialize_account2(token_program: Pubkey) {
+async fn initialize_account2() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -28,7 +27,7 @@ async fn initialize_account2(token_program: Pubkey) {
         &mut context,
         mint_authority,
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -41,15 +40,13 @@ async fn initialize_account2(token_program: Pubkey) {
     let account_size = 165;
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_account2(
+    let initialize_ix = spl_token::instruction::initialize_account2(
         &spl_token::ID,
         &account.pubkey(),
         &mint,
         &owner,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // When a new mint account is created and initialized.
 
@@ -59,7 +56,7 @@ async fn initialize_account2(token_program: Pubkey) {
             &account.pubkey(),
             rent.minimum_balance(account_size),
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];

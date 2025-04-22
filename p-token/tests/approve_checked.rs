@@ -11,9 +11,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn approve_checked(token_program: Pubkey) {
+async fn approve_checked() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -27,7 +26,7 @@ async fn approve_checked(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -36,7 +35,8 @@ async fn approve_checked(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     mint::mint(
         &mut context,
@@ -44,7 +44,7 @@ async fn approve_checked(token_program: Pubkey) {
         &account,
         &mint_authority,
         100,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -53,8 +53,8 @@ async fn approve_checked(token_program: Pubkey) {
 
     let delegate = Pubkey::new_unique();
 
-    let mut approve_ix = spl_token::instruction::approve_checked(
-        &spl_token::ID,
+    let approve_ix = spl_token::instruction::approve_checked(
+        &TOKEN_PROGRAM_ID,
         &account,
         &mint,
         &delegate,
@@ -64,7 +64,6 @@ async fn approve_checked(token_program: Pubkey) {
         4,
     )
     .unwrap();
-    approve_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[approve_ix],

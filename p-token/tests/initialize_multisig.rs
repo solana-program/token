@@ -13,9 +13,8 @@ use {
     spl_token::state::Multisig,
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn initialize_multisig(token_program: Pubkey) {
+async fn initialize_multisig() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -30,15 +29,13 @@ async fn initialize_multisig(token_program: Pubkey) {
 
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_multisig(
+    let initialize_ix = spl_token::instruction::initialize_multisig(
         &spl_token::ID,
         &multisig.pubkey(),
         &signers,
         2,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // When a new multisig account is created and initialized.
 
@@ -48,7 +45,7 @@ async fn initialize_multisig(token_program: Pubkey) {
             &multisig.pubkey(),
             rent.minimum_balance(Multisig::LEN),
             Multisig::LEN as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];
