@@ -1123,7 +1123,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority(token_program
         .await
         .unwrap_err();
 
-    // Then the destination account has the excess lamports.
+    // Then we expect an error.
 
     assert_matches!(
         error,
