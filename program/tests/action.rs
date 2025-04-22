@@ -1,4 +1,5 @@
 use {
+    ethnum::U256,
     solana_program_test::BanksClient,
     solana_sdk::{
         hash::Hash,
@@ -83,7 +84,7 @@ pub async fn mint_to(
     mint: &Pubkey,
     account: &Pubkey,
     mint_authority: &Keypair,
-    amount: u64,
+    amount: U256,
 ) -> Result<(), TransportError> {
     let transaction = Transaction::new_signed_with_payer(
         &[
@@ -105,7 +106,7 @@ pub async fn transfer(
     source: &Pubkey,
     destination: &Pubkey,
     authority: &Keypair,
-    amount: u64,
+    amount: U256,
 ) -> Result<(), TransportError> {
     let transaction = Transaction::new_signed_with_payer(
         &[
@@ -127,7 +128,7 @@ pub async fn burn(
     mint: &Pubkey,
     account: &Pubkey,
     authority: &Keypair,
-    amount: u64,
+    amount: U256,
 ) -> Result<(), TransportError> {
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::burn(&id(), account, mint, &authority.pubkey(), &[], amount).unwrap()],

@@ -13,6 +13,7 @@ pub mod state;
 #[cfg(not(feature = "no-entrypoint"))]
 mod entrypoint;
 
+use ethnum::{AsU256, U256};
 // Export current sdk types for downstream users building with a different sdk
 // version
 pub use solana_program;
@@ -20,19 +21,19 @@ use solana_program::{entrypoint::ProgramResult, program_error::ProgramError, pub
 
 /// Convert the UI representation of a token amount (using the decimals field
 /// defined in its mint) to the raw amount
-pub fn ui_amount_to_amount(ui_amount: f64, decimals: u8) -> u64 {
-    (ui_amount * 10_usize.pow(decimals as u32) as f64) as u64
+pub fn ui_amount_to_amount(ui_amount: f64, decimals: u8) -> U256 {
+    (ui_amount * 10_usize.pow(decimals as u32) as f64).as_u256()
 }
 
 /// Convert a raw amount to its UI representation (using the decimals field
 /// defined in its mint)
-pub fn amount_to_ui_amount(amount: u64, decimals: u8) -> f64 {
-    amount as f64 / 10_usize.pow(decimals as u32) as f64
+pub fn amount_to_ui_amount(amount: U256, decimals: u8) -> f64 {
+    amount.as_f64() / 10_usize.pow(decimals as u32) as f64
 }
 
 /// Convert a raw amount to its UI representation (using the decimals field
 /// defined in its mint)
-pub fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
+pub fn amount_to_ui_amount_string(amount: U256, decimals: u8) -> String {
     let decimals = decimals as usize;
     if decimals > 0 {
         // Left-pad zeros to decimals + 1, so we at least have an integer zero
@@ -47,7 +48,7 @@ pub fn amount_to_ui_amount_string(amount: u64, decimals: u8) -> String {
 
 /// Convert a raw amount to its UI representation using the given decimals field
 /// Excess zeroes or unneeded decimal point are trimmed.
-pub fn amount_to_ui_amount_string_trimmed(amount: u64, decimals: u8) -> String {
+pub fn amount_to_ui_amount_string_trimmed(amount: U256, decimals: u8) -> String {
     let mut s = amount_to_ui_amount_string(amount, decimals);
     if decimals > 0 {
         let zeros_trimmed = s.trim_end_matches('0');

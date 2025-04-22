@@ -20,3 +20,6 @@ lint = "nightly-2024-08-08"
 
 [workspace.metadata.spellcheck]
 config = "scripts/spellcheck.toml"
+
+[patch.crates-io]
+solana-pubkey = { path = "../solana-sdk/pubkey" }
