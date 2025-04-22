@@ -895,7 +895,9 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pub
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_mint_with_mint_as_signer(token_program: Pubkey) {
+async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_signer(
+    token_program: Pubkey,
+) {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -998,7 +1000,9 @@ async fn fail_withdraw_excess_lamports_from_mint_with_mint_as_signer(token_progr
 
 #[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn fail_withdraw_excess_lamports_from_mint_with_no_authority(token_program: Pubkey) {
+async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority_signer(
+    token_program: Pubkey,
+) {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
