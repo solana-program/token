@@ -55,11 +55,11 @@ impl Mint {
     }
 
     #[inline(always)]
-    pub fn mint_authority(&self) -> Result<Option<&Pubkey>, ProgramError> {
-        match self.mint_authority.0 {
-            [0, 0, 0, 0] => Ok(None),
-            [1, 0, 0, 0] => Ok(Some(&self.mint_authority.1)),
-            _ => Err(ProgramError::InvalidAccountData),
+    pub fn mint_authority(&self) -> Option<&Pubkey> {
+        if self.mint_authority.0[0] == 1 {
+            Some(&self.mint_authority.1)
+        } else {
+            None
         }
     }
 
@@ -75,11 +75,11 @@ impl Mint {
     }
 
     #[inline(always)]
-    pub fn freeze_authority(&self) -> Result<Option<&Pubkey>, ProgramError> {
-        match self.freeze_authority.0 {
-            [0, 0, 0, 0] => Ok(None),
-            [1, 0, 0, 0] => Ok(Some(&self.freeze_authority.1)),
-            _ => Err(ProgramError::InvalidAccountData),
+    pub fn freeze_authority(&self) -> Option<&Pubkey> {
+        if self.freeze_authority.0[0] == 1 {
+            Some(&self.freeze_authority.1)
+        } else {
+            None
         }
     }
 }
@@ -92,10 +92,25 @@ impl Transmutable for Mint {
 impl Initializable for Mint {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
-        match self.is_initialized {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => Err(ProgramError::InvalidAccountData),
+        // mint_authority
+        match self.mint_authority.0 {
+            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
+            _ => return Err(ProgramError::InvalidAccountData),
         }
+
+        // is_initialized
+        let initialized = match self.is_initialized {
+            0 => false,
+            1 => true,
+            _ => return Err(ProgramError::InvalidAccountData),
+        };
+
+        // freeze_authority
+        match self.freeze_authority.0 {
+            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
+            _ => return Err(ProgramError::InvalidAccountData),
+        }
+
+        Ok(initialized)
     }
 }

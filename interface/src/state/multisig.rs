@@ -46,6 +46,7 @@ impl Transmutable for Multisig {
 impl Initializable for Multisig {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
+        // is_initialized
         match self.is_initialized {
             0 => Ok(false),
             1 => Ok(true),

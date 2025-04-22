@@ -78,11 +78,11 @@ impl Account {
     }
 
     #[inline(always)]
-    pub fn delegate(&self) -> Result<Option<&Pubkey>, ProgramError> {
-        match self.delegate.0 {
-            [0, 0, 0, 0] => Ok(None),
-            [1, 0, 0, 0] => Ok(Some(&self.delegate.1)),
-            _ => Err(ProgramError::InvalidAccountData),
+    pub fn delegate(&self) -> Option<&Pubkey> {
+        if self.delegate.0[0] == 1 {
+            Some(&self.delegate.1)
+        } else {
+            None
         }
     }
 
@@ -132,11 +132,11 @@ impl Account {
     }
 
     #[inline(always)]
-    pub fn close_authority(&self) -> Result<Option<&Pubkey>, ProgramError> {
-        match self.close_authority.0 {
-            [0, 0, 0, 0] => Ok(None),
-            [1, 0, 0, 0] => Ok(Some(&self.close_authority.1)),
-            _ => Err(ProgramError::InvalidAccountData),
+    pub fn close_authority(&self) -> Option<&Pubkey> {
+        if self.close_authority.0[0] == 1 {
+            Some(&self.close_authority.1)
+        } else {
+            None
         }
     }
 
@@ -158,6 +158,26 @@ impl Transmutable for Account {
 impl Initializable for Account {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
-        Ok(AccountState::try_from(self.state)? != AccountState::Uninitialized)
+        // delegate
+        match self.delegate.0 {
+            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
+            _ => return Err(ProgramError::InvalidAccountData),
+        }
+        // state
+        let state = AccountState::try_from(self.state)?;
+
+        // is_native
+        match self.is_native {
+            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
+            _ => return Err(ProgramError::InvalidAccountData),
+        }
+
+        // close authority
+        match self.close_authority.0 {
+            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
+            _ => return Err(ProgramError::InvalidAccountData),
+        }
+
+        Ok(state != AccountState::Uninitialized)
     }
 }

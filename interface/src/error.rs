@@ -124,7 +124,7 @@ impl TryFrom<u32> for TokenError {
             17 => Ok(TokenError::AccountFrozen),
             18 => Ok(TokenError::MintDecimalsMismatch),
             19 => Ok(TokenError::NonNativeNotSupported),
-            _ => Err(TokenError::InvalidInstruction.into()),
+            _ => Err(ProgramError::InvalidArgument),
         }
     }
 }

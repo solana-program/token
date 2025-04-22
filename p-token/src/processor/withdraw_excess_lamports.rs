@@ -36,7 +36,7 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
             // SAFETY: `source_data` has the same length as `Mint`.
             let mint = unsafe { load::<Mint>(source_data)? };
 
-            if let Some(mint_authority) = mint.mint_authority()? {
+            if let Some(mint_authority) = mint.mint_authority() {
                 validate_owner(mint_authority, authority_info, remaining)?;
             } else {
                 return Err(TokenError::AuthorityTypeNotSupported.into());

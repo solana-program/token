@@ -126,7 +126,7 @@ pub fn process_transfer(
 
     // Validates the authority (delegate or owner).
 
-    if source_account.delegate()? == Some(authority_info.key()) {
+    if source_account.delegate() == Some(authority_info.key()) {
         validate_owner(authority_info.key(), authority_info, remaining)?;
 
         let delegated_amount = source_account

@@ -47,7 +47,7 @@ pub fn process_mint_to(
         }
     }
 
-    match mint.mint_authority()? {
+    match mint.mint_authority() {
         Some(mint_authority) => validate_owner(mint_authority, owner_info, remaining)?,
         None => return Err(TokenError::FixedSupply.into()),
     }

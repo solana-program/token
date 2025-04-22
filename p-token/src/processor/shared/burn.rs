@@ -53,7 +53,7 @@ pub fn process_burn(
     }
 
     if !source_account.is_owned_by_system_program_or_incinerator() {
-        match source_account.delegate()? {
+        match source_account.delegate() {
             Some(delegate) if authority_info.key() == delegate => {
                 validate_owner(delegate, authority_info, remaining)?;
 
