@@ -22,9 +22,9 @@ pub trait Transmutable {
 
 /// Trait to represent a type that can be initialized.
 ///
-/// Types implementing this trait must provide a method to check if the object is
-/// initialized, i.e., if all required fields are set to valid values and they
-/// represent an initialized state.
+/// Types implementing this trait must provide a method to check if the object
+/// is initialized, i.e., if all required fields are set to valid values and
+/// they represent an initialized state.
 pub trait Initializable {
     /// Return `true` if the object is initialized.
     fn is_initialized(&self) -> Result<bool, ProgramError>;
