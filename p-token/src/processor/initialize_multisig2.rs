@@ -11,5 +11,6 @@ pub fn process_initialize_multisig2(
     let m = instruction_data
         .first()
         .ok_or(TokenError::InvalidInstruction)?;
+
     shared::initialize_multisig::process_initialize_multisig(accounts, *m, false)
 }

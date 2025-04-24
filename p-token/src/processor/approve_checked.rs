@@ -1,5 +1,5 @@
 use {
-    super::shared,
+    super::{shared, U64_BYTES},
     pinocchio::{account_info::AccountInfo, ProgramResult},
     spl_token_interface::error::TokenError,
 };
@@ -8,9 +8,10 @@ use {
 pub fn process_approve_checked(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
     // expected u64 (8) + u8 (1)
     let (amount, decimals) = if instruction_data.len() == 9 {
-        let (amount, decimals) = instruction_data.split_at(core::mem::size_of::<u64>());
+        let (amount, decimals) = instruction_data.split_at(U64_BYTES);
         (
-            u64::from_le_bytes(amount.try_into().unwrap()),
+            // SAFETY: The size of `amount` is `U64_BYTES` bytes.
+            unsafe { u64::from_le_bytes(*(amount.as_ptr() as *const [u8; U64_BYTES])) },
             decimals.first().copied(),
         )
     } else {

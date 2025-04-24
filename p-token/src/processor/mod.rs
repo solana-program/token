@@ -64,6 +64,9 @@ pub use {
     withdraw_excess_lamports::process_withdraw_excess_lamports,
 };
 
+/// Number of bytes in a `u64`.
+const U64_BYTES: usize = core::mem::size_of::<u64>();
+
 /// Maximum number of digits in a formatted `u64`.
 ///
 /// The maximum number of digits is equal to the maximum number

@@ -21,24 +21,26 @@ pub fn process_initialize_mint(
 ) -> ProgramResult {
     // Validates the instruction data.
 
-    // SAFETY: The minimum size of the instruction data is either 34 or 66 bytes:
-    //   - decimals (1 byte)
-    //   - mint_authority (32 bytes)
-    //   - option + freeze_authority (1 byte + 32 bytes)
-    let (decimals, mint_authority, freeze_authority) = unsafe {
-        match instruction_data.len() {
-            34 if *instruction_data.get_unchecked(33) == 0 => (
-                *instruction_data.get_unchecked(0),
-                &*(instruction_data.as_ptr().add(1) as *const Pubkey),
-                None,
-            ),
-            66 if *instruction_data.get_unchecked(33) == 1 => (
-                *instruction_data.get_unchecked(0),
-                &*(instruction_data.as_ptr().add(1) as *const Pubkey),
-                Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey)),
-            ),
-            _ => return Err(TokenError::InvalidInstruction.into()),
+    let (decimals, mint_authority, freeze_authority) = if instruction_data.len() >= 34 {
+        // SAFETY: The minimum size of the instruction data is either 34 or 66 bytes:
+        //   - decimals (1 byte)
+        //   - mint_authority (32 bytes)
+        //   - option + freeze_authority (1 byte + 32 bytes)
+        unsafe {
+            let decimals = *instruction_data.get_unchecked(0);
+            let mint_authority = &*(instruction_data.as_ptr().add(1) as *const Pubkey);
+            let freeze_authority = if *instruction_data.get_unchecked(33) == 0 {
+                None
+            } else if *instruction_data.get_unchecked(33) == 1 && instruction_data.len() >= 66 {
+                Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey))
+            } else {
+                return Err(TokenError::InvalidInstruction.into());
+            };
+
+            (decimals, mint_authority, freeze_authority)
         }
+    } else {
+        return Err(TokenError::InvalidInstruction.into());
     };
 
     // Validates the accounts.

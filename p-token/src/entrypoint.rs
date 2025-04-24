@@ -194,7 +194,7 @@ fn inner_process_remaining_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Revoke");
 
-            process_revoke(accounts, instruction_data)
+            process_revoke(accounts)
         }
         // 6 - SetAuthority
         6 => {

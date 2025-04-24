@@ -8,7 +8,7 @@ use {
 };
 
 #[inline(always)]
-pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> ProgramResult {
+pub fn process_revoke(accounts: &[AccountInfo]) -> ProgramResult {
     let [source_account_info, owner_info, remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
