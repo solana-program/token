@@ -39,7 +39,7 @@ impl Multisig {
 }
 
 impl Transmutable for Multisig {
-    /// The length of the `Mint` account data.
+    /// The length of the `Multisig` account data.
     const LEN: usize = core::mem::size_of::<Multisig>();
 }
 
