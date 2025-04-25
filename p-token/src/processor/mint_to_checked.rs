@@ -7,7 +7,7 @@ use {
 #[inline(always)]
 pub fn process_mint_to_checked(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
     // expected u64 (8) + u8 (1)
-    let (amount, decimals) = if instruction_data.len() == 9 {
+    let (amount, decimals) = if instruction_data.len() >= 9 {
         let (amount, decimals) = instruction_data.split_at(U64_BYTES);
         (
             // SAFETY: The size of `amount` is `U64_BYTES` bytes.
