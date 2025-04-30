@@ -11,9 +11,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn revoke(token_program: Pubkey) {
+async fn revoke() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -27,7 +26,7 @@ async fn revoke(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -36,7 +35,8 @@ async fn revoke(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     mint::mint(
         &mut context,
@@ -44,7 +44,7 @@ async fn revoke(token_program: Pubkey) {
         &account,
         &mint_authority,
         100,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -59,15 +59,14 @@ async fn revoke(token_program: Pubkey) {
         &delegate,
         &owner,
         50,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await;
 
     // When we revoke the delegation.
 
-    let mut revoke_ix =
+    let revoke_ix =
         spl_token::instruction::revoke(&spl_token::ID, &account, &owner.pubkey(), &[]).unwrap();
-    revoke_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[revoke_ix],

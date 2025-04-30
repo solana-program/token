@@ -11,9 +11,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn mint_to(token_program: Pubkey) {
+async fn mint_to() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -27,7 +26,7 @@ async fn mint_to(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -36,11 +35,12 @@ async fn mint_to(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     // When we mint tokens to it.
 
-    let mut mint_ix = spl_token::instruction::mint_to(
+    let mint_ix = spl_token::instruction::mint_to(
         &spl_token::ID,
         &mint,
         &account,
@@ -49,8 +49,6 @@ async fn mint_to(token_program: Pubkey) {
         100,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    mint_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[mint_ix],

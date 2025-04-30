@@ -15,9 +15,8 @@ use {
     std::mem::size_of,
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn initialize_mint(token_program: Pubkey) {
+async fn initialize_mint() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -31,7 +30,7 @@ async fn initialize_mint(token_program: Pubkey) {
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
+    let initialize_ix = spl_token::instruction::initialize_mint(
         &spl_token::ID,
         &account.pubkey(),
         &mint_authority,
@@ -39,8 +38,6 @@ async fn initialize_mint(token_program: Pubkey) {
         0,
     )
     .unwrap();
-    // Switches the program id to the token program.
-    initialize_ix.program_id = token_program;
 
     // When a new mint account is created and initialized.
 
@@ -50,7 +47,7 @@ async fn initialize_mint(token_program: Pubkey) {
             &account.pubkey(),
             rent.minimum_balance(account_size),
             account_size as u64,
-            &token_program,
+            &TOKEN_PROGRAM_ID,
         ),
         initialize_ix,
     ];

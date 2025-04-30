@@ -5,16 +5,14 @@ use {
     solana_program_test::{tokio, ProgramTest},
     solana_sdk::{
         program_pack::Pack,
-        pubkey::Pubkey,
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
     spl_token::state::AccountState,
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn thaw_account(token_program: Pubkey) {
+async fn thaw_account() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -28,7 +26,7 @@ async fn thaw_account(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority.pubkey()),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -37,7 +35,8 @@ async fn thaw_account(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     let token_account = context.banks_client.get_account(account).await.unwrap();
     assert!(token_account.is_some());
@@ -47,13 +46,13 @@ async fn thaw_account(token_program: Pubkey) {
         &account,
         &mint,
         &freeze_authority,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await;
 
     // When we thaw the account.
 
-    let mut thaw_account_ix = spl_token::instruction::thaw_account(
+    let thaw_account_ix = spl_token::instruction::thaw_account(
         &spl_token::ID,
         &account,
         &mint,
@@ -61,7 +60,6 @@ async fn thaw_account(token_program: Pubkey) {
         &[],
     )
     .unwrap();
-    thaw_account_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[thaw_account_ix],

@@ -11,9 +11,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn burn(token_program: Pubkey) {
+async fn burn() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -27,7 +26,7 @@ async fn burn(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -36,7 +35,8 @@ async fn burn(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     mint::mint(
         &mut context,
@@ -44,17 +44,16 @@ async fn burn(token_program: Pubkey) {
         &account,
         &mint_authority,
         100,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
 
     // When we burn 50 tokens.
 
-    let mut burn_ix =
+    let burn_ix =
         spl_token::instruction::burn(&spl_token::ID, &account, &mint, &owner.pubkey(), &[], 50)
             .unwrap();
-    burn_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[burn_ix],

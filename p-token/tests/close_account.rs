@@ -10,9 +10,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn close_account(token_program: Pubkey) {
+async fn close_account() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -26,7 +25,7 @@ async fn close_account(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -35,14 +34,15 @@ async fn close_account(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     let token_account = context.banks_client.get_account(account).await.unwrap();
     assert!(token_account.is_some());
 
     // When we close the account.
 
-    let mut close_account_ix = spl_token::instruction::close_account(
+    let close_account_ix = spl_token::instruction::close_account(
         &spl_token::ID,
         &account,
         &owner.pubkey(),
@@ -50,7 +50,6 @@ async fn close_account(token_program: Pubkey) {
         &[],
     )
     .unwrap();
-    close_account_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[close_account_ix],

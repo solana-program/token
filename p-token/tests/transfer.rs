@@ -11,9 +11,8 @@ use {
     },
 };
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn transfer(token_program: Pubkey) {
+async fn transfer() {
     let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -27,7 +26,7 @@ async fn transfer(token_program: Pubkey) {
         &mut context,
         mint_authority.pubkey(),
         Some(freeze_authority),
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -36,7 +35,8 @@ async fn transfer(token_program: Pubkey) {
 
     let owner = Keypair::new();
 
-    let account = account::initialize(&mut context, &mint, &owner.pubkey(), &token_program).await;
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
 
     mint::mint(
         &mut context,
@@ -44,7 +44,7 @@ async fn transfer(token_program: Pubkey) {
         &account,
         &mint_authority,
         100,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     )
     .await
     .unwrap();
@@ -54,9 +54,9 @@ async fn transfer(token_program: Pubkey) {
     let destination = Pubkey::new_unique();
 
     let destination_account =
-        account::initialize(&mut context, &mint, &destination, &token_program).await;
+        account::initialize(&mut context, &mint, &destination, &TOKEN_PROGRAM_ID).await;
 
-    let mut transfer_ix = spl_token::instruction::transfer(
+    let transfer_ix = spl_token::instruction::transfer(
         &spl_token::ID,
         &account,
         &destination_account,
@@ -65,7 +65,6 @@ async fn transfer(token_program: Pubkey) {
         100,
     )
     .unwrap();
-    transfer_ix.program_id = token_program;
 
     let tx = Transaction::new_signed_with_payer(
         &[transfer_ix],

@@ -40,9 +40,8 @@ fn batch_instruction(instructions: Vec<Instruction>) -> Result<Instruction, Prog
     })
 }
 
-#[test_case::test_case(TOKEN_PROGRAM_ID ; "p-token")]
 #[tokio::test]
-async fn batch(token_program: Pubkey) {
+async fn batch() {
     let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
         .start_with_context()
         .await;
@@ -63,10 +62,10 @@ async fn batch(token_program: Pubkey) {
         &mint_a.pubkey(),
         mint_rent,
         mint_len as u64,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     );
     let initialize_mint_ix = spl_token::instruction::initialize_mint(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &mint_a.pubkey(),
         &mint_authority.pubkey(),
         None,
@@ -82,10 +81,10 @@ async fn batch(token_program: Pubkey) {
         &mint_b.pubkey(),
         mint_rent,
         mint_len as u64,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     );
     let initialize_mint_with_freeze_authority_ix = spl_token::instruction::initialize_mint2(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &mint_b.pubkey(),
         &mint_authority.pubkey(),
         Some(&freeze_authority),
@@ -104,24 +103,24 @@ async fn batch(token_program: Pubkey) {
         &owner_a_ta_a.pubkey(),
         account_rent,
         account_len as u64,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     );
     let create_owner_b_ta_a = system_instruction::create_account(
         &context.payer.pubkey(),
         &owner_b_ta_a.pubkey(),
         account_rent,
         account_len as u64,
-        &token_program,
+        &TOKEN_PROGRAM_ID,
     );
     let intialize_owner_a_ta_a = spl_token::instruction::initialize_account3(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &owner_a_ta_a.pubkey(),
         &mint_a.pubkey(),
         &owner_a.pubkey(),
     )
     .unwrap();
     let intialize_owner_b_ta_a = spl_token::instruction::initialize_account3(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &owner_b_ta_a.pubkey(),
         &mint_a.pubkey(),
         &owner_b.pubkey(),
@@ -130,7 +129,7 @@ async fn batch(token_program: Pubkey) {
 
     // Mint Token A to Owner A
     let mint_token_a_to_owner_a = spl_token::instruction::mint_to(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &mint_a.pubkey(),
         &owner_a_ta_a.pubkey(),
         &mint_authority.pubkey(),
@@ -141,7 +140,7 @@ async fn batch(token_program: Pubkey) {
 
     // Transfer Token A from Owner A to Owner B
     let transfer_token_a_to_owner_b = spl_token::instruction::transfer(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &owner_a_ta_a.pubkey(),
         &owner_b_ta_a.pubkey(),
         &owner_a.pubkey(),
@@ -152,7 +151,7 @@ async fn batch(token_program: Pubkey) {
 
     // Close Token A
     let close_owner_a_ta_a = spl_token::instruction::close_account(
-        &token_program,
+        &TOKEN_PROGRAM_ID,
         &owner_a_ta_a.pubkey(),
         &owner_a.pubkey(),
         &owner_a.pubkey(),
