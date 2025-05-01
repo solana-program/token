@@ -12,8 +12,8 @@ readme = "./README.md"
 crate-type = ["rlib"]
 
 [dependencies]
-pinocchio = "0.8"
-pinocchio-pubkey = "0.2.4"
+pinocchio = "0.8.4"
+pinocchio-pubkey = "0.2"
 
 [dev-dependencies]
 strum = "0.27"
