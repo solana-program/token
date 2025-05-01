@@ -1,5 +1,4 @@
 use {
-    core::mem::size_of,
     pinocchio::{
         account_info::AccountInfo,
         program_error::ProgramError,
@@ -57,23 +56,23 @@ pub fn process_initialize_mint(
         (mint_info, None)
     };
 
+    let mint_data_len = mint_info.data_len();
+
+    let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
+        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length
+        // are checked by `from_account_info_unchecked`.
+        let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
+        rent.is_exempt(mint_info.lamports(), mint_data_len)
+    } else {
+        Rent::get()?.is_exempt(mint_info.lamports(), mint_data_len)
+    };
+
     // SAFETY: single mutable borrow to `mint_info` account data.
     let mint = unsafe { load_mut_unchecked::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint.is_initialized()? {
         return Err(TokenError::AlreadyInUse.into());
     }
-
-    // Check rent-exempt status of the mint account.
-
-    let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
-        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length
-        // are checked by `from_account_info_unchecked`.
-        let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
-        rent.is_exempt(mint_info.lamports(), size_of::<Mint>())
-    } else {
-        Rent::get()?.is_exempt(mint_info.lamports(), size_of::<Mint>())
-    };
 
     if !is_exempt {
         return Err(TokenError::NotRentExempt.into());
