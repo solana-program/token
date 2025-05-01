@@ -1,5 +1,5 @@
 use {
-    super::{account_state::AccountState, COption, Initializable, Transmutable},
+    super::{account_state::AccountState, validate_option, COption, Initializable, Transmutable},
     pinocchio::{program_error::ProgramError, pubkey::Pubkey},
 };
 
@@ -159,24 +159,16 @@ impl Initializable for Account {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
         // delegate
-        match self.delegate.0 {
-            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
-            _ => return Err(ProgramError::InvalidAccountData),
-        }
+        validate_option(self.delegate.0)?;
+
         // state
         let state = AccountState::try_from(self.state)?;
 
         // is_native
-        match self.is_native {
-            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
-            _ => return Err(ProgramError::InvalidAccountData),
-        }
+        validate_option(self.is_native)?;
 
         // close authority
-        match self.close_authority.0 {
-            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
-            _ => return Err(ProgramError::InvalidAccountData),
-        }
+        validate_option(self.close_authority.0)?;
 
         Ok(state != AccountState::Uninitialized)
     }

@@ -1,5 +1,5 @@
 use {
-    super::{COption, Initializable, Transmutable},
+    super::{validate_option, COption, Initializable, Transmutable},
     pinocchio::{program_error::ProgramError, pubkey::Pubkey},
 };
 
@@ -93,10 +93,7 @@ impl Initializable for Mint {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
         // mint_authority
-        match self.mint_authority.0 {
-            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
-            _ => return Err(ProgramError::InvalidAccountData),
-        }
+        validate_option(self.mint_authority.0)?;
 
         // is_initialized
         let initialized = match self.is_initialized {
@@ -106,10 +103,7 @@ impl Initializable for Mint {
         };
 
         // freeze_authority
-        match self.freeze_authority.0 {
-            [0, 0, 0, 0] | [1, 0, 0, 0] => (),
-            _ => return Err(ProgramError::InvalidAccountData),
-        }
+        validate_option(self.freeze_authority.0)?;
 
         Ok(initialized)
     }
