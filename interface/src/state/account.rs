@@ -1,5 +1,5 @@
 use {
-    super::{account_state::AccountState, validate_option, COption, Initializable, Transmutable},
+    super::{account_state::AccountState, COption, Initializable, Transmutable},
     pinocchio::{program_error::ProgramError, pubkey::Pubkey},
 };
 
@@ -142,7 +142,7 @@ impl Account {
 
     #[inline(always)]
     pub fn is_frozen(&self) -> Result<bool, ProgramError> {
-        Ok(AccountState::try_from(self.state)? == AccountState::Frozen)
+        AccountState::try_from(self.state).map(|state| state == AccountState::Frozen)
     }
 
     #[inline(always)]
@@ -158,18 +158,6 @@ impl Transmutable for Account {
 impl Initializable for Account {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
-        // delegate
-        validate_option(self.delegate.0)?;
-
-        // state
-        let state = AccountState::try_from(self.state)?;
-
-        // is_native
-        validate_option(self.is_native)?;
-
-        // close authority
-        validate_option(self.close_authority.0)?;
-
-        Ok(state != AccountState::Uninitialized)
+        AccountState::try_from(self.state).map(|state| state != AccountState::Uninitialized)
     }
 }

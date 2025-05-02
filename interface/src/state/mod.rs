@@ -1,4 +1,4 @@
-use pinocchio::{program_error::ProgramError, ProgramResult};
+use pinocchio::program_error::ProgramError;
 
 pub mod account;
 pub mod account_state;
@@ -21,10 +21,6 @@ pub trait Transmutable {
 }
 
 /// Trait to represent a type that can be initialized.
-///
-/// Types implementing this trait must provide a method to check if the object
-/// is initialized, i.e., if all required fields are set to valid values and
-/// they represent an initialized state.
 pub trait Initializable {
     /// Return `true` if the object is initialized.
     fn is_initialized(&self) -> Result<bool, ProgramError>;
@@ -96,14 +92,4 @@ pub unsafe fn load_mut_unchecked<T: Transmutable>(
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(&mut *(bytes.as_mut_ptr() as *mut T))
-}
-
-/// Validates a `COption` mask value.
-#[inline(always)]
-const fn validate_option(value: [u8; 4]) -> ProgramResult {
-    if u32::from_le_bytes(value) > 1 {
-        Err(ProgramError::InvalidAccountData)
-    } else {
-        Ok(())
-    }
 }
