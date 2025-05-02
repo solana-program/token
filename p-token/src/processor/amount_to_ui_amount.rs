@@ -1,5 +1,5 @@
 use {
-    super::{check_account_owner, MAX_FORMATTED_DIGITS, U64_BYTES},
+    super::{check_account_owner, unpack_amount, MAX_FORMATTED_DIGITS},
     core::str::from_utf8_unchecked,
     pinocchio::{
         account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
@@ -16,12 +16,7 @@ pub fn process_amount_to_ui_amount(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let amount = if instruction_data.len() >= U64_BYTES {
-        // SAFETY: The minimum size of the instruction data is `U64_BYTES` bytes.
-        unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; U64_BYTES])) }
-    } else {
-        return Err(TokenError::InvalidInstruction.into());
-    };
+    let amount = unpack_amount(instruction_data)?;
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;
