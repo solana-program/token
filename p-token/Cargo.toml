@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 logging = []
 
 [dependencies]
-pinocchio = "0.8"
+pinocchio = "0.8.4"
 pinocchio-log = { version = "0.4", default-features = false }
 spl-token-interface = { version = "^0", path = "../interface" }
 

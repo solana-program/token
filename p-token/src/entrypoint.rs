@@ -36,7 +36,7 @@ pub fn process_instruction(
     instruction_data: &[u8],
 ) -> ProgramResult {
     let [discriminator, remaining @ ..] = instruction_data else {
-        return Err(ProgramError::InvalidInstructionData);
+        return Err(TokenError::InvalidInstruction.into());
     };
 
     let result = if *discriminator == 255 {
@@ -78,7 +78,7 @@ pub(crate) fn inner_process_instruction(
     instruction_data: &[u8],
 ) -> ProgramResult {
     let [discriminator, instruction_data @ ..] = instruction_data else {
-        return Err(ProgramError::InvalidInstructionData);
+        return Err(TokenError::InvalidInstruction.into());
     };
 
     match *discriminator {
@@ -194,7 +194,7 @@ fn inner_process_remaining_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Revoke");
 
-            process_revoke(accounts, instruction_data)
+            process_revoke(accounts)
         }
         // 6 - SetAuthority
         6 => {
@@ -280,6 +280,6 @@ fn inner_process_remaining_instruction(
 
             process_withdraw_excess_lamports(accounts)
         }
-        _ => Err(ProgramError::InvalidInstructionData),
+        _ => Err(TokenError::InvalidInstruction.into()),
     }
 }

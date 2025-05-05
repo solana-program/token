@@ -1,6 +1,7 @@
 use {
     crate::entrypoint::inner_process_instruction,
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    spl_token_interface::error::TokenError,
 };
 
 /// The size of the batch instruction header.
@@ -17,7 +18,7 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
 
         if instruction_data.len() < IX_HEADER_SIZE {
             // The instruction data must have at least two bytes.
-            return Err(ProgramError::InvalidInstructionData);
+            return Err(TokenError::InvalidInstruction.into());
         }
 
         // SAFETY: The instruction data is guaranteed to have at least two bytes
@@ -27,7 +28,7 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
         let data_offset = IX_HEADER_SIZE + unsafe { *instruction_data.get_unchecked(1) as usize };
 
         if instruction_data.len() < data_offset || data_offset == IX_HEADER_SIZE {
-            return Err(ProgramError::InvalidInstructionData);
+            return Err(TokenError::InvalidInstruction.into());
         }
 
         if accounts.len() < expected_accounts {

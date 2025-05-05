@@ -21,8 +21,13 @@ pub fn process_burn(
     // `load_mut` validates that the account is initialized.
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
+    // SAFETY: single mutable borrow to `mint_info` account data and
+    // `load_mut` validates that the mint is initialized; additionally, an
+    // account cannot be both a token account and a mint, so if duplicates are
+    // passed in, one of them will fail the `load_mut` check.
+    let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
-    if source_account.is_frozen() {
+    if source_account.is_frozen()? {
         return Err(TokenError::AccountFrozen.into());
     }
     if source_account.is_native() {
@@ -35,12 +40,6 @@ pub fn process_burn(
         .amount()
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
-
-    // SAFETY: single mutable borrow to `mint_info` account data and
-    // `load_mut` validates that the mint is initialized; additionally, an
-    // account cannot be both a token account and a mint, so if duplicates are
-    // passed in, one of them will fail the `load_mut` check.
-    let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
     if mint_info.key() != &source_account.mint {
         return Err(TokenError::MintMismatch.into());

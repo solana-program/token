@@ -1,5 +1,5 @@
 use {
-    super::{check_account_owner, MAX_FORMATTED_DIGITS},
+    super::{check_account_owner, unpack_amount, MAX_FORMATTED_DIGITS},
     core::str::from_utf8_unchecked,
     pinocchio::{
         account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
@@ -16,11 +16,7 @@ pub fn process_amount_to_ui_amount(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let amount = u64::from_le_bytes(
-        instruction_data
-            .try_into()
-            .map_err(|_error| ProgramError::InvalidInstructionData)?,
-    );
+    let amount = unpack_amount(instruction_data)?;
 
     let mint_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
     check_account_owner(mint_info)?;

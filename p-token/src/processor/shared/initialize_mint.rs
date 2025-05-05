@@ -1,5 +1,4 @@
 use {
-    core::mem::size_of,
     pinocchio::{
         account_info::AccountInfo,
         program_error::ProgramError,
@@ -21,24 +20,26 @@ pub fn process_initialize_mint(
 ) -> ProgramResult {
     // Validates the instruction data.
 
-    // SAFETY: The minimum size of the instruction data is either 34 or 66 bytes:
-    //   - decimals (1 byte)
-    //   - mint_authority (32 bytes)
-    //   - option + freeze_authority (1 byte + 32 bytes)
-    let (decimals, mint_authority, freeze_authority) = unsafe {
-        match instruction_data.len() {
-            34 if *instruction_data.get_unchecked(33) == 0 => (
-                *instruction_data.get_unchecked(0),
-                &*(instruction_data.as_ptr().add(1) as *const Pubkey),
-                None,
-            ),
-            66 if *instruction_data.get_unchecked(33) == 1 => (
-                *instruction_data.get_unchecked(0),
-                &*(instruction_data.as_ptr().add(1) as *const Pubkey),
-                Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey)),
-            ),
-            _ => return Err(ProgramError::InvalidInstructionData),
+    let (decimals, mint_authority, freeze_authority) = if instruction_data.len() >= 34 {
+        // SAFETY: The minimum size of the instruction data is either 34 or 66 bytes:
+        //   - decimals (1 byte)
+        //   - mint_authority (32 bytes)
+        //   - option + freeze_authority (1 byte + 32 bytes)
+        unsafe {
+            let decimals = *instruction_data.get_unchecked(0);
+            let mint_authority = &*(instruction_data.as_ptr().add(1) as *const Pubkey);
+            let freeze_authority = if *instruction_data.get_unchecked(33) == 0 {
+                None
+            } else if *instruction_data.get_unchecked(33) == 1 && instruction_data.len() >= 66 {
+                Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey))
+            } else {
+                return Err(TokenError::InvalidInstruction.into());
+            };
+
+            (decimals, mint_authority, freeze_authority)
         }
+    } else {
+        return Err(TokenError::InvalidInstruction.into());
     };
 
     // Validates the accounts.
@@ -55,23 +56,23 @@ pub fn process_initialize_mint(
         (mint_info, None)
     };
 
-    // SAFETY: single mutable borrow to `mint_info` account data.
-    let mint = unsafe { load_mut_unchecked::<Mint>(mint_info.borrow_mut_data_unchecked())? };
-
-    if mint.is_initialized() {
-        return Err(TokenError::AlreadyInUse.into());
-    }
-
-    // Check rent-exempt status of the mint account.
+    let mint_data_len = mint_info.data_len();
 
     let is_exempt = if let Some(rent_sysvar_info) = rent_sysvar_info {
         // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length
         // are checked by `from_account_info_unchecked`.
         let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
-        rent.is_exempt(mint_info.lamports(), size_of::<Mint>())
+        rent.is_exempt(mint_info.lamports(), mint_data_len)
     } else {
-        Rent::get()?.is_exempt(mint_info.lamports(), size_of::<Mint>())
+        Rent::get()?.is_exempt(mint_info.lamports(), mint_data_len)
     };
+
+    // SAFETY: single mutable borrow to `mint_info` account data.
+    let mint = unsafe { load_mut_unchecked::<Mint>(mint_info.borrow_mut_data_unchecked())? };
+
+    if mint.is_initialized()? {
+        return Err(TokenError::AlreadyInUse.into());
+    }
 
     if !is_exempt {
         return Err(TokenError::NotRentExempt.into());

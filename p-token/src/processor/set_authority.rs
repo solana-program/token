@@ -14,21 +14,23 @@ use {
 pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
     // Validates the instruction data.
 
-    // SAFETY: The expected size of the instruction data is either 2 or 34 bytes:
-    //   - authority_type (1 byte)
-    //   - option + new_authority (1 byte + 32 bytes)
-    let (authority_type, new_authority) = unsafe {
-        match instruction_data.len() {
-            2 if *instruction_data.get_unchecked(1) == 0 => (
-                AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
-                None,
-            ),
-            34 if *instruction_data.get_unchecked(1) == 1 => (
-                AuthorityType::try_from(*instruction_data.get_unchecked(0))?,
-                Some(&*(instruction_data.as_ptr().add(2) as *const Pubkey)),
-            ),
-            _ => return Err(ProgramError::InvalidInstructionData),
+    let (authority_type, new_authority) = if instruction_data.len() >= 2 {
+        // SAFETY: The expected size of the instruction data is either 2 or 34 bytes:
+        //   - authority_type (1 byte)
+        //   - option + new_authority (1 byte + 32 bytes)
+        unsafe {
+            let authority_type = AuthorityType::try_from(*instruction_data.get_unchecked(0))?;
+            let new_authority = if *instruction_data.get_unchecked(1) == 0 {
+                None
+            } else if *instruction_data.get_unchecked(1) == 1 && instruction_data.len() >= 34 {
+                Some(&*(instruction_data.as_ptr().add(2) as *const Pubkey))
+            } else {
+                return Err(TokenError::InvalidInstruction.into());
+            };
+            (authority_type, new_authority)
         }
+    } else {
+        return Err(TokenError::InvalidInstruction.into());
     };
 
     // Validates the accounts.
@@ -42,7 +44,7 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
         // `load_mut` validates that the account is initialized.
         let account = unsafe { load_mut::<Account>(account_info.borrow_mut_data_unchecked())? };
 
-        if account.is_frozen() {
+        if account.is_frozen()? {
             return Err(TokenError::AccountFrozen.into());
         }
 

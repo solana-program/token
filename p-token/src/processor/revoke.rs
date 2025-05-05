@@ -8,8 +8,8 @@ use {
 };
 
 #[inline(always)]
-pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> ProgramResult {
-    let [source_account_info, owner_info, remaining @ ..] = accounts else {
+pub fn process_revoke(accounts: &[AccountInfo]) -> ProgramResult {
+    let [source_account_info, remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -18,7 +18,13 @@ pub fn process_revoke(accounts: &[AccountInfo], _instruction_data: &[u8]) -> Pro
     let source_account =
         unsafe { load_mut::<Account>(source_account_info.borrow_mut_data_unchecked())? };
 
-    if source_account.is_frozen() {
+    // Unpacking the remaining accounts to get the owner account at this point
+    // to maintain the same order as SPL Token.
+    let [owner_info, remaining @ ..] = remaining else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+
+    if source_account.is_frozen()? {
         return Err(TokenError::AccountFrozen.into());
     }
 

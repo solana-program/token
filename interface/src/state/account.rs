@@ -1,6 +1,6 @@
 use {
     super::{account_state::AccountState, COption, Initializable, Transmutable},
-    pinocchio::pubkey::Pubkey,
+    pinocchio::{program_error::ProgramError, pubkey::Pubkey},
 };
 
 /// Incinerator address.
@@ -27,7 +27,7 @@ pub struct Account {
     delegate: COption<Pubkey>,
 
     /// The account's state.
-    pub state: AccountState,
+    state: u8,
 
     /// Indicates whether this account represents a native token or not.
     is_native: [u8; 4],
@@ -46,6 +46,16 @@ pub struct Account {
 }
 
 impl Account {
+    #[inline(always)]
+    pub fn set_account_state(&mut self, state: AccountState) {
+        self.state = state as u8;
+    }
+
+    #[inline(always)]
+    pub fn account_state(&self) -> Result<AccountState, ProgramError> {
+        AccountState::try_from(self.state)
+    }
+
     #[inline(always)]
     pub fn set_amount(&mut self, amount: u64) {
         self.amount = amount.to_le_bytes();
@@ -131,8 +141,8 @@ impl Account {
     }
 
     #[inline(always)]
-    pub fn is_frozen(&self) -> bool {
-        self.state == AccountState::Frozen
+    pub fn is_frozen(&self) -> Result<bool, ProgramError> {
+        AccountState::try_from(self.state).map(|state| state == AccountState::Frozen)
     }
 
     #[inline(always)]
@@ -147,7 +157,7 @@ impl Transmutable for Account {
 
 impl Initializable for Account {
     #[inline(always)]
-    fn is_initialized(&self) -> bool {
-        self.state != AccountState::Uninitialized
+    fn is_initialized(&self) -> Result<bool, ProgramError> {
+        AccountState::try_from(self.state).map(|state| state != AccountState::Uninitialized)
     }
 }

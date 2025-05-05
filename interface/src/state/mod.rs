@@ -23,7 +23,7 @@ pub trait Transmutable {
 /// Trait to represent a type that can be initialized.
 pub trait Initializable {
     /// Return `true` if the object is initialized.
-    fn is_initialized(&self) -> bool;
+    fn is_initialized(&self) -> Result<bool, ProgramError>;
 }
 
 /// Return a reference for an initialized `T` from the given bytes.
@@ -35,7 +35,7 @@ pub trait Initializable {
 pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
     load_unchecked(bytes).and_then(|t: &T| {
         // checks if the data is initialized
-        if t.is_initialized() {
+        if t.is_initialized()? {
             Ok(t)
         } else {
             Err(ProgramError::UninitializedAccount)
@@ -69,7 +69,7 @@ pub unsafe fn load_mut<T: Initializable + Transmutable>(
 ) -> Result<&mut T, ProgramError> {
     load_mut_unchecked(bytes).and_then(|t: &mut T| {
         // checks if the data is initialized
-        if t.is_initialized() {
+        if t.is_initialized()? {
             Ok(t)
         } else {
             Err(ProgramError::UninitializedAccount)
