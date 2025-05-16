@@ -63,7 +63,7 @@ pub enum TokenInstruction<'a> {
     InitializeAccount,
     /// Initializes a multisignature account with N provided signers.
     ///
-    /// Multisignature accounts can used in place of any single owner/delegate
+    /// Multisignature accounts can be used in place of any single owner/delegate
     /// accounts in any token instruction that require an owner/delegate to be
     /// present.  The variant field represents the number of signers (M)
     /// required to validate this multisignature account.
