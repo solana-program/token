@@ -2,6 +2,7 @@
 
 use {
     crate::{
+        check_program_account,
         amount_to_ui_amount_string_trimmed,
         error::TokenError,
         instruction::{is_valid_signer_index, AuthorityType, TokenInstruction, MAX_SIGNERS},
@@ -233,6 +234,10 @@ impl Processor {
         let account_info_iter = &mut accounts.iter();
 
         let source_account_info = next_account_info(account_info_iter)?;
+        let destination_account_info = next_account_info(account_info_iter)?;
+
+        check_program_account(source_account_info.owner)?;
+        check_program_account(destination_account_info.owner)?;
 
         let expected_mint_info = if let Some(expected_decimals) = expected_decimals {
             Some((next_account_info(account_info_iter)?, expected_decimals))
@@ -240,7 +245,6 @@ impl Processor {
             None
         };
 
-        let destination_account_info = next_account_info(account_info_iter)?;
         let authority_info = next_account_info(account_info_iter)?;
 
         let mut source_account = Account::unpack(&source_account_info.data.borrow())?;
@@ -529,6 +533,9 @@ impl Processor {
         let destination_account_info = next_account_info(account_info_iter)?;
         let owner_info = next_account_info(account_info_iter)?;
 
+        check_program_account(mint_info.owner)?;
+        check_program_account(destination_account_info.owner)?;
+
         let mut destination_account = Account::unpack(&destination_account_info.data.borrow())?;
         if destination_account.is_frozen() {
             return Err(TokenError::AccountFrozen.into());
@@ -594,6 +601,9 @@ impl Processor {
         let source_account_info = next_account_info(account_info_iter)?;
         let mint_info = next_account_info(account_info_iter)?;
         let authority_info = next_account_info(account_info_iter)?;
+
+        check_program_account(source_account_info.owner)?;
+        check_program_account(mint_info.owner)?;
 
         let mut source_account = Account::unpack(&source_account_info.data.borrow())?;
         let mut mint = Mint::unpack(&mint_info.data.borrow())?;
