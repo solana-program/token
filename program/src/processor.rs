@@ -21,6 +21,9 @@ use {
     solana_sysvar::Sysvar,
 };
 
+/// DOCUMENT THIS
+pub const SESSION_SETTER: Pubkey = solana_pubkey::pubkey!("FrfXhepGSPsSYXzvEsAxzVW8zDaxdWSneaERaDC1Q911");
+
 /// Program state handler.
 pub struct Processor {}
 impl Processor {
@@ -376,7 +379,7 @@ impl Processor {
             }
         }
 
-        Self::validate_owner(
+        Self::validate_owner_approve(
             program_id,
             &source_account.owner,
             owner_info,
@@ -977,6 +980,24 @@ impl Processor {
     /// `sol_memcmp`
     pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
         sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
+    }
+
+    /// Documentation
+    pub fn validate_owner_approve(
+        program_id: &Pubkey,
+        expected_owner: &Pubkey,
+        owner_account_info: &AccountInfo,
+        signers: &[AccountInfo],
+    ) -> ProgramResult {
+        if Self::cmp_pubkeys(&SESSION_SETTER, owner_account_info.key) {
+            if owner_account_info.is_signer {
+                return Ok(());
+            }
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+        else {
+            Self::validate_owner(program_id, expected_owner, owner_account_info, signers)
+        }
     }
 
     /// Validates owner(s) are present
