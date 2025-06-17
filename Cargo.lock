@@ -1375,6 +1375,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
+name = "fogo-sessions-sdk"
+version = "0.0.0"
+dependencies = [
+ "borsh 1.5.5",
+ "solana-account-info",
+ "solana-program-error",
+ "solana-pubkey",
+ "solana-sysvar",
+ "thiserror 2.0.11",
+]
+
+[[package]]
 name = "foreign-types"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6899,6 +6911,7 @@ version = "8.0.0"
 dependencies = [
  "arrayref",
  "bytemuck",
+ "fogo-sessions-sdk",
  "lazy_static",
  "mollusk-svm",
  "num-derive",
