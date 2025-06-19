@@ -1001,8 +1001,8 @@ impl Processor {
         if Self::cmp_pubkeys(&SESSION_MANAGER_ID, owner_account_info.owner) {
             let session_account = Session::try_deserialize(&mut owner_account_info.data.borrow().as_ref())?;
             session_account.check_is_live()?;
-            session_account.check_subject(actual_owner)?;
-            session_account.check_audience_signer(signers)?;
+            session_account.check_user(actual_owner)?;
+            session_account.check_authorized_program_signer(signers)?;
         }
         Self::validate_owner(program_id, delegate, owner_account_info, signers)
     }
