@@ -7,9 +7,20 @@ use {
         instruction::{is_valid_signer_index, AuthorityType, TokenInstruction, MAX_SIGNERS},
         state::{Account, AccountState, Mint, Multisig},
         try_ui_amount_into_amount,
-    }, fogo_sessions_sdk::{Session, SESSION_MANAGER_ID, SESSION_SETTER}, solana_account_info::{next_account_info, AccountInfo}, solana_cpi::set_return_data, solana_msg::msg, solana_program_error::{ProgramError, ProgramResult}, solana_program_memory::sol_memcmp, solana_program_option::COption, solana_program_pack::{IsInitialized, Pack}, solana_pubkey::{Pubkey, PUBKEY_BYTES}, solana_rent::Rent, solana_sdk_ids::system_program, solana_sysvar::Sysvar
+    },
+    fogo_sessions_sdk::{AuthorizedTokens, Session, SESSION_MANAGER_ID, SESSION_SETTER},
+    solana_account_info::{next_account_info, AccountInfo},
+    solana_cpi::set_return_data,
+    solana_msg::msg,
+    solana_program_error::{ProgramError, ProgramResult},
+    solana_program_memory::sol_memcmp,
+    solana_program_option::COption,
+    solana_program_pack::{IsInitialized, Pack},
+    solana_pubkey::{Pubkey, PUBKEY_BYTES},
+    solana_rent::Rent,
+    solana_sdk_ids::system_program,
+    solana_sysvar::Sysvar,
 };
-
 
 /// Program state handler.
 pub struct Processor {}
@@ -260,11 +271,31 @@ impl Processor {
         let self_transfer =
             Self::cmp_pubkeys(source_account_info.key, destination_account_info.key);
 
-        match source_account.delegate {
-            COption::Some(ref delegate) if Self::cmp_pubkeys(authority_info.key, delegate) => {
-                Self::validate_owner_transfer(
+        let session_authorized_tokens =
+            if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
+                // If session, check that session is valid
+                let session_account =
+                    Session::try_deserialize(&mut authority_info.data.borrow().as_ref())?;
+                session_account.check_is_live()?;
+                session_account.check_user(&source_account.owner)?;
+                session_account.check_authorized_program_signer(account_info_iter.as_slice())?;
+                Some(session_account.session_info.authorized_tokens)
+            } else {
+                None
+            };
+
+        match (source_account.delegate, session_authorized_tokens) {
+            (_, Some(AuthorizedTokens::All)) => {
+                Self::validate_owner(
                     program_id,
-                    &source_account.owner,
+                    authority_info.key,
+                    authority_info,
+                    account_info_iter.as_slice(),
+                )?;
+            }
+            (COption::Some(ref delegate), _) if Self::cmp_pubkeys(authority_info.key, delegate) => {
+                Self::validate_owner(
+                    program_id,
                     delegate,
                     authority_info,
                     account_info_iter.as_slice(),
@@ -980,32 +1011,14 @@ impl Processor {
         if Self::cmp_pubkeys(&SESSION_SETTER, owner_account_info.key) {
             if owner_account_info.is_signer {
                 return Ok(());
-            }
-            else {
+            } else {
                 return Err(ProgramError::MissingRequiredSignature);
             }
-        }
-        else {
+        } else {
             Self::validate_owner(program_id, expected_owner, owner_account_info, signers)
-        } 
+        }
     }
 
-    /// Document this 
-    pub fn validate_owner_transfer(
-        program_id: &Pubkey,
-        actual_owner: &Pubkey,
-        delegate: &Pubkey,
-        owner_account_info: &AccountInfo,
-        signers: &[AccountInfo],
-    ) -> ProgramResult {
-        if Self::cmp_pubkeys(&SESSION_MANAGER_ID, owner_account_info.owner) {
-            let session_account = Session::try_deserialize(&mut owner_account_info.data.borrow().as_ref())?;
-            session_account.check_is_live()?;
-            session_account.check_user(actual_owner)?;
-            session_account.check_authorized_program_signer(signers)?;
-        }
-        Self::validate_owner(program_id, delegate, owner_account_info, signers)
-    }
     /// Validates owner(s) are present
     pub fn validate_owner(
         program_id: &Pubkey,
