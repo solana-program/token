@@ -273,13 +273,9 @@ impl Processor {
 
         let session_authorized_tokens =
             if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
-                // If session, check that session is valid
                 let session_account =
                     Session::try_deserialize(&mut authority_info.data.borrow().as_ref())?;
-                session_account.check_is_live()?;
-                session_account.check_user(&source_account.owner)?;
-                session_account.check_authorized_program_signer(account_info_iter.as_slice())?;
-                Some(session_account.session_info.authorized_tokens)
+                Some(session_account.get_token_permissions_checked(&source_account.owner, account_info_iter.as_slice())?)
             } else {
                 None
             };
