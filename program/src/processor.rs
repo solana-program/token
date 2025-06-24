@@ -998,7 +998,8 @@ impl Processor {
         sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
     }
 
-    /// Documentation
+    /// Validates permissions for an approve instruction.
+    /// Either the owner of the token account or the global session setter can perform this instruction.
     pub fn validate_owner_approve(
         program_id: &Pubkey,
         expected_owner: &Pubkey,
