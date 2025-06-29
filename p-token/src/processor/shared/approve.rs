@@ -1,5 +1,5 @@
 use {
-    crate::processor::validate_owner,
+    crate::processor::{pubkeys_eq, validate_owner},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     spl_token_interface::{
         error::TokenError,
@@ -56,7 +56,7 @@ pub fn process_approve(
     }
 
     if let Some((mint_info, expected_decimals)) = expected_mint_info {
-        if mint_info.key() != &source_account.mint {
+        if !pubkeys_eq(mint_info.key(), &source_account.mint) {
             return Err(TokenError::MintMismatch.into());
         }
 

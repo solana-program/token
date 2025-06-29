@@ -1,5 +1,5 @@
 use {
-    crate::processor::{check_account_owner, validate_owner},
+    crate::processor::{check_account_owner, pubkeys_eq, validate_owner},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     spl_token_interface::{
         error::TokenError,
@@ -41,7 +41,7 @@ pub fn process_burn(
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
-    if mint_info.key() != &source_account.mint {
+    if !pubkeys_eq(mint_info.key(), &source_account.mint) {
         return Err(TokenError::MintMismatch.into());
     }
 
@@ -53,7 +53,7 @@ pub fn process_burn(
 
     if !source_account.is_owned_by_system_program_or_incinerator() {
         match source_account.delegate() {
-            Some(delegate) if authority_info.key() == delegate => {
+            Some(delegate) if pubkeys_eq(authority_info.key(), delegate) => {
                 validate_owner(delegate, authority_info, remaining)?;
 
                 let delegated_amount = source_account

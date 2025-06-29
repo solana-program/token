@@ -1,5 +1,5 @@
 use {
-    super::validate_owner,
+    super::{pubkeys_eq, validate_owner},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     spl_token_interface::{
         error::TokenError,
@@ -38,7 +38,7 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
 
         if !source_account.is_owned_by_system_program_or_incinerator() {
             validate_owner(authority, authority_info, remaining)?;
-        } else if destination_account_info.key() != &INCINERATOR_ID {
+        } else if !pubkeys_eq(destination_account_info.key(), &INCINERATOR_ID) {
             return Err(ProgramError::InvalidAccountData);
         }
     }

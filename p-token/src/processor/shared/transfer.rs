@@ -1,5 +1,5 @@
 use {
-    crate::processor::{check_account_owner, validate_owner},
+    crate::processor::{check_account_owner, pubkeys_eq, validate_owner},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     spl_token_interface::{
         error::TokenError,
@@ -101,7 +101,7 @@ pub fn process_transfer(
             .checked_sub(amount)
             .ok_or(TokenError::InsufficientFunds)?;
 
-        if source_account.mint != destination_account.mint {
+        if !pubkeys_eq(&source_account.mint, &destination_account.mint) {
             return Err(TokenError::MintMismatch.into());
         }
 
@@ -111,7 +111,7 @@ pub fn process_transfer(
     // Validates the mint information.
 
     if let Some((mint_info, decimals)) = expected_mint_info {
-        if mint_info.key() != &source_account.mint {
+        if !pubkeys_eq(mint_info.key(), &source_account.mint) {
             return Err(TokenError::MintMismatch.into());
         }
 
@@ -126,7 +126,7 @@ pub fn process_transfer(
 
     // Validates the authority (delegate or owner).
 
-    if source_account.delegate() == Some(authority_info.key()) {
+    if source_account.delegate().map_or(false, |delegate| pubkeys_eq(delegate, authority_info.key())) {
         validate_owner(authority_info.key(), authority_info, remaining)?;
 
         let delegated_amount = source_account
