@@ -35,7 +35,8 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
     let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
     match mint.freeze_authority() {
-        Some(authority) => validate_owner(authority, authority_info, remaining),
+        // SAFETY: `authority_info` is not currently borrowed.
+        Some(authority) => unsafe { validate_owner(authority, authority_info, remaining) },
         None => Err(TokenError::MintCannotFreeze.into()),
     }?;
 
