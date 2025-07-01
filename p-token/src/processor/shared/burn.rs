@@ -54,7 +54,8 @@ pub fn process_burn(
     if !source_account.is_owned_by_system_program_or_incinerator() {
         match source_account.delegate() {
             Some(delegate) if authority_info.key() == delegate => {
-                validate_owner(delegate, authority_info, remaining)?;
+                // SAFETY: `authority_info` is not currently borrowed.
+                unsafe { validate_owner(delegate, authority_info, remaining)? };
 
                 let delegated_amount = source_account
                     .delegated_amount()
@@ -67,7 +68,8 @@ pub fn process_burn(
                 }
             }
             _ => {
-                validate_owner(&source_account.owner, authority_info, remaining)?;
+                // SAFETY: `authority_info` is not currently borrowed.
+                unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
             }
         }
     }

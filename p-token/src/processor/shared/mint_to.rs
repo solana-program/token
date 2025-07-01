@@ -48,7 +48,8 @@ pub fn process_mint_to(
     }
 
     match mint.mint_authority() {
-        Some(mint_authority) => validate_owner(mint_authority, owner_info, remaining)?,
+        // SAFETY: `owner_info` is not currently borrowed.
+        Some(mint_authority) => unsafe { validate_owner(mint_authority, owner_info, remaining)? },
         None => return Err(TokenError::FixedSupply.into()),
     }
 
