@@ -86,12 +86,15 @@ fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
 
 /// Validates owner(s) are present.
 ///
-/// Note that `owner_account_info` will be immutable borrowed when it represents
+///
+/// # Safety
+///
+/// The `owner_account_info` will be immutable borrowed when it represents
 /// a multisig account, therefore it should not have any mutable borrows when
 /// calling this function.
 #[inline(always)]
 #[allow(clippy::arithmetic_side_effects)]
-fn validate_owner(
+unsafe fn validate_owner(
     expected_owner: &Pubkey,
     owner_account_info: &AccountInfo,
     signers: &[AccountInfo],
