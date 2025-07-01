@@ -1,10 +1,9 @@
-use {
-    solana_program_test::ProgramTestContext,
-    solana_sdk::{
-        pubkey::Pubkey, signature::Keypair, signer::Signer, system_instruction,
-        transaction::Transaction,
-    },
-};
+use solana_keypair::Keypair;
+use solana_program_test::ProgramTestContext;
+use solana_pubkey::Pubkey;
+use solana_signer::Signer;
+use solana_system_interface::instruction::create_account;
+use solana_transaction::Transaction;
 
 pub async fn initialize(
     context: &mut ProgramTestContext,
@@ -23,7 +22,7 @@ pub async fn initialize(
     initialize_ix.program_id = *program_id;
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size),

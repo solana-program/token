@@ -5,15 +5,15 @@ mod setup;
 use {
     assert_matches::assert_matches,
     setup::{mint, TOKEN_PROGRAM_ID},
+    solana_instruction::error::InstructionError,
+    solana_keypair::Keypair,
+    solana_program_pack::Pack,
     solana_program_test::{tokio, BanksClientError, ProgramTest},
-    solana_sdk::{
-        instruction::InstructionError,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-        system_instruction,
-        transaction::{Transaction, TransactionError},
-    },
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
+    solana_transaction_error::TransactionError,
     spl_token_interface::state::{account::Account, mint::Mint, multisig::Multisig},
     std::mem::size_of,
 };
@@ -48,7 +48,7 @@ async fn withdraw_excess_lamports_from_mint() {
     // And we initialize a mint account with excess lamports.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -155,7 +155,7 @@ async fn withdraw_excess_lamports_from_account() {
     // When a new mint account is created and initialized.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -253,7 +253,7 @@ async fn withdraw_excess_lamports_from_multisig() {
     // And we initialize the multisig account.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &multisig.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -348,7 +348,7 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority() {
     // And we initialize a mint account with excess lamports.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -461,7 +461,7 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority() {
     // When a new mint account is created and initialized.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -565,7 +565,7 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority() {
     // And we initialize the multisig account.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &multisig.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -669,7 +669,7 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer() {
     // And we initialize the multisig account.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &multisig.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -769,7 +769,7 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority() {
     // And we initialize a mint account with excess lamports.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &mint_account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -897,7 +897,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
     // And we initialize a mint account with excess lamports.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &mint_account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,
@@ -997,7 +997,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
     // And we initialize a mint account with excess lamports.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &mint_account.pubkey(),
             rent.minimum_balance(account_size) + excess_lamports,

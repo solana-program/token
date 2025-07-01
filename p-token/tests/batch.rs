@@ -2,16 +2,15 @@ mod setup;
 
 use {
     crate::setup::TOKEN_PROGRAM_ID,
+    solana_instruction::{AccountMeta, Instruction},
+    solana_keypair::Keypair,
+    solana_program_error::ProgramError,
+    solana_program_pack::Pack,
     solana_program_test::{tokio, ProgramTest},
-    solana_sdk::{
-        instruction::{AccountMeta, Instruction},
-        program_error::ProgramError,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-        system_instruction,
-        transaction::Transaction,
-    },
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
 };
 
 fn batch_instruction(instructions: Vec<Instruction>) -> Result<Instruction, ProgramError> {
@@ -57,7 +56,7 @@ async fn batch() {
     // Create a mint
     let mint_a = Keypair::new();
     let mint_authority = Keypair::new();
-    let create_mint_a = system_instruction::create_account(
+    let create_mint_a = create_account(
         &context.payer.pubkey(),
         &mint_a.pubkey(),
         mint_rent,
@@ -76,7 +75,7 @@ async fn batch() {
     // Create a mint 2 with a freeze authority
     let mint_b = Keypair::new();
     let freeze_authority = Pubkey::new_unique();
-    let create_mint_b = system_instruction::create_account(
+    let create_mint_b = create_account(
         &context.payer.pubkey(),
         &mint_b.pubkey(),
         mint_rent,
@@ -98,14 +97,14 @@ async fn batch() {
     let owner_a_ta_a = Keypair::new();
     let owner_b_ta_a = Keypair::new();
 
-    let create_owner_a_ta_a = system_instruction::create_account(
+    let create_owner_a_ta_a = create_account(
         &context.payer.pubkey(),
         &owner_a_ta_a.pubkey(),
         account_rent,
         account_len as u64,
         &TOKEN_PROGRAM_ID,
     );
-    let create_owner_b_ta_a = system_instruction::create_account(
+    let create_owner_b_ta_a = create_account(
         &context.payer.pubkey(),
         &owner_b_ta_a.pubkey(),
         account_rent,

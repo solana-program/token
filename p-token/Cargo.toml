@@ -22,10 +22,20 @@ spl-token-interface = { version = "^0", path = "../interface" }
 [dev-dependencies]
 assert_matches = "1.5.0"
 num-traits = "0.2"
-solana-program-test = "2.1"
-solana-sdk = "2.1"
-spl-token = { version="^4", features=["no-entrypoint"] }
-spl-token-2022 = { version="^7", features=["no-entrypoint"] }
+solana-instruction = "2.3.0"
+solana-keypair = "2.2.3"
+solana-program-error = "2.2.2"
+solana-program-option = "2.2.1"
+solana-program-pack = "2.2.1"
+solana-program-test = "2.3.2"
+solana-pubkey = "2.4.0"
+solana-signature = "2.3.0"
+solana-signer = "2.2.1"
+solana-transaction = "2.2.3"
+solana-transaction-error = "2.2.1"
+solana-system-interface = { version="1.0", features=["bincode"] }
+spl-token = { version="^8", features=["no-entrypoint"] }
+spl-token-2022 = { version="^9", features=["no-entrypoint"] }
 
 [lints]
 workspace = true
