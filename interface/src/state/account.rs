@@ -151,7 +151,7 @@ impl Account {
     }
 }
 
-impl Transmutable for Account {
+unsafe impl Transmutable for Account {
     const LEN: usize = core::mem::size_of::<Account>();
 }
 

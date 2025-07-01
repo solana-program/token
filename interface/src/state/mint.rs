@@ -84,7 +84,7 @@ impl Mint {
     }
 }
 
-impl Transmutable for Mint {
+unsafe impl Transmutable for Mint {
     /// The length of the `Mint` account data.
     const LEN: usize = core::mem::size_of::<Mint>();
 }
