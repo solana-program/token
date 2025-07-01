@@ -30,7 +30,8 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
                 return Err(TokenError::NativeNotSupported.into());
             }
 
-            validate_owner(&account.owner, authority_info, remaining)?;
+            // SAFETY: `authority_info` is not currently borrowed.
+            unsafe { validate_owner(&account.owner, authority_info, remaining)? };
         }
         Mint::LEN => {
             // SAFETY: `source_data` has the same length as `Mint`.
@@ -38,7 +39,8 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
 
             match mint.mint_authority() {
                 Some(mint_authority) => {
-                    validate_owner(mint_authority, authority_info, remaining)?;
+                    // SAFETY: `authority_info` is not currently borrowed.
+                    unsafe { validate_owner(mint_authority, authority_info, remaining)? };
                 }
                 None if source_account_info == authority_info => {
                     // Comparing whether the AccountInfo's "point" to the same account or
@@ -58,7 +60,8 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
             }
         }
         Multisig::LEN => {
-            validate_owner(source_account_info.key(), authority_info, remaining)?;
+            // SAFETY: `authority_info` is not currently mutably borrowed.
+            unsafe { validate_owner(source_account_info.key(), authority_info, remaining)? };
         }
         _ => return Err(TokenError::InvalidState.into()),
     }
