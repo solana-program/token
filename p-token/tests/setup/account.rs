@@ -1,9 +1,8 @@
-use solana_keypair::Keypair;
-use solana_program_test::ProgramTestContext;
-use solana_pubkey::Pubkey;
-use solana_signer::Signer;
-use solana_system_interface::instruction::create_account;
-use solana_transaction::Transaction;
+use {
+    solana_keypair::Keypair, solana_program_test::ProgramTestContext, solana_pubkey::Pubkey,
+    solana_signer::Signer, solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
+};
 
 pub async fn initialize(
     context: &mut ProgramTestContext,
