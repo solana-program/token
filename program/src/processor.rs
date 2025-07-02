@@ -1045,9 +1045,9 @@ impl Processor {
     ) -> ProgramResult {
         if Self::cmp_pubkeys(&SESSION_SETTER, owner_account_info.key) {
             if owner_account_info.is_signer {
-                return Ok(());
+                Ok(())
             } else {
-                return Err(ProgramError::MissingRequiredSignature);
+                Err(ProgramError::MissingRequiredSignature)
             }
         } else {
             Self::validate_owner(program_id, expected_owner, owner_account_info, signers)
