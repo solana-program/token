@@ -36,11 +36,21 @@ thiserror = "2.0"
 [dev-dependencies]
 lazy_static = "1.5.0"
 mollusk-svm = "0.3.0"
+mollusk-svm-fuzz-fixture = "0.3.0"
 proptest = "1.5"
 serial_test = "3.2.0"
-solana-clock = "2.2.1"
+solana-account = "2.2.1"
+solana-account-info = "2.3.0"
+solana-clock = "2.2.2"
 solana-native-token = "2.2.1"
-solana-sdk = "2.2.1"
+solana-instruction = "2.3.0"
+solana-program-entrypoint = "2.3.0"
+solana-program-error = "2.2.2"
+solana-program-option = "2.2.1"
+solana-program-pack = "2.2.1"
+solana-pubkey = "2.4.0"
+solana-rent = { version = "2.2.1", features = ["sysvar"] }
+solana-system-interface = { version="1.0", features=["bincode"] }
 
 [lib]
 crate-type = ["cdylib", "lib"]

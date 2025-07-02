@@ -2,11 +2,9 @@ mod setup;
 
 use {
     mollusk_svm::{result::Check, Mollusk},
-    solana_sdk::{
-        account::{Account as SolanaAccount, ReadableAccount},
-        program_pack::Pack,
-        pubkey::Pubkey,
-    },
+    solana_account::{Account as SolanaAccount, ReadableAccount},
+    solana_program_pack::Pack,
+    solana_pubkey::Pubkey,
     spl_token::{
         id, instruction,
         state::{Account, Mint},

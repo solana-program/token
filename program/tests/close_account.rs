@@ -2,13 +2,12 @@ mod setup;
 
 use {
     mollusk_svm::{result::Check, Mollusk},
-    solana_sdk::{
-        account::{Account as SolanaAccount, ReadableAccount},
-        program_error::ProgramError,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        system_instruction, system_program,
-    },
+    solana_account::{Account as SolanaAccount, ReadableAccount},
+    solana_program_error::ProgramError,
+    solana_program_pack::Pack,
+    solana_pubkey::Pubkey,
+    solana_sdk_ids::system_program,
+    solana_system_interface::instruction::{create_account, transfer},
     spl_token::{instruction, state::Account},
 };
 
@@ -36,7 +35,7 @@ fn success_init_after_close_account() {
                 &[Check::success()],
             ),
             (
-                &system_instruction::create_account(
+                &create_account(
                     &owner,
                     &account,
                     1_000_000_000,
@@ -96,7 +95,7 @@ fn fail_init_after_close_account() {
                 &[Check::success()],
             ),
             (
-                &system_instruction::transfer(&owner, &account, 1_000_000_000),
+                &transfer(&owner, &account, 1_000_000_000),
                 &[Check::success()],
             ),
             (
