@@ -1,4 +1,4 @@
-use solana_sdk::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 #[allow(dead_code)]
 pub mod account;

@@ -2,14 +2,13 @@ mod setup;
 
 use {
     setup::TOKEN_PROGRAM_ID,
+    solana_keypair::Keypair,
+    solana_program_pack::Pack,
     solana_program_test::{tokio, ProgramTest},
-    solana_sdk::{
-        program_pack::Pack,
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-        system_instruction,
-        transaction::Transaction,
-    },
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
     spl_token::state::Multisig,
 };
 
@@ -40,7 +39,7 @@ async fn initialize_multisig2() {
     // When a new multisig account is created and initialized.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &multisig.pubkey(),
             rent.minimum_balance(Multisig::LEN),

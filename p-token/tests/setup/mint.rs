@@ -1,9 +1,11 @@
 use {
+    solana_keypair::Keypair,
+    solana_program_error::ProgramError,
     solana_program_test::{BanksClientError, ProgramTestContext},
-    solana_sdk::{
-        program_error::ProgramError, pubkey::Pubkey, signature::Keypair, signer::Signer,
-        system_instruction, transaction::Transaction,
-    },
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
     spl_token_interface::state::mint::Mint,
     std::mem::size_of,
 };
@@ -34,7 +36,7 @@ pub async fn initialize(
     // Create a new account and initialize as a mint.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size),

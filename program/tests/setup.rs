@@ -1,7 +1,8 @@
 use {
-    solana_sdk::{
-        account::Account as SolanaAccount, program_pack::Pack, pubkey::Pubkey, rent::Rent,
-    },
+    solana_account::Account as SolanaAccount,
+    solana_program_pack::Pack,
+    solana_pubkey::Pubkey,
+    solana_rent::Rent,
     spl_token::state::{Account, AccountState, Mint},
 };
 

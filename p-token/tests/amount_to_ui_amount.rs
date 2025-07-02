@@ -3,7 +3,9 @@ mod setup;
 use {
     setup::{mint, TOKEN_PROGRAM_ID},
     solana_program_test::{tokio, ProgramTest},
-    solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction},
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_transaction::Transaction,
 };
 
 #[tokio::test]

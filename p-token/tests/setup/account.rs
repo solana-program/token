@@ -1,9 +1,7 @@
 use {
-    solana_program_test::ProgramTestContext,
-    solana_sdk::{
-        pubkey::Pubkey, signature::Keypair, signer::Signer, system_instruction,
-        transaction::Transaction,
-    },
+    solana_keypair::Keypair, solana_program_test::ProgramTestContext, solana_pubkey::Pubkey,
+    solana_signer::Signer, solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
 };
 
 pub async fn initialize(
@@ -23,7 +21,7 @@ pub async fn initialize(
     initialize_ix.program_id = *program_id;
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size),

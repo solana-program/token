@@ -3,18 +3,15 @@
 use {
     mollusk_svm::{result::Check, Mollusk},
     serial_test::serial,
-    solana_sdk::{
-        account::{create_account_for_test, Account as SolanaAccount, ReadableAccount},
-        account_info::{AccountInfo, IntoAccountInfo},
-        entrypoint::ProgramResult,
-        instruction::Instruction,
-        program_error::ProgramError,
-        program_option::COption,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        rent::Rent,
-        sysvar::rent,
-    },
+    solana_account::{create_account_for_test, Account as SolanaAccount, ReadableAccount},
+    solana_account_info::{AccountInfo, IntoAccountInfo},
+    solana_instruction::Instruction,
+    solana_program_error::{ProgramError, ProgramResult},
+    solana_program_option::COption,
+    solana_program_pack::Pack,
+    solana_pubkey::Pubkey,
+    solana_rent::Rent,
+    solana_sdk_ids::sysvar::rent,
     spl_token::{
         error::TokenError,
         instruction::{

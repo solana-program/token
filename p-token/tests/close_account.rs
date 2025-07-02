@@ -2,12 +2,11 @@ mod setup;
 
 use {
     setup::{account, mint, TOKEN_PROGRAM_ID},
+    solana_keypair::Keypair,
     solana_program_test::{tokio, ProgramTest},
-    solana_sdk::{
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-        transaction::Transaction,
-    },
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_transaction::Transaction,
 };
 
 #[tokio::test]

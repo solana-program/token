@@ -2,14 +2,13 @@ mod setup;
 
 use {
     setup::{mint, TOKEN_PROGRAM_ID},
+    solana_keypair::Keypair,
+    solana_program_pack::Pack,
     solana_program_test::{tokio, ProgramTest},
-    solana_sdk::{
-        program_pack::Pack,
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-        system_instruction,
-        transaction::Transaction,
-    },
+    solana_pubkey::Pubkey,
+    solana_signer::Signer,
+    solana_system_interface::instruction::create_account,
+    solana_transaction::Transaction,
 };
 
 #[tokio::test]
@@ -51,7 +50,7 @@ async fn initialize_account() {
     // When a new mint account is created and initialized.
 
     let instructions = vec![
-        system_instruction::create_account(
+        create_account(
             &context.payer.pubkey(),
             &account.pubkey(),
             rent.minimum_balance(account_size),
