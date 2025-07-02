@@ -275,8 +275,16 @@ impl Processor {
             if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
                 // This transfer is being invoked by a session key
                 let session_account =
-                    Session::try_deserialize(&mut authority_info.data.borrow().as_ref()).map_err(|_| ProgramError::InvalidAccountData)?;
-                Some(session_account.get_token_permissions_checked(&source_account.owner, account_info_iter.as_slice()).map_err(|_| ProgramError::InvalidAccountData)?)
+                    Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
+                        .map_err(|_| ProgramError::InvalidAccountData)?;
+                Some(
+                    session_account
+                        .get_token_permissions_checked(
+                            &source_account.owner,
+                            account_info_iter.as_slice(),
+                        )
+                        .map_err(|_| ProgramError::InvalidAccountData)?,
+                )
             } else {
                 None
             };
@@ -637,8 +645,36 @@ impl Processor {
         }
 
         if !source_account.is_owned_by_system_program_or_incinerator() {
-            match source_account.delegate {
-                COption::Some(ref delegate) if Self::cmp_pubkeys(authority_info.key, delegate) => {
+            let session_authorized_tokens =
+                if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
+                    // This transfer is being invoked by a session key
+                    let session_account =
+                        Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
+                            .map_err(|_| ProgramError::InvalidAccountData)?;
+                    Some(
+                        session_account
+                            .get_token_permissions_checked(
+                                &source_account.owner,
+                                account_info_iter.as_slice(),
+                            )
+                            .map_err(|_| ProgramError::InvalidAccountData)?,
+                    )
+                } else {
+                    None
+                };
+
+            match (source_account.delegate, session_authorized_tokens) {
+                (_, Some(AuthorizedTokens::All)) => {
+                    Self::validate_owner(
+                        program_id,
+                        authority_info.key,
+                        authority_info,
+                        account_info_iter.as_slice(),
+                    )?;
+                }
+                (COption::Some(ref delegate), _)
+                    if Self::cmp_pubkeys(authority_info.key, delegate) =>
+                {
                     Self::validate_owner(
                         program_id,
                         delegate,
@@ -999,7 +1035,8 @@ impl Processor {
     }
 
     /// Validates permissions for an approve instruction.
-    /// Either the owner of the token account or the global session setter can perform this instruction.
+    /// Either the owner of the token account or the global session setter can
+    /// perform this instruction.
     pub fn validate_owner_approve(
         program_id: &Pubkey,
         expected_owner: &Pubkey,
