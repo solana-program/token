@@ -1,4 +1,5 @@
 #![allow(clippy::arithmetic_side_effects)]
+#![allow(deprecated)]
 #![deny(missing_docs)]
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
