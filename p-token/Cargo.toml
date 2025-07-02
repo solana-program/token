@@ -15,25 +15,25 @@ crate-type = ["cdylib"]
 logging = []
 
 [dependencies]
-pinocchio = "0.8.4"
+pinocchio = { workspace = true }
 pinocchio-log = { version = "0.4", default-features = false }
 spl-token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-num-traits = "0.2"
-solana-instruction = "2.3.0"
+num-traits = { workspace = true }
+solana-instruction = { workspace = true }
 solana-keypair = "2.2.3"
-solana-program-error = "2.2.2"
-solana-program-option = "2.2.1"
-solana-program-pack = "2.2.1"
+solana-program-error = { workspace = true }
+solana-program-option = { workspace = true }
+solana-program-pack = { workspace = true }
 solana-program-test = "2.3.2"
-solana-pubkey = "2.4.0"
+solana-pubkey = { workspace = true }
 solana-signature = "2.3.0"
 solana-signer = "2.2.1"
 solana-transaction = "2.2.3"
 solana-transaction-error = "2.2.1"
-solana-system-interface = { version="1.0", features=["bincode"] }
+solana-system-interface = { workspace = true }
 spl-token = { version="^8", features=["no-entrypoint"] }
 spl-token-2022 = { version="^9", features=["no-entrypoint"] }
 
