@@ -273,7 +273,7 @@ impl Processor {
 
         let session_authorized_tokens =
             if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
-                // This transfer is being invoked by a session key
+                // This transfer is being invoked by a session key: first, check that the session is valid
                 let session_account =
                     Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
                         .map_err(|_| ProgramError::InvalidAccountData)?;
@@ -290,6 +290,7 @@ impl Processor {
             };
 
         match (source_account.delegate, session_authorized_tokens) {
+            // The signer is a session key that has unlimited permissions
             (_, Some(AuthorizedTokens::All)) => {
                 Self::validate_owner(
                     program_id,
@@ -298,6 +299,7 @@ impl Processor {
                     account_info_iter.as_slice(),
                 )?;
             }
+            // The signer is a delegate (either a session key with limited permissions or any public key). This code path needs to update the delegated amounts
             (COption::Some(ref delegate), _) if Self::cmp_pubkeys(authority_info.key, delegate) => {
                 Self::validate_owner(
                     program_id,
@@ -318,6 +320,7 @@ impl Processor {
                     }
                 }
             }
+            // The signer is the owner of the account
             _ => Self::validate_owner(
                 program_id,
                 &source_account.owner,
@@ -647,7 +650,7 @@ impl Processor {
         if !source_account.is_owned_by_system_program_or_incinerator() {
             let session_authorized_tokens =
                 if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
-                    // This transfer is being invoked by a session key
+                    // This burn is being invoked by a session key: first, check that the session is valid
                     let session_account =
                         Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
                             .map_err(|_| ProgramError::InvalidAccountData)?;
@@ -664,6 +667,7 @@ impl Processor {
                 };
 
             match (source_account.delegate, session_authorized_tokens) {
+                // The signer is a session key that has unlimited permissions
                 (_, Some(AuthorizedTokens::All)) => {
                     Self::validate_owner(
                         program_id,
@@ -672,6 +676,7 @@ impl Processor {
                         account_info_iter.as_slice(),
                     )?;
                 }
+                // The signer is a delegate (either a session key with limited permissions or any public key). This code path needs to update the delegated amounts
                 (COption::Some(ref delegate), _)
                     if Self::cmp_pubkeys(authority_info.key, delegate) =>
                 {
@@ -693,6 +698,7 @@ impl Processor {
                         source_account.delegate = COption::None;
                     }
                 }
+                // The signer is the owner of the account
                 _ => Self::validate_owner(
                     program_id,
                     &source_account.owner,
