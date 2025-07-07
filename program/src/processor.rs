@@ -273,7 +273,8 @@ impl Processor {
 
         let session_authorized_tokens =
             if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
-                // This transfer is being invoked by a session key: first, check that the session is valid
+                // This transfer is being invoked by a session key: first, check that the
+                // session is valid
                 let session_account =
                     Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
                         .map_err(|_| ProgramError::InvalidAccountData)?;
@@ -299,7 +300,8 @@ impl Processor {
                     account_info_iter.as_slice(),
                 )?;
             }
-            // The signer is a delegate (either a session key with limited permissions or any public key). This code path needs to update the delegated amounts
+            // The signer is a delegate (either a session key with limited permissions or any public
+            // key). This code path needs to update the delegated amounts
             (COption::Some(ref delegate), _) if Self::cmp_pubkeys(authority_info.key, delegate) => {
                 Self::validate_owner(
                     program_id,
@@ -650,7 +652,8 @@ impl Processor {
         if !source_account.is_owned_by_system_program_or_incinerator() {
             let session_authorized_tokens =
                 if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
-                    // This burn is being invoked by a session key: first, check that the session is valid
+                    // This burn is being invoked by a session key: first, check that the session is
+                    // valid
                     let session_account =
                         Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
                             .map_err(|_| ProgramError::InvalidAccountData)?;
@@ -676,7 +679,8 @@ impl Processor {
                         account_info_iter.as_slice(),
                     )?;
                 }
-                // The signer is a delegate (either a session key with limited permissions or any public key). This code path needs to update the delegated amounts
+                // The signer is a delegate (either a session key with limited permissions or any
+                // public key). This code path needs to update the delegated amounts
                 (COption::Some(ref delegate), _)
                     if Self::cmp_pubkeys(authority_info.key, delegate) =>
                 {
