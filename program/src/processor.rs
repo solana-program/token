@@ -8,6 +8,7 @@ use {
         state::{Account, AccountState, Mint, Multisig},
         try_ui_amount_into_amount,
     },
+    fogo_sessions_sdk::{AuthorizedTokens, Session, SESSION_MANAGER_ID, SESSION_SETTER},
     solana_account_info::{next_account_info, AccountInfo},
     solana_cpi::set_return_data,
     solana_msg::msg,
@@ -270,8 +271,38 @@ impl Processor {
         let self_transfer =
             Self::cmp_pubkeys(source_account_info.key, destination_account_info.key);
 
-        match source_account.delegate {
-            COption::Some(ref delegate) if Self::cmp_pubkeys(authority_info.key, delegate) => {
+        let session_authorized_tokens =
+            if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
+                // This transfer is being invoked by a session key: first, check that the
+                // session is valid
+                let session_account =
+                    Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
+                        .map_err(|_| ProgramError::InvalidAccountData)?;
+                Some(
+                    session_account
+                        .get_token_permissions_checked(
+                            &source_account.owner,
+                            account_info_iter.as_slice(),
+                        )
+                        .map_err(|_| ProgramError::InvalidAccountData)?,
+                )
+            } else {
+                None
+            };
+
+        match (source_account.delegate, session_authorized_tokens) {
+            // The signer is a session key that has unlimited permissions
+            (_, Some(AuthorizedTokens::All)) => {
+                Self::validate_owner(
+                    program_id,
+                    authority_info.key,
+                    authority_info,
+                    account_info_iter.as_slice(),
+                )?;
+            }
+            // The signer is a delegate (either a session key with limited permissions or any public
+            // key). This code path needs to update the delegated amounts
+            (COption::Some(ref delegate), _) if Self::cmp_pubkeys(authority_info.key, delegate) => {
                 Self::validate_owner(
                     program_id,
                     delegate,
@@ -291,6 +322,7 @@ impl Processor {
                     }
                 }
             }
+            // The signer is the owner of the account
             _ => Self::validate_owner(
                 program_id,
                 &source_account.owner,
@@ -376,7 +408,7 @@ impl Processor {
             }
         }
 
-        Self::validate_owner(
+        Self::validate_owner_approve(
             program_id,
             &source_account.owner,
             owner_info,
@@ -618,8 +650,40 @@ impl Processor {
         }
 
         if !source_account.is_owned_by_system_program_or_incinerator() {
-            match source_account.delegate {
-                COption::Some(ref delegate) if Self::cmp_pubkeys(authority_info.key, delegate) => {
+            let session_authorized_tokens =
+                if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
+                    // This burn is being invoked by a session key: first, check that the session is
+                    // valid
+                    let session_account =
+                        Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
+                            .map_err(|_| ProgramError::InvalidAccountData)?;
+                    Some(
+                        session_account
+                            .get_token_permissions_checked(
+                                &source_account.owner,
+                                account_info_iter.as_slice(),
+                            )
+                            .map_err(|_| ProgramError::InvalidAccountData)?,
+                    )
+                } else {
+                    None
+                };
+
+            match (source_account.delegate, session_authorized_tokens) {
+                // The signer is a session key that has unlimited permissions
+                (_, Some(AuthorizedTokens::All)) => {
+                    Self::validate_owner(
+                        program_id,
+                        authority_info.key,
+                        authority_info,
+                        account_info_iter.as_slice(),
+                    )?;
+                }
+                // The signer is a delegate (either a session key with limited permissions or any
+                // public key). This code path needs to update the delegated amounts
+                (COption::Some(ref delegate), _)
+                    if Self::cmp_pubkeys(authority_info.key, delegate) =>
+                {
                     Self::validate_owner(
                         program_id,
                         delegate,
@@ -638,6 +702,7 @@ impl Processor {
                         source_account.delegate = COption::None;
                     }
                 }
+                // The signer is the owner of the account
                 _ => Self::validate_owner(
                     program_id,
                     &source_account.owner,
@@ -977,6 +1042,26 @@ impl Processor {
     /// `sol_memcmp`
     pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
         sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
+    }
+
+    /// Validates permissions for an approve instruction.
+    /// Either the owner of the token account or the global session setter can
+    /// perform this instruction.
+    pub fn validate_owner_approve(
+        program_id: &Pubkey,
+        expected_owner: &Pubkey,
+        owner_account_info: &AccountInfo,
+        signers: &[AccountInfo],
+    ) -> ProgramResult {
+        if Self::cmp_pubkeys(&SESSION_SETTER, owner_account_info.key) {
+            if owner_account_info.is_signer {
+                Ok(())
+            } else {
+                Err(ProgramError::MissingRequiredSignature)
+            }
+        } else {
+            Self::validate_owner(program_id, expected_owner, owner_account_info, signers)
+        }
     }
 
     /// Validates owner(s) are present
