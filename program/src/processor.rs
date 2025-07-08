@@ -1041,7 +1041,7 @@ mod tests {
     use {
         super::*,
         solana_clock::Epoch,
-        solana_program_error::PrintProgramError,
+        solana_program_error::ToStr,
         std::sync::{Arc, RwLock},
     };
 
@@ -1056,7 +1056,7 @@ mod tests {
     #[test]
     fn test_print_error() {
         let error = return_token_error_as_program_error();
-        error.print::<TokenError>();
+        error.to_str::<TokenError>();
     }
 
     #[test]

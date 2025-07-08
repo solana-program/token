@@ -1,5 +1,4 @@
 #![allow(clippy::arithmetic_side_effects)]
-#![allow(deprecated)]
 #![deny(missing_docs)]
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
@@ -25,7 +24,7 @@ pub mod solana_program {
         pub use solana_instruction::{AccountMeta, Instruction};
     }
     pub mod program_error {
-        pub use solana_program_error::{PrintProgramError, ProgramError};
+        pub use solana_program_error::ProgramError;
     }
     pub mod program_option {
         pub use solana_program_option::COption;

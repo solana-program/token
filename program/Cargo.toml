@@ -19,7 +19,6 @@ num-traits = { workspace = true }
 num_enum = "0.7.3"
 solana-account-info = "2.3.0"
 solana-cpi = "2.2.1"
-solana-decode-error = "2.3.0"
 solana-instruction = { workspace = true }
 solana-msg = "2.2.1"
 solana-program-entrypoint = "2.3.0"
@@ -46,6 +45,8 @@ solana-native-token = "2.2.1"
 solana-program-entrypoint = "2.3.0"
 solana-rent = { version = "2.2.1", features = ["sysvar"] }
 solana-system-interface = { version="1.0", features=["bincode"] }
+strum = "0.24"
+strum_macros = "0.24"
 
 [lib]
 crate-type = ["cdylib", "lib"]

@@ -7253,7 +7253,6 @@ dependencies = [
  "solana-account-info",
  "solana-clock",
  "solana-cpi",
- "solana-decode-error",
  "solana-instruction",
  "solana-msg",
  "solana-native-token",
@@ -7267,6 +7266,8 @@ dependencies = [
  "solana-sdk-ids",
  "solana-system-interface",
  "solana-sysvar",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
  "thiserror 2.0.12",
 ]
 
