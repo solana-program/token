@@ -278,7 +278,7 @@ impl Processor {
                 let session_account =
                     Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
                         .map_err(|err| {
-                            msg!("Session error: {:?}", err);
+                            msg!("SessionError: {:?}", err);
                             ProgramError::InvalidAccountData
                         })?;
                 Some(
@@ -288,7 +288,7 @@ impl Processor {
                             account_info_iter.as_slice(),
                         )
                         .map_err(|err| {
-                            msg!("Session error: {:?}", err);
+                            msg!("SessionError: {:?}", err);
                             ProgramError::InvalidAccountData
                         })?,
                 )
@@ -663,7 +663,7 @@ impl Processor {
                     let session_account =
                         Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
                             .map_err(|err| {
-                                msg!("Session error: {:?}", err);
+                                msg!("SessionError: {:?}", err);
                                 ProgramError::InvalidAccountData
                             })?;
                     Some(
@@ -673,7 +673,7 @@ impl Processor {
                                 account_info_iter.as_slice(),
                             )
                             .map_err(|err| {
-                                msg!("Session error: {:?}", err);
+                                msg!("SessionError: {:?}", err);
                                 ProgramError::InvalidAccountData
                             })?,
                     )
