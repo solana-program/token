@@ -275,16 +275,23 @@ impl Processor {
             if Self::cmp_pubkeys(&SESSION_MANAGER_ID, authority_info.owner) {
                 // This transfer is being invoked by a session key: first, check that the
                 // session is valid
-                let session_account =
-                    Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
-                        .map_err(|_| ProgramError::InvalidAccountData)?;
+                let session_account = Session::try_deserialize(
+                    &mut authority_info.data.borrow().as_ref(),
+                )
+                .map_err(|err| {
+                    msg!("SessionError: {:?}", err);
+                    ProgramError::InvalidAccountData
+                })?;
                 Some(
                     session_account
                         .get_token_permissions_checked(
                             &source_account.owner,
                             account_info_iter.as_slice(),
                         )
-                        .map_err(|_| ProgramError::InvalidAccountData)?,
+                        .map_err(|err| {
+                            msg!("SessionError: {:?}", err);
+                            ProgramError::InvalidAccountData
+                        })?,
                 )
             } else {
                 None
@@ -656,14 +663,20 @@ impl Processor {
                     // valid
                     let session_account =
                         Session::try_deserialize(&mut authority_info.data.borrow().as_ref())
-                            .map_err(|_| ProgramError::InvalidAccountData)?;
+                            .map_err(|err| {
+                                msg!("SessionError: {:?}", err);
+                                ProgramError::InvalidAccountData
+                            })?;
                     Some(
                         session_account
                             .get_token_permissions_checked(
                                 &source_account.owner,
                                 account_info_iter.as_slice(),
                             )
-                            .map_err(|_| ProgramError::InvalidAccountData)?,
+                            .map_err(|err| {
+                                msg!("SessionError: {:?}", err);
+                                ProgramError::InvalidAccountData
+                            })?,
                     )
                 } else {
                     None
