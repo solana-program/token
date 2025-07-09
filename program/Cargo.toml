@@ -15,32 +15,38 @@ test-sbf = []
 arrayref = "0.3.9"
 bytemuck = "1.20.0"
 num-derive = "0.4"
-num-traits = "0.2"
+num-traits = { workspace = true }
 num_enum = "0.7.3"
-solana-account-info = "2.2.0"
-solana-cpi = "2.2.0"
-solana-decode-error = "2.2.0"
-solana-instruction = "2.2.0"
-solana-msg = "2.2.0"
-solana-program-entrypoint = "2.2.0"
-solana-program-error = "2.2.0"
-solana-program-memory = "2.2.0"
-solana-program-option = "2.2.0"
-solana-program-pack = "2.2.0"
-solana-pubkey = { version = "2.2.0", features = ["bytemuck"] }
-solana-rent = "2.2.0"
-solana-sdk-ids = "2.2.0"
-solana-sysvar = { version = "2.2.0", features = ["bincode"] }
+solana-account-info = "2.3.0"
+solana-cpi = "2.2.1"
+solana-instruction = { workspace = true }
+solana-msg = "2.2.1"
+solana-program-entrypoint = "2.3.0"
+solana-program-error = { workspace = true }
+solana-program-memory = "2.3.1"
+solana-program-option = { workspace = true }
+solana-program-pack = { workspace = true }
+solana-pubkey = { workspace = true, features = ["bytemuck"] }
+solana-rent = "2.2.1"
+solana-sdk-ids = "2.2.1"
+solana-sysvar = { version = "2.2.2", features = ["bincode"] }
 thiserror = "2.0"
 
 [dev-dependencies]
 lazy_static = "1.5.0"
-mollusk-svm = "0.1.0"
+mollusk-svm = "0.3.0"
+mollusk-svm-fuzz-fixture = "0.3.0"
 proptest = "1.5"
 serial_test = "3.2.0"
-solana-clock = "2.2.1"
+solana-account = "2.2.1"
+solana-account-info = "2.3.0"
+solana-clock = "2.2.2"
 solana-native-token = "2.2.1"
-solana-sdk = "2.2.1"
+solana-program-entrypoint = "2.3.0"
+solana-rent = { version = "2.2.1", features = ["sysvar"] }
+solana-system-interface = { version="1.0", features=["bincode"] }
+strum = "0.24"
+strum_macros = "0.24"
 
 [lib]
 crate-type = ["cdylib", "lib"]

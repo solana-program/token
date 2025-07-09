@@ -2,13 +2,12 @@
 
 use {
     num_derive::FromPrimitive,
-    solana_decode_error::DecodeError,
-    solana_msg::msg,
-    solana_program_error::{PrintProgramError, ProgramError},
+    solana_program_error::{ProgramError, ToStr},
     thiserror::Error,
 };
 
 /// Errors that may be returned by the Token program.
+#[cfg_attr(test, derive(strum_macros::FromRepr, strum_macros::EnumIter))]
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum TokenError {
     // 0
@@ -84,56 +83,84 @@ impl From<TokenError> for ProgramError {
         ProgramError::Custom(e as u32)
     }
 }
-impl<T> DecodeError<T> for TokenError {
-    fn type_of() -> &'static str {
-        "TokenError"
+
+impl TryFrom<u32> for TokenError {
+    type Error = ProgramError;
+    fn try_from(error: u32) -> Result<Self, Self::Error> {
+        match error {
+            0 => Ok(TokenError::NotRentExempt),
+            1 => Ok(TokenError::InsufficientFunds),
+            2 => Ok(TokenError::InvalidMint),
+            3 => Ok(TokenError::MintMismatch),
+            4 => Ok(TokenError::OwnerMismatch),
+            5 => Ok(TokenError::FixedSupply),
+            6 => Ok(TokenError::AlreadyInUse),
+            7 => Ok(TokenError::InvalidNumberOfProvidedSigners),
+            8 => Ok(TokenError::InvalidNumberOfRequiredSigners),
+            9 => Ok(TokenError::UninitializedState),
+            10 => Ok(TokenError::NativeNotSupported),
+            11 => Ok(TokenError::NonNativeHasBalance),
+            12 => Ok(TokenError::InvalidInstruction),
+            13 => Ok(TokenError::InvalidState),
+            14 => Ok(TokenError::Overflow),
+            15 => Ok(TokenError::AuthorityTypeNotSupported),
+            16 => Ok(TokenError::MintCannotFreeze),
+            17 => Ok(TokenError::AccountFrozen),
+            18 => Ok(TokenError::MintDecimalsMismatch),
+            19 => Ok(TokenError::NonNativeNotSupported),
+            _ => Err(ProgramError::InvalidArgument),
+        }
     }
 }
 
-impl PrintProgramError for TokenError {
-    fn print<E>(&self)
-    where
-        E: 'static
-            + std::error::Error
-            + DecodeError<E>
-            + PrintProgramError
-            + num_traits::FromPrimitive,
-    {
+impl ToStr for TokenError {
+    fn to_str<E>(&self) -> &'static str {
         match self {
-            TokenError::NotRentExempt => msg!("Error: Lamport balance below rent-exempt threshold"),
-            TokenError::InsufficientFunds => msg!("Error: insufficient funds"),
-            TokenError::InvalidMint => msg!("Error: Invalid Mint"),
-            TokenError::MintMismatch => msg!("Error: Account not associated with this Mint"),
-            TokenError::OwnerMismatch => msg!("Error: owner does not match"),
-            TokenError::FixedSupply => msg!("Error: the total supply of this token is fixed"),
-            TokenError::AlreadyInUse => msg!("Error: account or token already in use"),
+            TokenError::NotRentExempt => "Error: Lamport balance below rent-exempt threshold",
+            TokenError::InsufficientFunds => "Error: insufficient funds",
+            TokenError::InvalidMint => "Error: Invalid Mint",
+            TokenError::MintMismatch => "Error: Account not associated with this Mint",
+            TokenError::OwnerMismatch => "Error: owner does not match",
+            TokenError::FixedSupply => "Error: the total supply of this token is fixed",
+            TokenError::AlreadyInUse => "Error: account or token already in use",
             TokenError::InvalidNumberOfProvidedSigners => {
-                msg!("Error: Invalid number of provided signers")
+                "Error: Invalid number of provided signers"
             }
             TokenError::InvalidNumberOfRequiredSigners => {
-                msg!("Error: Invalid number of required signers")
+                "Error: Invalid number of required signers"
             }
-            TokenError::UninitializedState => msg!("Error: State is uninitialized"),
-            TokenError::NativeNotSupported => {
-                msg!("Error: Instruction does not support native tokens")
-            }
+            TokenError::UninitializedState => "Error: State is uninitialized",
+            TokenError::NativeNotSupported => "Error: Instruction does not support native tokens",
             TokenError::NonNativeHasBalance => {
-                msg!("Error: Non-native account can only be closed if its balance is zero")
+                "Error: Non-native account can only be closed if its balance is zero"
             }
-            TokenError::InvalidInstruction => msg!("Error: Invalid instruction"),
-            TokenError::InvalidState => msg!("Error: Invalid account state for operation"),
-            TokenError::Overflow => msg!("Error: Operation overflowed"),
+            TokenError::InvalidInstruction => "Error: Invalid instruction",
+            TokenError::InvalidState => "Error: Invalid account state for operation",
+            TokenError::Overflow => "Error: Operation overflowed",
             TokenError::AuthorityTypeNotSupported => {
-                msg!("Error: Account does not support specified authority type")
+                "Error: Account does not support specified authority type"
             }
-            TokenError::MintCannotFreeze => msg!("Error: This token mint cannot freeze accounts"),
-            TokenError::AccountFrozen => msg!("Error: Account is frozen"),
-            TokenError::MintDecimalsMismatch => {
-                msg!("Error: decimals different from the Mint decimals")
-            }
+            TokenError::MintCannotFreeze => "Error: This token mint cannot freeze accounts",
+            TokenError::AccountFrozen => "Error: Account is frozen",
+            TokenError::MintDecimalsMismatch => "Error: decimals different from the Mint decimals",
             TokenError::NonNativeNotSupported => {
-                msg!("Error: Instruction does not support non-native tokens")
+                "Error: Instruction does not support non-native tokens"
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use {super::*, strum::IntoEnumIterator};
+    #[test]
+    fn test_parse_error_from_primitive_exhaustive() {
+        for variant in TokenError::iter() {
+            let variant_u32 = variant as u32;
+            assert_eq!(
+                TokenError::from_repr(variant_u32 as usize).unwrap(),
+                TokenError::try_from(variant_u32).unwrap()
+            );
         }
     }
 }

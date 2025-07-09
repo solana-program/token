@@ -2,12 +2,11 @@ mod setup;
 
 use {
     setup::{account, mint, TOKEN_PROGRAM_ID},
+    solana_keypair::Keypair,
+    solana_program_pack::Pack,
     solana_program_test::{tokio, ProgramTest},
-    solana_sdk::{
-        program_pack::Pack,
-        signature::{Keypair, Signer},
-        transaction::Transaction,
-    },
+    solana_signer::Signer,
+    solana_transaction::Transaction,
     spl_token::state::AccountState,
 };
 

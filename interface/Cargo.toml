@@ -12,7 +12,7 @@ readme = "./README.md"
 crate-type = ["rlib"]
 
 [dependencies]
-pinocchio = "0.8.4"
+pinocchio = { workspace = true }
 pinocchio-pubkey = "0.2"
 
 [dev-dependencies]
