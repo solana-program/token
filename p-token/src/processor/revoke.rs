@@ -28,7 +28,8 @@ pub fn process_revoke(accounts: &[AccountInfo]) -> ProgramResult {
         return Err(TokenError::AccountFrozen.into());
     }
 
-    validate_owner(&source_account.owner, owner_info, remaining)?;
+    // SAFETY: `owner_info` is not currently borrowed.
+    unsafe { validate_owner(&source_account.owner, owner_info, remaining)? }
 
     source_account.clear_delegate();
     source_account.set_delegated_amount(0);

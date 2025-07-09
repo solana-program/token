@@ -69,7 +69,8 @@ pub fn process_approve(
         }
     }
 
-    validate_owner(&source_account.owner, owner_info, remaining)?;
+    // SAFETY: `owner_info` is not currently borrowed.
+    unsafe { validate_owner(&source_account.owner, owner_info, remaining)? };
 
     // Sets the delegate and delegated amount.
 

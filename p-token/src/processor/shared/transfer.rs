@@ -127,7 +127,8 @@ pub fn process_transfer(
     // Validates the authority (delegate or owner).
 
     if source_account.delegate() == Some(authority_info.key()) {
-        validate_owner(authority_info.key(), authority_info, remaining)?;
+        // SAFETY: `authority_info` is not currently borrowed.
+        unsafe { validate_owner(authority_info.key(), authority_info, remaining)? };
 
         let delegated_amount = source_account
             .delegated_amount()
@@ -142,7 +143,8 @@ pub fn process_transfer(
             }
         }
     } else {
-        validate_owner(&source_account.owner, authority_info, remaining)?;
+        // SAFETY: `authority_info` is not currently borrowed.
+        unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
     }
 
     if self_transfer || amount == 0 {

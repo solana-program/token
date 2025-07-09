@@ -37,7 +37,8 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
             .unwrap_or(&source_account.owner);
 
         if !source_account.is_owned_by_system_program_or_incinerator() {
-            validate_owner(authority, authority_info, remaining)?;
+            // SAFETY: `authority_info` is not currently borrowed.
+            unsafe { validate_owner(authority, authority_info, remaining)? };
         } else if destination_account_info.key() != &INCINERATOR_ID {
             return Err(ProgramError::InvalidAccountData);
         }
