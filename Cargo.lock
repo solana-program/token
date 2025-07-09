@@ -1376,9 +1376,9 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "fogo-sessions-sdk"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a97401bb9f4498a23e476f155ade9b53ff504704b5bad432b9da09b9688565f2"
+checksum = "0c590819f9325395ea522d8158942f6079b7fdcf2f5a876614ac1bb995833125"
 dependencies = [
  "borsh 1.5.5",
  "solana-account-info",
