@@ -27,7 +27,7 @@ solana-keypair = "2.2.3"
 solana-program-error = { workspace = true }
 solana-program-option = { workspace = true }
 solana-program-pack = { workspace = true }
-solana-program-test = "2.3.2"
+solana-program-test = "2.3.4"
 solana-pubkey = { workspace = true }
 solana-signature = "2.3.0"
 solana-signer = "2.2.1"
