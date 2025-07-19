@@ -30,17 +30,6 @@ pnpm programs:format
 pnpm programs:lint
 ```
 
-## Generating IDLs
-
-You may use the following command to generate the IDLs for your programs.
-
-```sh
-pnpm generate:idls
-```
-
-Depending on your program's framework, this will either use Shank or Anchor to generate the IDLs.
-Note that, to ensure IDLs are generated using the correct framework version, the specific version used by the program will be downloaded and used locally.
-
 ## Generating clients
 
 Once your programs' IDLs have been generated, you can generate clients for them using the following command.
