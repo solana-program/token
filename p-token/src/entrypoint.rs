@@ -89,12 +89,46 @@ pub(crate) fn inner_process_instruction(
 
             process_initialize_mint(accounts, instruction_data)
         }
+        // 100 - Test InitializeMint
+        100 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: InitializeMint");
+
+            let accounts = [
+                accounts[0].clone(), // Mint Info
+                accounts[1].clone(), // Rent Sysvar Info
+            ];
+
+            let instruction_data = [
+                // Decimals: instruction_data[0]
+                1,
+                // Mint Authority: instruction_data[1..33]
+                2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+                // Freeze Authority: instruction_data[33]
+                34,
+            ];
+
+            test_process_initialize_mint(&accounts, &instruction_data)
+        }
         // 1 - InitializeAccount
         1 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeAccount");
 
             process_initialize_account(accounts)
+        }
+        // 101 - Test InitializeAccount
+        101 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: InitializeAccount");
+
+
+            let accounts = [
+                accounts[0].clone(), // New Account Info
+                accounts[1].clone(), // Mint Info
+            ];
+
+            test_process_initialize_account(&accounts)
         }
         // 3 - Transfer
         3 => {
@@ -103,12 +137,49 @@ pub(crate) fn inner_process_instruction(
 
             process_transfer(accounts, instruction_data)
         }
+        // 103 - Test Transfer
+        103 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: Transfer");
+
+            let accounts = [
+                accounts[0].clone(), // Source Account Info
+                accounts[1].clone(), // Mint Info
+                accounts[2].clone(), // Destination Account Info
+                accounts[3].clone(), // Authority Info
+            ];
+
+            let instruction_data = [
+                // LE bytes for amount
+                1, 2, 3, 4, 5, 6, 7, 8,
+            ];
+
+            test_process_transfer(&accounts, &instruction_data)
+        }
         // 7 - MintTo
         7 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: MintTo");
 
             process_mint_to(accounts, instruction_data)
+        }
+        // 107 - MintTo
+        107 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: MintTo");
+
+            let accounts = [
+                accounts[0].clone(), // Mint Info
+                accounts[1].clone(), // Destination Account Info
+                accounts[2].clone(), // Owner Info
+            ];
+
+            let instruction_data = [
+                // LE bytes for amount
+                1, 2, 3, 4, 5, 6, 7, 8,
+            ];
+
+            test_process_mint_to(&accounts, &instruction_data)
         }
         // 8 - Burn
         8 => {
@@ -117,12 +188,43 @@ pub(crate) fn inner_process_instruction(
 
             process_burn(accounts, instruction_data)
         }
+        // 108 - Test Burn
+        108 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: Burn");
+
+            let accounts = [
+                accounts[0].clone(), // Source Account Info
+                accounts[1].clone(), // Mint Info
+                accounts[2].clone(), // Authority Info
+            ];
+
+            let instruction_data = [
+                // LE bytes for amount
+                1, 2, 3, 4, 5, 6, 7, 8,
+            ];
+
+            test_process_burn(&accounts, &instruction_data)
+        }
         // 9 - CloseAccount
         9 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: CloseAccount");
 
             process_close_account(accounts)
+        }
+        // 109 - Test CloseAccount
+        109 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: CloseAccount");
+
+            let accounts = [
+                accounts[0].clone(), // Source Account Info
+                accounts[1].clone(), // Destination Account Info
+                accounts[2].clone(), // Authority Info
+            ];
+
+            test_process_close_account(&accounts)
         }
         // 12 - TransferChecked
         12 => {
@@ -131,12 +233,53 @@ pub(crate) fn inner_process_instruction(
 
             process_transfer_checked(accounts, instruction_data)
         }
+        // 112 - Test TransferChecked
+        112 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: TransferChecked");
+
+            let accounts = [
+                accounts[0].clone(), // Source Account Info
+                accounts[1].clone(), // Mint Info
+                accounts[2].clone(), // Destination Account Info
+                accounts[3].clone(), // Authority Info
+            ];
+
+            let instruction_data = [
+                // LE bytes for amount
+                1, 2, 3, 4, 5, 6, 7, 8,
+                // Decimals
+                9,
+            ];
+
+            test_process_transfer_checked(&accounts, &instruction_data)
+        }
         // 15 - BurnChecked
         15 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: BurnChecked");
 
             process_burn_checked(accounts, instruction_data)
+        }
+        // 115 - Test BurnChecked
+        115 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: BurnChecked");
+
+            let accounts = [
+                accounts[0].clone(), // Source Account Info
+                accounts[1].clone(), // Mint Info
+                accounts[2].clone(), // Authority Info
+            ];
+
+            let instruction_data = [
+                // LE bytes for amount
+                1, 2, 3, 4, 5, 6, 7, 8,
+                // Decimals
+                9,
+            ];
+
+            test_process_burn_checked(&accounts, &instruction_data)
         }
         // 16 - InitializeAccount2
         16 => {
@@ -145,6 +288,24 @@ pub(crate) fn inner_process_instruction(
 
             process_initialize_account2(accounts, instruction_data)
         }
+        // 116 - Test InitializeAccount2
+        116 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: InitializeAccount2");
+
+            let accounts = [
+                accounts[0].clone(), // New Account Info
+                accounts[1].clone(), // Mint Info
+                // accounts[2].clone // Owner Info
+            ];
+
+            let instruction_data = [
+                // Owner Pubkey (If not provided in `accounts`)
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+            ];
+
+            test_process_initialize_account2(&accounts, &instruction_data)
+        }
         // 18 - InitializeAccount3
         18 => {
             #[cfg(feature = "logging")]
@@ -152,12 +313,51 @@ pub(crate) fn inner_process_instruction(
 
             process_initialize_account3(accounts, instruction_data)
         }
+        // 118 - Test InitializeAccount3
+        118 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: InitializeAccount3");
+
+            let accounts = [
+                accounts[0].clone(), // New Account Info
+                accounts[1].clone(), // Mint Info
+                // accounts[2].clone // Owner Info
+            ];
+
+            let instruction_data = [
+                // Owner Pubkey (If not provided in `accounts`)
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+            ];
+
+            test_process_initialize_account3(&accounts, &instruction_data)
+        }
         // 20 - InitializeMint2
         20 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeMint2");
 
             process_initialize_mint2(accounts, instruction_data)
+        }
+        // 120 - Test InitializeMint2
+        120 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Testing Instruction: InitializeMint2");
+
+            let accounts = [
+                accounts[0].clone(), // Mint Info
+                accounts[1].clone(), // Rent Sysvar Info
+            ];
+
+            let instruction_data = [
+                // Decimals: instruction_data[0]
+                1,
+                // Mint Authority: instruction_data[1..33]
+                2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+                // Freeze Authority: instruction_data[33]
+                34,
+            ];
+
+            test_process_initialize_mint2(&accounts, &instruction_data)
         }
         d => inner_process_remaining_instruction(accounts, instruction_data, d),
     }
@@ -282,4 +482,60 @@ fn inner_process_remaining_instruction(
         }
         _ => Err(TokenError::InvalidInstruction.into()),
     }
+}
+
+// Hack Tests For Stable MIR JSON ---------------------------------------------
+#[inline(never)]
+pub fn test_process_initialize_mint(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
+    process_initialize_mint(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_initialize_account(accounts: &[AccountInfo; 2]) -> ProgramResult {
+    process_initialize_account(accounts)
+}
+
+#[inline(never)]
+pub fn test_process_transfer(accounts: &[AccountInfo; 4], instruction_data: &[u8; 8]) -> ProgramResult {
+    process_transfer(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
+    process_mint_to(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
+    process_burn(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
+    process_close_account(accounts)
+}
+
+#[inline(never)]
+pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 9]) -> ProgramResult {
+    process_transfer_checked(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: &[u8; 9]) -> ProgramResult {
+    process_burn_checked(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_initialize_account2(accounts: &[AccountInfo; 2], instruction_data: &[u8; 32]) -> ProgramResult {
+    process_initialize_account2(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction_data: &[u8; 32]) -> ProgramResult {
+    process_initialize_account3(accounts, instruction_data)
+}
+
+#[inline(never)]
+pub fn test_process_initialize_mint2(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
+    process_initialize_mint2(accounts, instruction_data)
 }
