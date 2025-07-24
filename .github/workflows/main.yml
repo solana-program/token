@@ -281,6 +281,29 @@ jobs:
       - name: Test
         run: pnpm programs:test
 
+  test_ptoken:
+    name: Test p-token
+    runs-on: ubuntu-latest
+    needs: build_ptoken
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-test-ptoken
+          solana: true
+
+      - name: Restore Program Builds
+        uses: actions/cache/restore@v4
+        with:
+          path: ./**/*.so
+          key: ${{ runner.os }}-ptoken-build-${{ github.sha }}
+
+      - name: Test
+        run: pnpm p-token:test
+
   conformance_ptoken:
     name: Conformance Test for p-token
     runs-on: ubuntu-latest
