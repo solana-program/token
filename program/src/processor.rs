@@ -8,7 +8,9 @@ use {
         state::{Account, AccountState, Mint, Multisig},
         try_ui_amount_into_amount,
     },
-    fogo_sessions_sdk::{AuthorizedTokens, Session, SESSION_MANAGER_ID, SESSION_SETTER},
+    fogo_sessions_sdk::session::{
+        token_program::SESSION_SETTER, AuthorizedTokens, Session, SESSION_MANAGER_ID,
+    },
     solana_account_info::{next_account_info, AccountInfo},
     solana_cpi::set_return_data,
     solana_msg::msg,
