@@ -7,7 +7,7 @@ use {
         pubkey::Pubkey,
         ProgramResult,
     },
-    spl_token_interface::error::TokenError,
+    spl_token_interface::{error::TokenError, state::{Initializable, Transmutable}},
 };
 
 program_entrypoint!(process_instruction);
@@ -122,13 +122,7 @@ pub(crate) fn inner_process_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Testing Instruction: InitializeAccount");
 
-
-            let accounts = [
-                accounts[0].clone(), // New Account Info
-                accounts[1].clone(), // Mint Info
-            ];
-
-            test_process_initialize_account(&accounts)
+            test_process_initialize_account(accounts.first_chunk().unwrap())
         }
         // 3 - Transfer
         3 => {
@@ -490,9 +484,73 @@ pub fn test_process_initialize_mint(accounts: &[AccountInfo; 2], instruction_dat
     process_initialize_mint(accounts, instruction_data)
 }
 
+/// accounts[0] // New Account Info
+/// accounts[1] // Mint Info
+/// accounts[2] // Owner Info
+/// accounts[3] // Rent Sysvar Info
 #[inline(never)]
-pub fn test_process_initialize_account(accounts: &[AccountInfo; 2]) -> ProgramResult {
-    process_initialize_account(accounts)
+pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    use spl_token_interface::state::{account, account_state};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let initial_state_new_account =  get_account(&accounts[0])
+        .account_state()
+        .unwrap();
+
+    let minimum_balance = unsafe {
+        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[3].borrow_data_unchecked())
+    }.minimum_balance(accounts[0].data_len());
+
+    let is_native_mint = accounts[1].key() == &spl_token_interface::native_mint::ID;
+
+    let mint_is_initialised = unsafe {
+        (accounts[1].borrow_data_unchecked().as_ptr() as *const spl_token_interface::state::mint::Mint)
+            .read()
+            .is_initialized()
+    };
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_account(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 4 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
+    } else if accounts[3].key() != &pinocchio::sysvars::rent::RENT_ID {
+        assert_eq!(result, Err(ProgramError::InvalidArgument))
+    } else if accounts[0].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if initial_state_new_account != account_state::AccountState::Uninitialized  { // Untested
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if accounts[0].lamports() < minimum_balance {
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else if !is_native_mint && unsafe {accounts[1].owner()} != &spl_token_interface::program::ID {
+        assert_eq!(result, Err(ProgramError::IncorrectProgramId))
+    } else if !is_native_mint
+            && unsafe {accounts[1].owner()} == &spl_token_interface::program::ID
+            && !mint_is_initialised.unwrap() {
+        assert_eq!(result, Err(ProgramError::Custom(2)))
+    } else {
+        assert!(result.is_ok());
+        assert_eq!(get_account(&accounts[0]).account_state().unwrap(), account_state::AccountState::Initialized);
+        assert_eq!(get_account(&accounts[0]).mint, *accounts[1].key());
+        assert_eq!(get_account(&accounts[0]).owner, *accounts[2].key());
+
+        if is_native_mint {
+            assert!(get_account(&accounts[0]).is_native());
+            assert_eq!(get_account(&accounts[0]).native_amount().unwrap(), minimum_balance);
+            assert_eq!(get_account(&accounts[0]).amount(), accounts[0].lamports() - minimum_balance);
+        }
+    }
+
+    result
 }
 
 #[inline(never)]
