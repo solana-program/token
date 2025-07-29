@@ -609,7 +609,9 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
     let result = process_initialize_account2(accounts, instruction_data);
 
     //-Assert Postconditions---------------------------------------------------
-    if accounts.len() < 3 {
+    if instruction_data.len() < pinocchio::pubkey::PUBKEY_BYTES {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 3 {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
     } else if accounts[2].key() != &pinocchio::sysvars::rent::RENT_ID {
         assert_eq!(result, Err(ProgramError::InvalidArgument))
