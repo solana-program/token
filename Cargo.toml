@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["interface", "p-token", "program"]
+members = ["p-interface", "p-token", "program"]
 
 [workspace.package]
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]

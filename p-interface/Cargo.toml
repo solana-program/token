@@ -1,7 +1,7 @@
 [package]
-name = "spl-token-interface"
+name = "pinocchio-token-interface"
 version = "0.0.0"
-description = "Instructions and types for interacting with SPL Token program"
+description = "Pinocchio instructions and types for interacting with SPL Token program"
 authors = { workspace = true}
 repository = { workspace = true}
 license = { workspace = true}

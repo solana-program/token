@@ -3,7 +3,7 @@ use {
     pinocchio::{
         account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
     },
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         instruction::AuthorityType,
         state::{account::Account, load_mut, mint::Mint, Transmutable},

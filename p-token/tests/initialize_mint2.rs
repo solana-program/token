@@ -1,6 +1,7 @@
 mod setup;
 
 use {
+    pinocchio_token_interface::state::mint::Mint,
     setup::TOKEN_PROGRAM_ID,
     solana_keypair::Keypair,
     solana_program_option::COption,
@@ -10,7 +11,6 @@ use {
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
-    spl_token_interface::state::mint::Mint,
     std::mem::size_of,
 };
 

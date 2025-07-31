@@ -4,7 +4,7 @@ use {
         account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey,
         syscalls::sol_memcpy_, ProgramResult,
     },
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         program::ID as TOKEN_PROGRAM_ID,
         state::{

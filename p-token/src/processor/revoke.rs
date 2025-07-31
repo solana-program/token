@@ -1,7 +1,7 @@
 use {
     super::validate_owner,
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load_mut},
     },

@@ -1,7 +1,7 @@
 use {
     crate::processor::validate_owner,
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load, load_mut, mint::Mint},
     },

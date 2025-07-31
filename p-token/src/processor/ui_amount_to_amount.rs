@@ -5,7 +5,7 @@ use {
         account_info::AccountInfo, program::set_return_data, program_error::ProgramError,
         ProgramResult,
     },
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         state::{load, mint::Mint},
     },

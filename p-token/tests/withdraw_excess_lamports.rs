@@ -4,6 +4,7 @@ mod setup;
 
 use {
     assert_matches::assert_matches,
+    pinocchio_token_interface::state::{account::Account, mint::Mint, multisig::Multisig},
     setup::{mint, TOKEN_PROGRAM_ID},
     solana_instruction::error::InstructionError,
     solana_keypair::Keypair,
@@ -14,7 +15,6 @@ use {
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
     solana_transaction_error::TransactionError,
-    spl_token_interface::state::{account::Account, mint::Mint, multisig::Multisig},
     std::mem::size_of,
 };
 

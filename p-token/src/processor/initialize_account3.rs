@@ -5,7 +5,7 @@ use {
         pubkey::{Pubkey, PUBKEY_BYTES},
         ProgramResult,
     },
-    spl_token_interface::error::TokenError,
+    pinocchio_token_interface::error::TokenError,
 };
 
 #[inline(always)]

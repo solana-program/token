@@ -1,4 +1,5 @@
 use {
+    pinocchio_token_interface::state::mint::Mint,
     solana_keypair::Keypair,
     solana_program_error::ProgramError,
     solana_program_test::{BanksClientError, ProgramTestContext},
@@ -6,7 +7,6 @@ use {
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
-    spl_token_interface::state::mint::Mint,
     std::mem::size_of,
 };
 

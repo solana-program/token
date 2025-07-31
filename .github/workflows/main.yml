@@ -61,8 +61,8 @@ jobs:
       - name: Lint
         run: pnpm programs:lint
 
-  format_and_lint_interface:
-    name: Format & Lint Interface
+  format_and_lint_pinterface:
+    name: Format & Lint P-Interface
     runs-on: ubuntu-latest
     steps:
       - name: Git Checkout
@@ -75,10 +75,10 @@ jobs:
           rustfmt: true
 
       - name: Format
-        run: pnpm interface:format
+        run: pnpm p-interface:format
 
       - name: Lint
-        run: pnpm interface:lint
+        run: pnpm p-interface:lint
 
   format_and_lint_ptoken:
     name: Format & Lint p-token
@@ -98,7 +98,7 @@ jobs:
 
       - name: Lint
         run: pnpm p-token:lint
-              
+
   audit_rust:
     name: Audit Rust
     runs-on: ubuntu-latest
@@ -192,7 +192,7 @@ jobs:
   build_ptoken:
     name: Build p-token
     runs-on: ubuntu-latest
-    needs: [format_and_lint_interface, format_and_lint_ptoken]
+    needs: [format_and_lint_pinterface, format_and_lint_ptoken]
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4

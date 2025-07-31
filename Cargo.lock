@@ -3058,6 +3058,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pinocchio-token-interface"
+version = "0.0.0"
+dependencies = [
+ "pinocchio",
+ "pinocchio-pubkey",
+ "strum 0.27.1",
+ "strum_macros 0.27.1",
+]
+
+[[package]]
 name = "pinocchio-token-program"
 version = "0.0.0"
 dependencies = [
@@ -3065,6 +3075,7 @@ dependencies = [
  "num-traits",
  "pinocchio",
  "pinocchio-log",
+ "pinocchio-token-interface",
  "solana-instruction",
  "solana-keypair",
  "solana-program-error",
@@ -3079,7 +3090,6 @@ dependencies = [
  "solana-transaction-error",
  "spl-token 8.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-token-2022",
- "spl-token-interface",
 ]
 
 [[package]]
@@ -7410,16 +7420,6 @@ dependencies = [
  "spl-discriminator",
  "spl-pod",
  "thiserror 2.0.12",
-]
-
-[[package]]
-name = "spl-token-interface"
-version = "0.0.0"
-dependencies = [
- "pinocchio",
- "pinocchio-pubkey",
- "strum 0.27.1",
- "strum_macros 0.27.1",
 ]
 
 [[package]]
