@@ -6,7 +6,7 @@ use {
         sysvars::{rent::Rent, Sysvar},
         ProgramResult,
     },
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load, mint::Mint, multisig::Multisig, Transmutable},
     },

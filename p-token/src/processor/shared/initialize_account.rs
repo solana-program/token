@@ -7,7 +7,7 @@ use {
         sysvars::{rent::Rent, Sysvar},
         ProgramResult,
     },
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         native_mint::is_native_mint,
         state::{

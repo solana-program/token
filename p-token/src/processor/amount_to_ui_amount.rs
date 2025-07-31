@@ -6,7 +6,7 @@ use {
         ProgramResult,
     },
     pinocchio_log::logger::{Argument, Logger},
-    spl_token_interface::{
+    pinocchio_token_interface::{
         error::TokenError,
         state::{load, mint::Mint},
     },
