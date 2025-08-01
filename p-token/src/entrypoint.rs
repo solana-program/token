@@ -95,21 +95,11 @@ pub(crate) fn inner_process_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Testing Instruction: InitializeMint");
 
-            let accounts = [
-                accounts[0].clone(), // Mint Info
-                accounts[1].clone(), // Rent Sysvar Info
-            ];
-
-            let instruction_data = [
-                // Decimals: instruction_data[0]
-                1,
-                // Mint Authority: instruction_data[1..33]
-                2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
-                // Freeze Authority: instruction_data[33]
-                34,
-            ];
-
-            test_process_initialize_mint(&accounts, &instruction_data)
+            match instruction_data.len() {
+                x if 66 <= x => test_process_initialize_mint_freeze(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap()),
+                x if 34 <= x => test_process_initialize_mint_no_freeze(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap()),
+                _ => panic!("Invalid instruction data length"),
+            }
         }
         // 1 - InitializeAccount
         1 => {
@@ -316,21 +306,11 @@ pub(crate) fn inner_process_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Testing Instruction: InitializeMint2");
 
-            let accounts = [
-                accounts[0].clone(), // Mint Info
-                accounts[1].clone(), // Rent Sysvar Info
-            ];
-
-            let instruction_data = [
-                // Decimals: instruction_data[0]
-                1,
-                // Mint Authority: instruction_data[1..33]
-                2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
-                // Freeze Authority: instruction_data[33]
-                34,
-            ];
-
-            test_process_initialize_mint2(&accounts, &instruction_data)
+            match instruction_data.len() {
+                x if 66 <= x => test_process_initialize_mint2_freeze(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap()),
+                x if 34 <= x => test_process_initialize_mint2_no_freeze(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap()),
+                _ => panic!("Invalid instruction data length"),
+            }
         }
         d => inner_process_remaining_instruction(accounts, instruction_data, d),
     }
@@ -458,9 +438,107 @@ fn inner_process_remaining_instruction(
 }
 
 // Hack Tests For Stable MIR JSON ---------------------------------------------
+/// accounts[0] // Mint Info
+/// accounts[1] // Rent Sysvar Info
+/// instruction_data[0]      // Decimals
+/// instruction_data[1..33]  // Mint Authority Pubkey
+/// instruction_data[33]     // Freeze Authority Exists? 1 for freeze
+/// instruction_data[34..66] // instruction_data[33] == 1 ==> Freeze Authority Pubkey
 #[inline(never)]
-pub fn test_process_initialize_mint(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
-    process_initialize_mint(accounts, instruction_data)
+pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 66]) -> ProgramResult {
+    use spl_token_interface::state::mint::Mint;
+    //-Helpers-----------------------------------------------------------------
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let minimum_balance = unsafe {
+        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[1].borrow_data_unchecked())
+    }.minimum_balance(accounts[0].data_len());
+    let mint_is_initialised_prior = get_mint(&accounts[0]).is_initialized();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_mint(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 34 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] != 0 && instruction_data[33] != 1 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] == 1 && instruction_data.len() < 66 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 2 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.unwrap()  { // Untested
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if accounts[0].lamports() < minimum_balance {
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else {
+        assert!(get_mint(&accounts[0]).is_initialized().unwrap());
+        assert_eq!(get_mint(&accounts[0]).mint_authority().unwrap(), &instruction_data[1..33]);
+        assert_eq!(get_mint(&accounts[0]).decimals, instruction_data[0]);
+
+        if instruction_data[33] == 1 {
+            assert_eq!(get_mint(&accounts[0]).freeze_authority().unwrap(), &instruction_data[34..66]);
+        }
+    }
+
+    result
+}
+
+/// accounts[0] // Mint Info
+/// accounts[1] // Rent Sysvar Info
+/// instruction_data[0]      // Decimals
+/// instruction_data[1..33]  // Mint Authority Pubkey
+/// instruction_data[33]     // Freeze Authority Exists? 0 for no freeze
+#[inline(never)]
+pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
+    use spl_token_interface::state::mint::Mint;
+    //-Helpers-----------------------------------------------------------------
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let minimum_balance = unsafe {
+        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[1].borrow_data_unchecked())
+    }.minimum_balance(accounts[0].data_len());
+    let mint_is_initialised_prior = get_mint(&accounts[0]).is_initialized();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_mint(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 34 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] != 0 && instruction_data[33] != 1 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] == 1 && instruction_data.len() < 66 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 2 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.unwrap()  { // Untested
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if accounts[0].lamports() < minimum_balance {
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else {
+        assert!(get_mint(&accounts[0]).is_initialized().unwrap());
+        assert_eq!(get_mint(&accounts[0]).mint_authority().unwrap(), &instruction_data[1..33]);
+        assert_eq!(get_mint(&accounts[0]).decimals, instruction_data[0]);
+
+        if instruction_data[33] == 1 {
+            assert_eq!(get_mint(&accounts[0]).freeze_authority().unwrap(), &instruction_data[34..66]);
+        }
+    }
+
+    result
 }
 
 /// accounts[0] // New Account Info
@@ -701,7 +779,103 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
     result
 }
 
+/// accounts[0] // Mint Info
+/// instruction_data[0]      // Decimals
+/// instruction_data[1..33]  // Mint Authority Pubkey
+/// instruction_data[33]     // Freeze Authority Exists? 1 for freeze
+/// instruction_data[34..66] // instruction_data[33] == 1 ==> Freeze Authority Pubkey
 #[inline(never)]
-pub fn test_process_initialize_mint2(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
-    process_initialize_mint2(accounts, instruction_data)
+pub fn test_process_initialize_mint2_freeze(accounts: &[AccountInfo; 1], instruction_data: &[u8; 66]) -> ProgramResult {
+    use spl_token_interface::state::mint::Mint;
+    //-Helpers-----------------------------------------------------------------
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
+    let rent = pinocchio::sysvars::rent::Rent::get().unwrap();
+    let minimum_balance = rent.minimum_balance(accounts[0].data_len());
+    let mint_is_initialised_prior = get_mint(&accounts[0]).is_initialized();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_mint2(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 34 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] != 0 && instruction_data[33] != 1 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] == 1 && instruction_data.len() < 66 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 1 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.unwrap()  { // Untested
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if accounts[0].lamports() < minimum_balance {
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else {
+        assert!(get_mint(&accounts[0]).is_initialized().unwrap());
+        assert_eq!(get_mint(&accounts[0]).mint_authority().unwrap(), &instruction_data[1..33]);
+        assert_eq!(get_mint(&accounts[0]).decimals, instruction_data[0]);
+
+        if instruction_data[33] == 1 {
+            assert_eq!(get_mint(&accounts[0]).freeze_authority().unwrap(), &instruction_data[34..66]);
+        }
+    }
+
+    result
+}
+
+/// accounts[0] // Mint Info
+/// instruction_data[0]      // Decimals
+/// instruction_data[1..33]  // Mint Authority Pubkey
+/// instruction_data[33]     // Freeze Authority Exists? 0 for no freeze
+#[inline(never)]
+pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], instruction_data: &[u8; 34]) -> ProgramResult {
+    use spl_token_interface::state::mint::Mint;
+    //-Helpers-----------------------------------------------------------------
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
+    let rent = pinocchio::sysvars::rent::Rent::get().unwrap();
+    let minimum_balance = rent.minimum_balance(accounts[0].data_len());
+    let mint_is_initialised_prior = get_mint(&accounts[0]).is_initialized();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_mint2(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 34 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] != 0 && instruction_data[33] != 1 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[33] == 1 && instruction_data.len() < 66 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 1 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.unwrap()  { // Untested
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if accounts[0].lamports() < minimum_balance {
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else {
+        assert!(get_mint(&accounts[0]).is_initialized().unwrap());
+        assert_eq!(get_mint(&accounts[0]).mint_authority().unwrap(), &instruction_data[1..33]);
+        assert_eq!(get_mint(&accounts[0]).decimals, instruction_data[0]);
+
+        if instruction_data[33] == 1 {
+            assert_eq!(get_mint(&accounts[0]).freeze_authority().unwrap(), &instruction_data[34..66]);
+        }
+    }
+
+    result
 }
