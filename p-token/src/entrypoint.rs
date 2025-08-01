@@ -463,6 +463,13 @@ pub fn test_process_initialize_mint(accounts: &[AccountInfo; 2], instruction_dat
     process_initialize_mint(accounts, instruction_data)
 }
 
+
+fn get_account(account_info: &AccountInfo) -> spl_token_interface::state::account::Account { unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const spl_token_interface::state::account::Account)
+            .read()
+    }
+}
+
 /// accounts[0] // New Account Info
 /// accounts[1] // Mint Info
 /// accounts[2] // Owner Info
@@ -474,10 +481,10 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
+    // let get_account = |account_info: &AccountInfo| unsafe {
+    //     (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+    //         .read()
+    // };
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
@@ -573,10 +580,10 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
+    // let get_account = |account_info: &AccountInfo| unsafe {
+    //     (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+    //         .read()
+    // };
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
@@ -643,10 +650,10 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
+    // let get_account = |account_info: &AccountInfo| unsafe {
+    //     (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+    //         .read()
+    // };
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
