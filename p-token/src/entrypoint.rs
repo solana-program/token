@@ -7,7 +7,7 @@ use {
         pubkey::Pubkey,
         ProgramResult,
     },
-    spl_token_interface::error::TokenError,
+    pinocchio_token_interface::error::TokenError,
 };
 
 program_entrypoint!(process_instruction);
