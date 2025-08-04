@@ -7435,7 +7435,6 @@ dependencies = [
  "num_enum",
  "proptest",
  "solana-instruction",
- "solana-native-token",
  "solana-program-error",
  "solana-program-option",
  "solana-program-pack",
