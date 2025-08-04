@@ -11,23 +11,22 @@ edition = { workspace = true }
 
 [dependencies]
 arrayref = "0.3.9"
-bytemuck = { version = "1.23.1", features = ["derive"] }
+bytemuck = "1.20.0"
 num-derive = "0.4"
 num_enum = "0.7.4"
-num-traits = { workspace = true }
+num-traits = "0.2"
 solana-instruction = "2.2.1"
 solana-program-error = "2.2.1"
 solana-program-option = "2.2.1"
 solana-program-pack = "2.2.1"
-solana-pubkey = "2.2.1"
+solana-pubkey = { version = "2.2.1", features = ["bytemuck"] }
 solana-sdk-ids = "2.2.1"
-spl-pod = { version = "0.5.1" }
 thiserror = "2.0"
 
 [dev-dependencies]
-proptest = "1.7"
-strum = "0.26"
-strum_macros = "0.26"
+proptest = "1.5"
+strum = "0.24"
+strum_macros = "0.24"
 
 [lib]
 crate-type = ["lib"]

@@ -38,7 +38,8 @@ pub mod solana_program {
 }
 use solana_program_error::ProgramError;
 
-solana_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+// Re-export spl_token_interface items
+pub use spl_token_interface::{check_id, check_program_account, id, ID};
 
 /// Convert the UI representation of a token amount (using the decimals field
 /// defined in its mint) to the raw amount
