@@ -36,10 +36,9 @@ pub mod solana_program {
         pub use solana_pubkey::{Pubkey, PUBKEY_BYTES};
     }
 }
-use {
-    solana_program_error::{ProgramError, ProgramResult},
-    solana_pubkey::Pubkey,
-};
+use solana_program_error::ProgramError;
+
+solana_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 /// Convert the UI representation of a token amount (using the decimals field
 /// defined in its mint) to the raw amount
@@ -103,14 +102,4 @@ pub fn try_ui_amount_into_amount(ui_amount: String, decimals: u8) -> Result<u64,
     amount_str
         .parse::<u64>()
         .map_err(|_| ProgramError::InvalidArgument)
-}
-
-solana_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-
-/// Checks that the supplied program ID is the correct one for SPL-token
-pub fn check_program_account(spl_token_program_id: &Pubkey) -> ProgramResult {
-    if spl_token_program_id != &id() {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-    Ok(())
 }
