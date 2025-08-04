@@ -5,7 +5,7 @@ use {
     solana_account::{Account as SolanaAccount, ReadableAccount},
     solana_program_pack::Pack,
     solana_pubkey::Pubkey,
-    spl_token::{
+    spl_token_interface::{
         id, instruction,
         state::{Account, Mint},
     },

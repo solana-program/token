@@ -99,6 +99,28 @@ jobs:
       - name: Lint
         run: pnpm p-token:lint
 
+  format_and_lint_interface:
+    name: Format, Lint & Test Interface
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+
+      - name: Format
+        run: pnpm interface:format
+
+      - name: Lint
+        run: pnpm interface:lint
+
+      - name: Lint
+        run: pnpm interface:test
+
   audit_rust:
     name: Audit Rust
     runs-on: ubuntu-latest
@@ -294,6 +316,7 @@ jobs:
         with:
           cargo-cache-key: cargo-test-ptoken
           solana: true
+          purge: true
 
       - name: Restore Program Builds
         uses: actions/cache/restore@v4
