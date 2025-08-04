@@ -58,6 +58,10 @@ runs:
         sudo rm -rf /imagegeneration
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
         sudo docker image prune --all --force
+        sudo docker system prune -af
+        # Clear additional caches that might be large
+        sudo rm -rf /tmp/*
+        sudo rm -rf /var/tmp/*
         # This packages aren't that big, ~500MB total
         #sudo apt-get remove -y '^php.*' --fix-missing
         #sudo apt-get remove -y '^dotnet-.*' --fix-missing
