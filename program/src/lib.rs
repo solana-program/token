@@ -37,7 +37,6 @@ pub mod solana_program {
     }
 }
 use solana_program_error::ProgramError;
-
 // Re-export spl_token_interface items
 pub use spl_token_interface::{check_id, check_program_account, id, ID};
 

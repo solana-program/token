@@ -4,8 +4,10 @@
 
 //! An ERC20-like Token program for the Solana blockchain
 
-use solana_program_error::{ProgramError, ProgramResult};
-use solana_pubkey::Pubkey;
+use {
+    solana_program_error::{ProgramError, ProgramResult},
+    solana_pubkey::Pubkey
+};
 
 pub mod error;
 pub mod instruction;
