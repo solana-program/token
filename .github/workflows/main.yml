@@ -100,7 +100,7 @@ jobs:
         run: pnpm p-token:lint
 
   format_and_lint_interface:
-    name: Format & Lint Interface
+    name: Format, Lint & Test Interface
     runs-on: ubuntu-latest
     steps:
       - name: Git Checkout
