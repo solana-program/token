@@ -6,7 +6,7 @@
 
 use {
     solana_program_error::{ProgramError, ProgramResult},
-    solana_pubkey::Pubkey
+    solana_pubkey::Pubkey,
 };
 
 pub mod error;
