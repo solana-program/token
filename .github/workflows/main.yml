@@ -118,6 +118,9 @@ jobs:
       - name: Lint
         run: pnpm interface:lint
 
+      - name: Lint
+        run: pnpm interface:test
+
   audit_rust:
     name: Audit Rust
     runs-on: ubuntu-latest
