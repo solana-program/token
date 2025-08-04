@@ -1,7 +1,7 @@
 use {
     crate::entrypoint::inner_process_instruction,
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
-    spl_token_interface::error::TokenError,
+    pinocchio_token_interface::error::TokenError,
 };
 
 /// The size of the batch instruction header.
