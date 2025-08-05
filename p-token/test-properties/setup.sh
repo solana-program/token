@@ -24,7 +24,7 @@ git submodule status --recursive
 
 # if any changes were already made, keep them. Otherwise, apply a
 # workaround to avoid confusion with the token workspace.
-if [ -z "$(git status --porcelain)" ]; then
+if [ -z "$(cd mir-semantics && git status --porcelain)" ]; then
     printf "\n\n# avoid workspace confusion in token repo\n[workspace]\n" \
            >> mir-semantics/deps/stable-mir-json/Cargo.toml
 fi
