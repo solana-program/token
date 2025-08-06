@@ -1,13 +1,13 @@
-| Start symbol name                            | Status | Steps |   |
-|----------------------------------------------|--------|-------|---|
-| entrypoint::test_process_initialize_mint     | Stuck  | 252   |   |
-| entrypoint::test_process_initialize_account  | Stuck  | 283   |   |
-| entrypoint::test_process_transfer            | Stuck  | 412   |   |
-| entrypoint::test_process_mint_to             | Stuck  | 389   |   |
-| entrypoint::test_process_burn                | Stuck  | 389   |   |
-| entrypoint::test_process_close_account       | Stuck  | 98    |   |
-| entrypoint::test_process_transfer_checked    | Stuck  | 245   |   |
-| entrypoint::test_process_burn_checked        | Stuck  | 245   |   |
-| entrypoint::test_process_initialize_account2 | Stuck  | 286   |   |
-| entrypoint::test_process_initialize_account3 | Stuck  | 286   |   |
-| entrypoint::test_process_initialize_mint2    | Stuck  | 252   |   |
+| Start symbol name                            | Sec | Status | Steps |                                            |
+|----------------------------------------------|-----|--------|-------|--------------------------------------------|
+| entrypoint::test_process_initialize_mint     | 140 | Stuck  | 252   | BUG: ref offset -1                         |
+| entrypoint::test_process_initialize_mint2    | 79  | Stuck  | 252   | BUG: ref offset -1                         |
+| entrypoint::test_process_initialize_account  | 118 | Stuck  | 283   | AggregateKindRawPtr with offset/cast thunk |
+| entrypoint::test_process_transfer            | 160 | Stuck  | 412   | subslice traversal from end                |
+| entrypoint::test_process_mint_to             | 118 | Stuck  | 389   | subslice traversal from end                |
+| entrypoint::test_process_burn                | 121 | Stuck  | 389   | subslice traversal from end                |
+| entrypoint::test_process_close_account       | 73  | Stuck  | 98    | subslice traversal from end                |
+| entrypoint::test_process_transfer_checked    | 130 | Stuck  | 245   | AggregateKindRawPtr with ptr and int       |
+| entrypoint::test_process_burn_checked        | 112 | Stuck  | 245   | AggregateKindRawPtr with ptr and int       |
+| entrypoint::test_process_initialize_account2 | 118 | Stuck  | 286   | AggregateKindRawPtr with offset/cast thunk |
+| entrypoint::test_process_initialize_account3 | 110 | Stuck  | 286   | AggregateKindRawPtr with offset/cast thunk |
