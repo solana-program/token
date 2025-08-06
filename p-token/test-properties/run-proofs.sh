@@ -55,5 +55,8 @@ for name in $TESTS; do
             uv --project mir-semantics/kmir run -- \
             kmir prove-rs --smir artefacts/p-token.smir.json \
             --proof-dir artefacts/proof --reload --verbose --start-symbol $name ${PROVE_OPTS}
+    uv --project mir-semantics/kmir run -- \
+       kmir show --proof-dir artefacts/proof p-token.smir.$name \
+       --no-full-printer > artefacts/proof/${name}-short.txt
     echo "==========================================================================="
 done
