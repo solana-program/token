@@ -309,12 +309,26 @@ fn inner_process_remaining_instruction(
 
             process_initialize_multisig(accounts, instruction_data)
         }
+        // 102 - InitializeMultisig
+        102 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeMultisig");
+
+            test_process_initialize_multisig(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
+        }
         // 4 - Approve
         4 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: Approve");
 
             process_approve(accounts, instruction_data)
+        }
+        // 104 - Approve
+        104 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: Approve");
+
+            test_process_approve(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
         }
         // 5 - Revoke
         5 => {
@@ -323,12 +337,26 @@ fn inner_process_remaining_instruction(
 
             process_revoke(accounts)
         }
+        // 105 - Revoke
+        105 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: Revoke");
+
+            test_process_revoke(accounts.first_chunk().unwrap())
+        }
         // 6 - SetAuthority
         6 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: SetAuthority");
 
             process_set_authority(accounts, instruction_data)
+        }
+        // 106 - SetAuthority
+        106 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: SetAuthority");
+
+            test_process_set_authority(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
         }
         // 10 - FreezeAccount
         10 => {
@@ -337,12 +365,26 @@ fn inner_process_remaining_instruction(
 
             process_freeze_account(accounts)
         }
+        // 110 - FreezeAccount
+        110 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: FreezeAccount");
+
+            test_process_freeze_account(accounts.first_chunk().unwrap())
+        }
         // 11 - ThawAccount
         11 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: ThawAccount");
 
             process_thaw_account(accounts)
+        }
+        // 111 - ThawAccount
+        111 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: ThawAccount");
+
+            test_process_thaw_account(accounts.first_chunk().unwrap())
         }
         // 13 - ApproveChecked
         13 => {
@@ -351,12 +393,26 @@ fn inner_process_remaining_instruction(
 
             process_approve_checked(accounts, instruction_data)
         }
+        // 113 - ApproveChecked
+        113 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: ApproveChecked");
+
+            test_process_approve_checked(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
+        }
         // 14 - MintToChecked
         14 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: MintToChecked");
 
             process_mint_to_checked(accounts, instruction_data)
+        }
+        // 114 - MintToChecked
+        114 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: MintToChecked");
+
+            test_process_mint_to_checked(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
         }
         // 17 - SyncNative
         17 => {
@@ -365,12 +421,26 @@ fn inner_process_remaining_instruction(
 
             process_sync_native(accounts)
         }
+        // 117 - SyncNative
+        117 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: SyncNative");
+
+            test_process_sync_native(accounts.first_chunk().unwrap())
+        }
         // 19 - InitializeMultisig2
         19 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeMultisig2");
 
             process_initialize_multisig2(accounts, instruction_data)
+        }
+        // 119 - InitializeMultisig2
+        119 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeMultisig2");
+
+            test_process_initialize_multisig2(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
         }
         // 21 - GetAccountDataSize
         21 => {
@@ -379,12 +449,26 @@ fn inner_process_remaining_instruction(
 
             process_get_account_data_size(accounts)
         }
+        // 121 - GetAccountDataSize
+        121 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: GetAccountDataSize");
+
+            test_process_get_account_data_size(accounts.first_chunk().unwrap())
+        }
         // 22 - InitializeImmutableOwner
         22 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: InitializeImmutableOwner");
 
             process_initialize_immutable_owner(accounts)
+        }
+        // 122 - InitializeImmutableOwner
+        122 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeImmutableOwner");
+
+            test_process_initialize_immutable_owner(accounts.first_chunk().unwrap())
         }
         // 23 - AmountToUiAmount
         23 => {
@@ -393,6 +477,13 @@ fn inner_process_remaining_instruction(
 
             process_amount_to_ui_amount(accounts, instruction_data)
         }
+        // 123 - AmountToUiAmount
+        123 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: AmountToUiAmount");
+
+            test_process_amount_to_ui_amount(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
+        }
         // 24 - UiAmountToAmount
         24 => {
             #[cfg(feature = "logging")]
@@ -400,12 +491,26 @@ fn inner_process_remaining_instruction(
 
             process_ui_amount_to_amount(accounts, instruction_data)
         }
+        // 124 - UiAmountToAmount
+        124 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: UiAmountToAmount");
+
+            test_process_ui_amount_to_amount(accounts.first_chunk().unwrap(), instruction_data.first_chunk().unwrap())
+        }
         // 38 - WithdrawExcessLamports
         38 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: WithdrawExcessLamports");
 
             process_withdraw_excess_lamports(accounts)
+        }
+        // 138 - WithdrawExcessLamports
+        138 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: WithdrawExcessLamports");
+
+            test_process_withdraw_excess_lamports(accounts.first_chunk().unwrap())
         }
         _ => Err(TokenError::InvalidInstruction.into()),
     }
@@ -1015,4 +1120,64 @@ pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], inst
     }
 
     result
+}
+
+fn test_process_initialize_multisig(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_initialize_multisig(accounts, instruction_data)
+}
+
+fn test_process_approve(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_approve(accounts, instruction_data)
+}
+
+fn test_process_revoke(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_revoke(accounts)
+}
+
+fn test_process_set_authority(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_set_authority(accounts, instruction_data)
+}
+
+fn test_process_freeze_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_freeze_account(accounts)
+}
+
+fn test_process_thaw_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_thaw_account(accounts)
+}
+
+fn test_process_approve_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_approve_checked(accounts, instruction_data)
+}
+
+fn test_process_mint_to_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_mint_to_checked(accounts, instruction_data)
+}
+
+fn test_process_sync_native(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_sync_native(accounts)
+}
+
+fn test_process_initialize_multisig2(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_initialize_multisig2(accounts, instruction_data)
+}
+
+fn test_process_get_account_data_size(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_get_account_data_size(accounts)
+}
+
+fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_initialize_immutable_owner(accounts)
+}
+
+fn test_process_amount_to_ui_amount(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_amount_to_ui_amount(accounts, instruction_data)
+}
+
+fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
+    process_ui_amount_to_amount(accounts, instruction_data)
+}
+
+fn test_process_withdraw_excess_lamports(accounts: &[AccountInfo; 4]) -> ProgramResult {
+    process_withdraw_excess_lamports(accounts)
 }
