@@ -141,18 +141,7 @@ pub(crate) fn inner_process_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: MintTo");
 
-            let accounts = [
-                accounts[0].clone(), // Mint Info
-                accounts[1].clone(), // Destination Account Info
-                accounts[2].clone(), // Owner Info
-            ];
-
-            let instruction_data = [
-                // LE bytes for amount
-                1, 2, 3, 4, 5, 6, 7, 8,
-            ];
-
-            test_process_mint_to(&accounts, &instruction_data)
+            test_process_mint_to(&accounts.first_chunk().unwrap(), &instruction_data.first_chunk().unwrap())
         }
         // 8 - Burn
         8 => {
@@ -747,10 +736,10 @@ pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8
             assert_eq!(result, Err(ProgramError::IncorrectProgramId)) // UNTESTED
         } else if (accounts[0] == accounts[1] || amount == 0) && unsafe { accounts[1].owner() } != &spl_token_interface::program::ID {
             assert_eq!(result, Err(ProgramError::IncorrectProgramId)) // UNTESTED
-        } else if get_account(&accounts[0]).is_native() && src_initial_lamports < amount {
+        } else if accounts[0] != accounts[1] && amount != 0 && get_account(&accounts[0]).is_native() && src_initial_lamports < amount {
             // Not sure how to fund native mint
             assert_eq!(result, Err(ProgramError::Custom(14))) // UNTESTED
-        } else if get_account(&accounts[0]).is_native() && u64::MAX - amount < dst_initial_lamports {
+        } else if accounts[0] != accounts[1] && amount != 0 && get_account(&accounts[0]).is_native() && u64::MAX - amount < dst_initial_lamports {
             // Not sure how to fund native mint
             assert_eq!(result, Err(ProgramError::Custom(14))) // UNTESTED
         }  else {
@@ -769,9 +758,76 @@ pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8
     result
 }
 
+/// accounts[0] // Mint Info
+/// accounts[1] // Destination Info
+/// accounts[2] // Owner Info
+/// instruction_data[0..8] // Little Endian Bytes of u64 amount
 #[inline(never)]
 pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
-    process_mint_to(accounts, instruction_data)
+    use spl_token_interface::state::{mint, account, account_state};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let initial_supply = get_mint(&accounts[0]).supply();
+    let initial_amount = get_account(&accounts[1]).amount();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_mint_to(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 8 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 3 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[1].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !get_account(&accounts[1]).is_initialized().unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if get_account(&accounts[1]).account_state().unwrap() == account_state::AccountState::Frozen  {
+        assert_eq!(result, Err(ProgramError::Custom(17)))
+    } else if get_account(&accounts[1]).is_native() {
+        assert_eq!(result, Err(ProgramError::Custom(10)))
+    } else if accounts[0].key() != &get_account(&accounts[1]).mint {
+        assert_eq!(result, Err(ProgramError::Custom(3)))
+    } else if accounts[0].data_len() != mint::Mint::LEN { // UNTESTED
+        // Not sure if this is even possible if we get past the case above
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !get_mint(&accounts[0]).is_initialized().unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else {
+        if get_mint(&accounts[0]).mint_authority().is_some() { // UNTESTED
+            // TODO validate_owner
+        } else { // UNTESTED
+            assert_eq!(result, Err(ProgramError::Custom(5)))
+        }
+
+        let amount =  unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
+
+        if amount == 0 && unsafe { accounts[0].owner() } != &spl_token_interface::program::ID {
+            assert_eq!(result, Err(ProgramError::IncorrectProgramId)) // UNTESTED
+        } else if amount == 0 && unsafe { accounts[1].owner() } != &spl_token_interface::program::ID {
+            assert_eq!(result, Err(ProgramError::IncorrectProgramId)) // UNTESTED
+        } else if amount != 0 && u64::MAX - amount < initial_supply {
+            assert_eq!(result, Err(ProgramError::Custom(14)))
+        } else {
+            assert_eq!(get_mint(&accounts[0]).supply(), initial_supply + amount);
+            assert_eq!(get_account(&accounts[1]).amount(), initial_amount + amount);
+            assert!(result.is_ok());
+        }
+    }
+
+    result
 }
 
 #[inline(never)]
@@ -1150,8 +1206,77 @@ fn test_process_approve_checked(accounts: &[AccountInfo; 4], instruction_data: &
     process_approve_checked(accounts, instruction_data)
 }
 
-fn test_process_mint_to_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
-    process_mint_to_checked(accounts, instruction_data)
+/// accounts[0] // Mint Info
+/// accounts[1] // Destination Info
+/// accounts[2] // Owner Info
+/// instruction_data[0..9] // Little Endian Bytes of u64 amount, and decimals
+fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &[u8; 9]) -> ProgramResult {
+    use spl_token_interface::state::{mint, account, account_state};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let initial_supply = get_mint(&accounts[0]).supply();
+    let initial_amount = get_account(&accounts[1]).amount();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_mint_to_checked(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 9 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 3 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[1].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !get_account(&accounts[1]).is_initialized().unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if get_account(&accounts[1]).account_state().unwrap() == account_state::AccountState::Frozen  {
+        assert_eq!(result, Err(ProgramError::Custom(17)))
+    } else if get_account(&accounts[1]).is_native() {
+        assert_eq!(result, Err(ProgramError::Custom(10)))
+    } else if accounts[0].key() != &get_account(&accounts[1]).mint {
+        assert_eq!(result, Err(ProgramError::Custom(3)))
+    } else if accounts[0].data_len() != mint::Mint::LEN { // UNTESTED
+        // Not sure if this is even possible if we get past the case above
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !get_mint(&accounts[0]).is_initialized().unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if instruction_data[8] != get_mint(&accounts[0]).decimals { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(18)))
+    } else {
+        if get_mint(&accounts[0]).mint_authority().is_some() { // UNTESTED
+            // TODO validate_owner
+        } else { // UNTESTED
+            assert_eq!(result, Err(ProgramError::Custom(5)))
+        }
+
+        let amount =  unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
+
+        if amount == 0 && unsafe { accounts[0].owner() } != &spl_token_interface::program::ID {
+            assert_eq!(result, Err(ProgramError::IncorrectProgramId)) // UNTESTED
+        } else if amount == 0 && unsafe { accounts[1].owner() } != &spl_token_interface::program::ID {
+            assert_eq!(result, Err(ProgramError::IncorrectProgramId)) // UNTESTED
+        } else if amount != 0 && u64::MAX - amount < initial_supply {
+            assert_eq!(result, Err(ProgramError::Custom(14)))
+        } else {
+            assert_eq!(get_mint(&accounts[0]).supply(), initial_supply + amount);
+            assert_eq!(get_account(&accounts[1]).amount(), initial_amount + amount);
+            assert!(result.is_ok());
+        }
+    }
+
+    result
 }
 
 fn test_process_sync_native(accounts: &[AccountInfo; 4]) -> ProgramResult {
