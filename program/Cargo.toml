@@ -30,7 +30,7 @@ solana-pubkey = { workspace = true, features = ["bytemuck"] }
 solana-rent = "2.2.1"
 solana-sdk-ids = "2.2.1"
 solana-sysvar = { version = "2.2.2", features = ["bincode"] }
-spl-token-interface = { version = "1.0", path = "../interface" }
+spl-token-interface = { version = "1.0" }
 thiserror = "2.0"
 
 [dev-dependencies]

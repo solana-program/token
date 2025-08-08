@@ -114,7 +114,7 @@ impl TryFrom<u32> for TokenError {
 }
 
 impl ToStr for TokenError {
-    fn to_str<E>(&self) -> &'static str {
+    fn to_str(&self) -> &'static str {
         match self {
             TokenError::NotRentExempt => "Error: Lamport balance below rent-exempt threshold",
             TokenError::InsufficientFunds => "Error: insufficient funds",
