@@ -1287,8 +1287,39 @@ fn test_process_initialize_multisig2(accounts: &[AccountInfo; 4], instruction_da
     process_initialize_multisig2(accounts, instruction_data)
 }
 
-fn test_process_get_account_data_size(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    process_get_account_data_size(accounts)
+/// accounts[0] // Mint Info
+fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramResult {
+    use spl_token_interface::state::mint;
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+
+    //-Initial State-----------------------------------------------------------
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_get_account_data_size(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 1 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if unsafe { accounts[0].owner() } != &spl_token_interface::program::ID { // UNTESTED
+        assert_eq!(result, Err(ProgramError::IncorrectProgramId))
+    } else if accounts[0].data_len() != mint::Mint::LEN {
+        assert_eq!(result, Err(ProgramError::Custom(2)))
+    } else if !get_mint(&accounts[0]).is_initialized().unwrap() {
+        assert_eq!(result, Err(ProgramError::Custom(2)))
+    } else {
+
+        // TODO: Figure out how to read return data and use it is Account::LEN
+        // NOTE: This uses syscalls::sol_set_return_data
+        assert!(result.is_ok())
+    }
+    result
 }
 
 fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 4]) -> ProgramResult {
