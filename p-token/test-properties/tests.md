@@ -1,7 +1,7 @@
 | Start symbol name                            | Sec | Status  | Steps |                                            |
 |----------------------------------------------|-----|---------|-------|--------------------------------------------|
-| entrypoint::test_process_initialize_mint     | 80  | Stuck   | 252   | BUG: ref offset -1                         |
-| entrypoint::test_process_initialize_mint2    | 80  | Stuck   | 252   | BUG: ref offset -1                         |
+| entrypoint::test_process_initialize_mint     | 79  | Stuck   | 243   | Return ref to ptr with offset thunk        |
+| entrypoint::test_process_initialize_mint2    | 79  | Stuck   | 243   | Return ref to ptr with offset thunk        |
 | entrypoint::test_process_initialize_account  | 122 | Stuck   | 283   | AggregateKindRawPtr with offset/cast thunk |
 | entrypoint::test_process_transfer            | 198 | Stuck   | 713   | AggregateKindRawPtr with offset/cast thunk |
 | entrypoint::test_process_mint_to             | 151 | Stuck   | 601   | AggregateKindRawPtr with offset/cast thunk |
