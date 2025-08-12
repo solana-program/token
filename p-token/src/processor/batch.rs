@@ -1,5 +1,5 @@
 use {
-    crate::entrypoint::inner_process_instruction,
+    crate::{entrypoint::inner_process_instruction, processor::check_account_owner},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     pinocchio_token_interface::error::TokenError,
 };
@@ -45,6 +45,34 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
                 instruction_data.get_unchecked(IX_HEADER_SIZE..data_offset),
             )
         };
+
+        // `Transfer` and `TransferChecked` instructions require specific account ownership
+        // checks when executed in a batch since account ownership is checked by the runtime
+        // at the end of the batch processing only.
+        match ix_data.first() {
+            // 3 - Transfer
+            Some(3) => {
+                let [source_account_info, destination_account_info, _remaining @ ..] = ix_accounts
+                else {
+                    return Err(ProgramError::NotEnoughAccountKeys);
+                };
+
+                check_account_owner(source_account_info)?;
+                check_account_owner(destination_account_info)?;
+            }
+            // 12 - TransferChecked
+            Some(12) => {
+                let [source_account_info, _, destination_account_info, _remaining @ ..] =
+                    ix_accounts
+                else {
+                    return Err(ProgramError::NotEnoughAccountKeys);
+                };
+
+                check_account_owner(source_account_info)?;
+                check_account_owner(destination_account_info)?;
+            }
+            _ => (),
+        }
 
         inner_process_instruction(ix_accounts, ix_data)?;
 
