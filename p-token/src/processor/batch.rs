@@ -46,9 +46,9 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
             )
         };
 
-        // `Transfer` and `TransferChecked` instructions require specific account ownership
-        // checks when executed in a batch since account ownership is checked by the runtime
-        // at the end of the batch processing only.
+        // `Transfer` and `TransferChecked` instructions require specific account
+        // ownership checks when executed in a batch since account ownership is
+        // checked by the runtime at the end of the batch processing only.
         match ix_data.first() {
             // 3 - Transfer
             Some(3) => {

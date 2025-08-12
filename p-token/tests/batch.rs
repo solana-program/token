@@ -251,7 +251,7 @@ fn create_token_account(
     token.set_native_amount(amount);
 
     if is_native {
-        lamports += amount;
+        lamports = lamports.saturating_add(amount);
     }
 
     Account {
