@@ -2,12 +2,23 @@ mod setup;
 
 use {
     crate::setup::TOKEN_PROGRAM_ID,
+    agave_feature_set::{bpf_account_data_direct_mapping, FeatureSet},
+    mollusk_svm::{result::Check, Mollusk},
+    pinocchio_token_interface::{
+        native_mint,
+        state::{
+            account::Account as TokenAccount, account_state::AccountState, load_mut_unchecked,
+        },
+    },
+    solana_account::Account,
     solana_instruction::{AccountMeta, Instruction},
     solana_keypair::Keypair,
     solana_program_error::ProgramError,
     solana_program_pack::Pack,
     solana_program_test::{tokio, ProgramTest},
     solana_pubkey::Pubkey,
+    solana_rent::Rent,
+    solana_sdk_ids::bpf_loader_upgradeable,
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
@@ -218,4 +229,209 @@ async fn batch() {
     let owner_b_ta_a_account =
         spl_token::state::Account::unpack(&owner_b_ta_a_account.unwrap().data).unwrap();
     assert_eq!(owner_b_ta_a_account.amount, 1000000);
+}
+
+fn create_token_account(
+    mint: &Pubkey,
+    owner: &Pubkey,
+    is_native: bool,
+    amount: u64,
+    program_owner: &Pubkey,
+) -> Account {
+    let space = size_of::<TokenAccount>();
+    let mut lamports = Rent::default().minimum_balance(space);
+
+    let mut data: Vec<u8> = vec![0u8; space];
+    let token = unsafe { load_mut_unchecked::<TokenAccount>(data.as_mut_slice()).unwrap() };
+    token.set_account_state(AccountState::Initialized);
+    token.mint = *mint.as_array();
+    token.owner = *owner.as_array();
+    token.set_amount(amount);
+    token.set_native(is_native);
+    token.set_native_amount(amount);
+
+    if is_native {
+        lamports += amount;
+    }
+
+    Account {
+        lamports,
+        data,
+        owner: *program_owner,
+        executable: false,
+        ..Default::default()
+    }
+}
+
+#[tokio::test]
+async fn batch_fail_transfer_with_invalid_program_owner() {
+    let invalid_program_id = Pubkey::new_from_array([2; 32]);
+    let native_mint = Pubkey::new_from_array(native_mint::ID);
+    let authority_key = Pubkey::new_unique();
+
+    // source account
+    //   - amount: 1_000_000_000
+    //   - mint: native_mint
+    //   - is_native: true
+    //   - program_id: invalid_program_id
+    let source_account_key = Pubkey::new_unique();
+    let source_account = create_token_account(
+        &native_mint,
+        &authority_key,
+        true,
+        1_000_000_000,
+        &invalid_program_id,
+    );
+
+    // destination account
+    //   - amount: 0
+    //   - mint: native_mint
+    //   - is_native: true
+    //   - program_id: TOKEN_PROGRAM_ID
+    let destination_account_key = Pubkey::new_unique();
+    let destination_account =
+        create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
+
+    let instruction = batch_instruction(vec![spl_token::instruction::transfer(
+        &TOKEN_PROGRAM_ID,
+        &source_account_key,
+        &destination_account_key,
+        &authority_key,
+        &[],
+        500_000_000,
+    )
+    .unwrap()])
+    .unwrap();
+
+    let mollusk = Mollusk::new(&TOKEN_PROGRAM_ID, "pinocchio_token_program");
+
+    // Expected to fail since source account has an invalid program owner.
+
+    mollusk.process_and_validate_instruction_chain(
+        &[(
+            &instruction,
+            &[
+                Check::err(ProgramError::IncorrectProgramId),
+                Check::all_rent_exempt(),
+            ],
+        )],
+        &[
+            (source_account_key, source_account),
+            (destination_account_key, destination_account),
+            (
+                authority_key,
+                Account {
+                    lamports: Rent::default().minimum_balance(0),
+                    ..Default::default()
+                },
+            ),
+        ],
+    );
+}
+
+#[tokio::test]
+async fn batch_fail_swap_tokens_with_invalid_program_owner() {
+    let native_mint = Pubkey::new_from_array(native_mint::ID);
+    let invalid_program_id = Pubkey::new_from_array([2; 32]);
+    let authority_key = Pubkey::new_unique();
+
+    // Account A
+    //   - amoun: 1_000
+    //   - mint: native_mint
+    //   - is_native: false
+    //   - program_id: invalid_program_id
+    let account_a_key = Pubkey::new_unique();
+    let account_a = create_token_account(
+        &native_mint,
+        &authority_key,
+        false,
+        1_000,
+        &invalid_program_id,
+    );
+
+    // Account B
+    //   - amoun: 0
+    //   - mint: native_mint
+    //   - is_native: true
+    //   - program_id: TOKEN_PROGRAM_ID
+    let account_b_key = Pubkey::new_unique();
+    let account_b = create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
+
+    // Account C
+    //   - amoun: 0
+    //   - mint: native_mint
+    //   - is_native: true
+    //   - program_id: TOKEN_PROGRAM_ID
+    let account_c_key = Pubkey::new_unique();
+    let account_c =
+        create_token_account(&native_mint, &authority_key, true, 1_000, &TOKEN_PROGRAM_ID);
+
+    // Batch instruction to swap tokens
+    //   - transfer 300 from account A to account B
+    //   - transfer 300 from account C to account A
+    let instruction = batch_instruction(vec![
+        spl_token::instruction::sync_native(&TOKEN_PROGRAM_ID, &account_b_key).unwrap(),
+        spl_token::instruction::sync_native(&TOKEN_PROGRAM_ID, &account_c_key).unwrap(),
+        spl_token::instruction::transfer(
+            &TOKEN_PROGRAM_ID,
+            &account_a_key,
+            &account_b_key,
+            &authority_key,
+            &[],
+            300,
+        )
+        .unwrap(),
+        spl_token::instruction::transfer(
+            &TOKEN_PROGRAM_ID,
+            &account_c_key,
+            &account_a_key,
+            &authority_key,
+            &[],
+            300,
+        )
+        .unwrap(),
+    ])
+    .unwrap();
+
+    // Set up Mollusk
+
+    let feature_set = {
+        let mut fs = FeatureSet::all_enabled();
+        fs.deactivate(&bpf_account_data_direct_mapping::id());
+        fs
+    };
+
+    let mut mollusk = Mollusk {
+        feature_set,
+        ..Default::default()
+    };
+    mollusk.add_program(
+        &TOKEN_PROGRAM_ID,
+        "pinocchio_token_program",
+        &bpf_loader_upgradeable::id(),
+    );
+
+    // Expected to fail since account A has an invalid program owner.
+
+    mollusk.process_and_validate_instruction_chain(
+        &[(
+            &instruction,
+            &[
+                Check::err(ProgramError::IncorrectProgramId),
+                Check::all_rent_exempt(),
+            ],
+        )],
+        &[
+            (account_a_key, account_a),
+            (account_b_key, account_b),
+            (account_c_key, account_c),
+            (
+                authority_key,
+                Account {
+                    lamports: Rent::default().minimum_balance(0),
+                    ..Default::default()
+                },
+            ),
+        ],
+    );
 }
