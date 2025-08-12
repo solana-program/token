@@ -3072,11 +3072,15 @@ dependencies = [
 name = "pinocchio-token-program"
 version = "0.0.0"
 dependencies = [
+ "agave-feature-set",
  "assert_matches",
+ "mollusk-svm",
+ "mollusk-svm-fuzz-fixture",
  "num-traits",
  "pinocchio",
  "pinocchio-log",
  "pinocchio-token-interface",
+ "solana-account",
  "solana-instruction 2.3.0",
  "solana-keypair",
  "solana-program-error 2.2.2",
@@ -3084,6 +3088,8 @@ dependencies = [
  "solana-program-pack 2.2.1",
  "solana-program-test",
  "solana-pubkey 2.4.0",
+ "solana-rent",
+ "solana-sdk-ids 2.2.1",
  "solana-signature",
  "solana-signer",
  "solana-system-interface",
