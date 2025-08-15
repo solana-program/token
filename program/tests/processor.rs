@@ -12,7 +12,7 @@ use {
     solana_pubkey::Pubkey,
     solana_rent::Rent,
     solana_sdk_ids::sysvar::rent,
-    spl_token::{
+    spl_token_interface::{
         error::TokenError,
         instruction::{
             amount_to_ui_amount, approve, approve_checked, burn, burn_checked, close_account,

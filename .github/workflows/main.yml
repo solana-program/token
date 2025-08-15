@@ -61,8 +61,8 @@ jobs:
       - name: Lint
         run: pnpm programs:lint
 
-  format_and_lint_interface:
-    name: Format & Lint Interface
+  format_and_lint_pinterface:
+    name: Format & Lint P-Interface
     runs-on: ubuntu-latest
     steps:
       - name: Git Checkout
@@ -75,10 +75,10 @@ jobs:
           rustfmt: true
 
       - name: Format
-        run: pnpm interface:format
+        run: pnpm p-interface:format
 
       - name: Lint
-        run: pnpm interface:lint
+        run: pnpm p-interface:lint
 
   format_and_lint_ptoken:
     name: Format & Lint p-token
@@ -98,7 +98,29 @@ jobs:
 
       - name: Lint
         run: pnpm p-token:lint
-              
+
+  format_and_lint_interface:
+    name: Format, Lint & Test Interface
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+
+      - name: Format
+        run: pnpm interface:format
+
+      - name: Lint
+        run: pnpm interface:lint
+
+      - name: Lint
+        run: pnpm interface:test
+
   audit_rust:
     name: Audit Rust
     runs-on: ubuntu-latest
@@ -192,7 +214,7 @@ jobs:
   build_ptoken:
     name: Build p-token
     runs-on: ubuntu-latest
-    needs: [format_and_lint_interface, format_and_lint_ptoken]
+    needs: [format_and_lint_pinterface, format_and_lint_ptoken]
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
@@ -280,6 +302,30 @@ jobs:
 
       - name: Test
         run: pnpm programs:test
+
+  test_ptoken:
+    name: Test p-token
+    runs-on: ubuntu-latest
+    needs: build_ptoken
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-test-ptoken
+          solana: true
+          purge: true
+
+      - name: Restore Program Builds
+        uses: actions/cache/restore@v4
+        with:
+          path: ./**/*.so
+          key: ${{ runner.os }}-ptoken-build-${{ github.sha }}
+
+      - name: Test
+        run: pnpm p-token:test
 
   conformance_ptoken:
     name: Conformance Test for p-token

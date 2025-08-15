@@ -92,7 +92,7 @@ async fn initialize_account3_native_mint() {
         .start_with_context()
         .await;
 
-    let mint = Pubkey::from(spl_token_interface::native_mint::ID);
+    let mint = Pubkey::from(pinocchio_token_interface::native_mint::ID);
 
     // Given a mint authority, freeze authority and an account keypair.
 
