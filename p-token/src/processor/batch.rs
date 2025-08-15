@@ -46,32 +46,52 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
             )
         };
 
-        // `Transfer` and `TransferChecked` instructions require specific account
-        // ownership checks when executed in a batch since account ownership is
-        // checked by the runtime at the end of the batch processing only.
-        match ix_data.first() {
-            // 3 - Transfer
-            Some(3) => {
-                let [source_account_info, destination_account_info, _remaining @ ..] = ix_accounts
-                else {
-                    return Err(ProgramError::NotEnoughAccountKeys);
-                };
-
-                check_account_owner(source_account_info)?;
-                check_account_owner(destination_account_info)?;
+        // Few Instructions require specific account ownership checks when executed
+        // in a batch since ownership is only enforced by the runtime at the end of
+        // the batch processing.
+        //
+        // Instructions that do not appear in the list below do not require
+        // ownership checks since they either do not modify accounts or the ownership
+        // is already checked explicitly.
+        if let Some(&discriminator) = ix_data.first() {
+            match discriminator {
+                // 3 - Transfer
+                // 7 - MintTo
+                // 8 - Burn
+                // 14 - MintToChecked
+                // 15 - BurnChecked
+                3 | 7 | 8 | 14 | 15 => {
+                    let [a0, a1, ..] = ix_accounts else {
+                        return Err(ProgramError::NotEnoughAccountKeys);
+                    };
+                    check_account_owner(a0)?;
+                    check_account_owner(a1)?;
+                }
+                // 12 - TransferChecked
+                12 => {
+                    let [a0, _, a2, ..] = ix_accounts else {
+                        return Err(ProgramError::NotEnoughAccountKeys);
+                    };
+                    check_account_owner(a0)?;
+                    check_account_owner(a2)?;
+                }
+                // 4 - Approve
+                // 5 - Revoke
+                // 6 - SetAuthority
+                // 9 - CloseAccount
+                // 10 - FreezeAccount
+                // 11 - ThawAccount
+                // 13 - ApproveChecked
+                // 22 - InitializeImmutableOwner
+                // 38 - WithdrawExcessLamports
+                4..=13 | 22 | 38 => {
+                    let [a0, ..] = ix_accounts else {
+                        return Err(ProgramError::NotEnoughAccountKeys);
+                    };
+                    check_account_owner(a0)?;
+                }
+                _ => {}
             }
-            // 12 - TransferChecked
-            Some(12) => {
-                let [source_account_info, _, destination_account_info, _remaining @ ..] =
-                    ix_accounts
-                else {
-                    return Err(ProgramError::NotEnoughAccountKeys);
-                };
-
-                check_account_owner(source_account_info)?;
-                check_account_owner(destination_account_info)?;
-            }
-            _ => (),
         }
 
         inner_process_instruction(ix_accounts, ix_data)?;
