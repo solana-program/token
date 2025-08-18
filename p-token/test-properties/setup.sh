@@ -67,7 +67,7 @@ make -C mir-semantics stable-mir-json build CARGO_BUILD_OPTS=--release
 export RUSTC=$PWD/mir-semantics/deps/.stable-mir-json/release.sh
 ${RUSTC} --version
 
-export STABLE_MIR_OPTS="-Zno-codegen"
+# export STABLE_MIR_OPTS="-Zno-codegen"
 
 # build p-token with stable-mir-json
 # NB deletes all prior token build artefacts
