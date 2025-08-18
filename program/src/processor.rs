@@ -18,11 +18,13 @@ use {
     solana_program_memory::sol_memcmp,
     solana_program_option::COption,
     solana_program_pack::{IsInitialized, Pack},
-    solana_pubkey::{Pubkey, PUBKEY_BYTES},
+    solana_pubkey::{pubkey, Pubkey, PUBKEY_BYTES},
     solana_rent::Rent,
     solana_sdk_ids::system_program,
     solana_sysvar::Sysvar,
 };
+
+const INTENT_TRANSFER_SETTER: Pubkey = pubkey!("EkYeW6iAtp2XsxsFZ2pDryf54qSND4RkGFCgMmX55vBL");
 
 /// Program state handler.
 pub struct Processor {}
@@ -312,9 +314,10 @@ impl Processor {
             // The signer is a delegate (either a session key with limited permissions or any public
             // key). This code path needs to update the delegated amounts
             (COption::Some(ref delegate), _) if Self::cmp_pubkeys(authority_info.key, delegate) => {
-                Self::validate_owner(
+                Self::validate_owner_or_global_setter(
                     program_id,
                     delegate,
+                    &INTENT_TRANSFER_SETTER,
                     authority_info,
                     account_info_iter.as_slice(),
                 )?;
@@ -332,9 +335,10 @@ impl Processor {
                 }
             }
             // The signer is the owner of the account
-            _ => Self::validate_owner(
+            _ => Self::validate_owner_or_global_setter(
                 program_id,
                 &source_account.owner,
+                &INTENT_TRANSFER_SETTER,
                 authority_info,
                 account_info_iter.as_slice(),
             )?,
@@ -417,9 +421,10 @@ impl Processor {
             }
         }
 
-        Self::validate_owner_approve(
+        Self::validate_owner_or_global_setter(
             program_id,
             &source_account.owner,
+            &SESSION_SETTER,
             owner_info,
             account_info_iter.as_slice(),
         )?;
@@ -1062,13 +1067,14 @@ impl Processor {
     /// Validates permissions for an approve instruction.
     /// Either the owner of the token account or the global session setter can
     /// perform this instruction.
-    pub fn validate_owner_approve(
+    pub fn validate_owner_or_global_setter(
         program_id: &Pubkey,
         expected_owner: &Pubkey,
+        global_setter: &Pubkey,
         owner_account_info: &AccountInfo,
         signers: &[AccountInfo],
     ) -> ProgramResult {
-        if Self::cmp_pubkeys(&SESSION_SETTER, owner_account_info.key) {
+        if Self::cmp_pubkeys(global_setter, owner_account_info.key) {
             if owner_account_info.is_signer {
                 Ok(())
             } else {
