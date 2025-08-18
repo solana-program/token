@@ -164,13 +164,7 @@ pub(crate) fn inner_process_instruction(
             #[cfg(feature = "logging")]
             pinocchio::msg!("Testing Instruction: CloseAccount");
 
-            let accounts = [
-                accounts[0].clone(), // Source Account Info
-                accounts[1].clone(), // Destination Account Info
-                accounts[2].clone(), // Authority Info
-            ];
-
-            test_process_close_account(&accounts)
+            test_process_close_account(&accounts.first_chunk().unwrap())
         }
         // 12 - TransferChecked
         12 => {
@@ -881,9 +875,62 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
     result
 }
 
+/// accounts[0] // Source Info
+/// accounts[1] // Destination Info
+/// accounts[2] // Authority Info
 #[inline(never)]
 pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
-    process_close_account(accounts)
+    // use pinocchio_token_interface::state::{account, account_state, mint};
+    use pinocchio_token_interface::state::account;
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_data_len = accounts[0].data_len();
+    let src_init_amount = get_account(&accounts[0]).amount();
+    let dst_init_lamports = accounts[0].lamports();
+    let src_init_lamports = accounts[1].lamports();
+    // let src_init_state = get_account(&accounts[0]).account_state();
+    let src_is_native = get_account(&accounts[0]).is_native();
+    // let src_mint = get_account(&accounts[0]).mint;
+    let src_owned_sys_inc = get_account(&accounts[0]).is_owned_by_system_program_or_incinerator();
+    // let src_owner = get_account(&accounts[0]).owner;
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_close_account(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 3 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0] == accounts[2] {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_data_len != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if !src_is_native && src_init_amount != 0 { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(11)))
+    } else {
+        if !src_owned_sys_inc {
+            // TODO: Validate owner
+        } else if accounts[1].key() != &account::INCINERATOR_ID { // UNTESTED
+            assert_eq!(result, Err(ProgramError::InvalidAccountData))
+        } else if u64::MAX - src_init_lamports < dst_init_lamports { // UNTESTED
+            assert_eq!(result, Err(ProgramError::Custom(14)))
+        } else {
+            assert_eq!(accounts[1].lamports(), dst_init_lamports + src_init_lamports);
+            assert_eq!(accounts[0].data_len(), 0); // TODO: More sol_memset stuff?
+            assert!(result.is_ok());
+        }
+    }
+    result
 }
 
 /// accounts[0] // Source Info
