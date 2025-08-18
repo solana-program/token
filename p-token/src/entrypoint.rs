@@ -505,6 +505,34 @@ fn inner_process_remaining_instruction(
     }
 }
 
+// Cheatcodes to inject AccountInfo assumptions
+#[inline(never)]
+#[allow(dead_code)]
+fn cheatcode_is_account(_: &AccountInfo) {}
+// #[inline(never)]
+// fn cheatcode_is_mint(_: &AccountInfo) {}
+// #[inline(never)]
+// fn cheatcode_is_multisig(_: &AccountInfo) {}
+
+// special test for basic domain data access
+#[inline(never)]
+fn test_ptoken_domain_data(acc: &AccountInfo) {
+    cheatcode_is_account(&acc);
+
+    let owner = unsafe {acc.owner()};
+    assert!(acc.is_owned_by(owner));
+    // QUESTION: is pinocchio::Account ever written to through AccountInfo?
+
+
+}
+
+// wrapper to ensure the above test is in the SMIR JSON
+#[no_mangle]
+pub unsafe extern "C" fn use_tests(acc: &AccountInfo) {
+    test_ptoken_domain_data(&acc);
+}
+
+
 // Hack Tests For Stable MIR JSON ---------------------------------------------
 /// accounts[0] // Mint Info
 /// accounts[1] // Rent Sysvar Info
