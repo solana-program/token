@@ -1651,8 +1651,36 @@ fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramRes
 }
 
 #[inline(never)]
-fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    process_initialize_immutable_owner(accounts)
+fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 1]) -> ProgramResult {
+    use pinocchio_token_interface::state::account;
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_immutable_owner(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() != 1 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys)) // UNTESTED
+    } else if accounts[0].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.clone().unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if src_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else { // UNTESTED
+        assert!(result.is_ok())
+    }
+    result
 }
 
 #[inline(never)]
