@@ -1365,14 +1365,127 @@ fn test_process_set_authority(accounts: &[AccountInfo; 4], instruction_data: &[u
     process_set_authority(accounts, instruction_data)
 }
 
+/// accounts[0] // Source Account Info
+/// accounts[1] // Mint Info
+/// accounts[2] // Authority Info
 #[inline(never)]
-fn test_process_freeze_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    process_freeze_account(accounts)
+fn test_process_freeze_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
+    use pinocchio_token_interface::state::{account, account_state, mint};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_init_state = get_account(&accounts[0]).account_state();
+    let src_is_native = get_account(&accounts[0]).is_native();
+    let src_mint = get_account(&accounts[0]).mint;
+    let mint_initialised = get_mint(&accounts[1]).is_initialized();
+    let mint_freeze_auth = get_mint(&accounts[1]).freeze_authority().cloned();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_freeze_account(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 3 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if src_init_state.is_err() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_init_state.unwrap() == account_state::AccountState::Frozen { // UNTESTED
+        // TODO: Why is the double test not throwing an error?
+        assert_eq!(result, Err(ProgramError::Custom(13)))
+    } else if src_is_native {
+        assert_eq!(result, Err(ProgramError::Custom(10)))
+    } else if accounts[1].key() != &src_mint {
+        assert_eq!(result, Err(ProgramError::Custom(3)))
+    } else if accounts[1].data_len() != mint::Mint::LEN { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !mint_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if mint_freeze_auth.is_none() {
+        assert_eq!(result, Err(ProgramError::Custom(16)))
+    } else {
+        // TODO: Validate owner is authority
+
+        assert_eq!(get_account(&accounts[0]).account_state().unwrap(), account_state::AccountState::Frozen);
+        assert!(result.is_ok())
+    }
+    result
 }
 
+/// accounts[0] // Source Account Info
+/// accounts[1] // Mint Info
+/// accounts[2] // Authority Info
 #[inline(never)]
-fn test_process_thaw_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    process_thaw_account(accounts)
+fn test_process_thaw_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
+    use pinocchio_token_interface::state::{account, account_state, mint};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_init_state = get_account(&accounts[0]).account_state();
+    let src_is_native = get_account(&accounts[0]).is_native();
+    let src_mint = get_account(&accounts[0]).mint;
+    let mint_initialised = get_mint(&accounts[1]).is_initialized();
+    let mint_freeze_auth = get_mint(&accounts[1]).freeze_authority().cloned();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_thaw_account(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 3 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if src_init_state.is_err() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_init_state.unwrap() != account_state::AccountState::Frozen {
+        assert_eq!(result, Err(ProgramError::Custom(13)))
+    } else if src_is_native { // UNTESTED
+        // TODO: Unsure if it is even possible to freeze a native mint
+        assert_eq!(result, Err(ProgramError::Custom(10)))
+    } else if accounts[1].key() != &src_mint {
+        assert_eq!(result, Err(ProgramError::Custom(3)))
+    } else if accounts[1].data_len() != mint::Mint::LEN { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !mint_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if mint_freeze_auth.is_none() { // UNTESTED
+        // TODO: Not sure how to freeze to then thaw
+        assert_eq!(result, Err(ProgramError::Custom(16)))
+    } else {
+        // TODO: Validate owner is authority
+
+        assert_eq!(get_account(&accounts[0]).account_state().unwrap(), account_state::AccountState::Initialized);
+        assert!(result.is_ok())
+    }
+    result
 }
 
 #[inline(never)]
