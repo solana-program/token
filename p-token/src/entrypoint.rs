@@ -1605,8 +1605,47 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
 }
 
 #[inline(never)]
-fn test_process_sync_native(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    process_sync_native(accounts)
+fn test_process_sync_native(accounts: &[AccountInfo; 1]) -> ProgramResult {
+    use pinocchio_token_interface::{program, state::account};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_owner = accounts[0].owner();
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_native_amount = get_account(&accounts[0]).native_amount();
+    let src_init_lamports = accounts[0].lamports();
+    let src_init_amount = get_account(&accounts[0]).amount();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_sync_native(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() != 1 { // Untested
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if src_owner != &program::ID { // UNTESTED
+        assert_eq!(result, Err(ProgramError::IncorrectProgramId))
+    } else if accounts[0].data_len() != account::Account::LEN { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if src_native_amount.is_none() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(19)))
+    } else if src_init_lamports < src_native_amount.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(14)))
+    } else if src_init_lamports - src_native_amount.unwrap() < src_init_amount { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(13)))
+    } else { // UNTESTED
+        assert_eq!(get_account(&accounts[0]).amount(), src_init_lamports - src_native_amount.unwrap());
+        assert!(result.is_ok())
+    }
+    result
 }
 
 #[inline(never)]
