@@ -1355,9 +1355,46 @@ fn test_process_approve(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1])
     process_approve(accounts, instruction_data)
 }
 
+/// accounts[0] // Source Account Info
+/// accounts[1] // Owner Info
 #[inline(never)]
-fn test_process_revoke(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    process_revoke(accounts)
+fn test_process_revoke(accounts: &[AccountInfo; 2]) -> ProgramResult {
+    use pinocchio_token_interface::state::{account, account_state};
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_init_state = get_account(&accounts[0]).account_state();
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_revoke(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 1 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != account::Account::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::UninitializedAccount))
+    } else if accounts.len() < 2 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if src_init_state.is_err() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_init_state.unwrap() == account_state::AccountState::Frozen {
+        assert_eq!(result, Err(ProgramError::Custom(17)))
+    } else {
+        // TODO: validate owner / signers
+
+        assert!(get_account(&accounts[0]).delegate().is_none());
+        assert_eq!(get_account(&accounts[0]).delegated_amount(), 0);
+        assert!(result.is_ok())
+    }
+
+    result
 }
 
 #[inline(never)]
