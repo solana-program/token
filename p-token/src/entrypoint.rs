@@ -1712,8 +1712,6 @@ fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 1]) -> Progr
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys)) // UNTESTED
     } else if accounts[0].data_len() != account::Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if !src_initialised.clone().unwrap() { // UNTESTED
-        assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if src_initialised.unwrap() { // UNTESTED
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else { // UNTESTED
