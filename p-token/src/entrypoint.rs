@@ -1345,30 +1345,37 @@ pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], inst
     result
 }
 
+#[inline(never)]
 fn test_process_initialize_multisig(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
     process_initialize_multisig(accounts, instruction_data)
 }
 
+#[inline(never)]
 fn test_process_approve(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
     process_approve(accounts, instruction_data)
 }
 
+#[inline(never)]
 fn test_process_revoke(accounts: &[AccountInfo; 4]) -> ProgramResult {
     process_revoke(accounts)
 }
 
+#[inline(never)]
 fn test_process_set_authority(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
     process_set_authority(accounts, instruction_data)
 }
 
+#[inline(never)]
 fn test_process_freeze_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
     process_freeze_account(accounts)
 }
 
+#[inline(never)]
 fn test_process_thaw_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
     process_thaw_account(accounts)
 }
 
+#[inline(never)]
 fn test_process_approve_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
     process_approve_checked(accounts, instruction_data)
 }
@@ -1377,6 +1384,7 @@ fn test_process_approve_checked(accounts: &[AccountInfo; 4], instruction_data: &
 /// accounts[1] // Destination Info
 /// accounts[2] // Owner Info
 /// instruction_data[0..9] // Little Endian Bytes of u64 amount, and decimals
+#[inline(never)]
 fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &[u8; 9]) -> ProgramResult {
     use pinocchio_token_interface::state::{mint, account, account_state};
 
@@ -1446,15 +1454,18 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
     result
 }
 
+#[inline(never)]
 fn test_process_sync_native(accounts: &[AccountInfo; 4]) -> ProgramResult {
     process_sync_native(accounts)
 }
 
+#[inline(never)]
 fn test_process_initialize_multisig2(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
     process_initialize_multisig2(accounts, instruction_data)
 }
 
 /// accounts[0] // Mint Info
+#[inline(never)]
 fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramResult {
     use pinocchio_token_interface::state::mint;
 
@@ -1489,10 +1500,12 @@ fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramRes
     result
 }
 
+#[inline(never)]
 fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 4]) -> ProgramResult {
     process_initialize_immutable_owner(accounts)
 }
 
+#[inline(never)]
 fn test_process_amount_to_ui_amount(accounts: &[AccountInfo; 1], instruction_data: &[u8; 8]) -> ProgramResult {
     use pinocchio_token_interface::state::mint;
 
@@ -1527,6 +1540,7 @@ fn test_process_amount_to_ui_amount(accounts: &[AccountInfo; 1], instruction_dat
     result
 }
 
+#[inline(never)]
 fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 1], instruction_data: &[u8]) -> ProgramResult {
     use pinocchio_token_interface::state::mint;
 
@@ -1621,6 +1635,7 @@ fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 1], instruction_dat
     result
 }
 
+#[inline(never)]
 fn test_process_withdraw_excess_lamports(accounts: &[AccountInfo; 4]) -> ProgramResult {
     process_withdraw_excess_lamports(accounts)
 }
