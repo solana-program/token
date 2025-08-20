@@ -20,8 +20,12 @@ pinocchio-log = { version = "0.5", default-features = false }
 pinocchio-token-interface = { version = "^0", path = "../p-interface" }
 
 [dev-dependencies]
+agave-feature-set = "2.2.20"
 assert_matches = "1.5.0"
+mollusk-svm = { workspace = true }
+mollusk-svm-fuzz-fixture = { workspace = true }
 num-traits = { workspace = true }
+solana-account = "2.2.1"
 solana-instruction = { workspace = true }
 solana-keypair = "2.2.3"
 solana-program-error = { workspace = true }
@@ -29,6 +33,8 @@ solana-program-option = { workspace = true }
 solana-program-pack = { workspace = true }
 solana-program-test = "2.3.4"
 solana-pubkey = { workspace = true }
+solana-rent = "2.2.1"
+solana-sdk-ids = "2.2.1"
 solana-signature = "2.3.0"
 solana-signer = "2.2.1"
 solana-transaction = "2.2.3"
