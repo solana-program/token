@@ -1,14 +1,9 @@
 use {
     crate::processor::*,
     pinocchio::{
-        account_info::AccountInfo,
-        no_allocator, nostd_panic_handler, program_entrypoint,
-        program_error::{ProgramError, ToStr},
-        pubkey::Pubkey,
-        ProgramResult,
-        sysvars::Sysvar,
+        account_info::AccountInfo, no_allocator, nostd_panic_handler, program_entrypoint, program_error::{ProgramError, ToStr}, pubkey::Pubkey, sysvars::Sysvar, ProgramResult
     },
-    spl_token_interface::{error::TokenError, state::{Initializable, Transmutable}},
+    spl_token_interface::{error::TokenError, state::{account::Account, load_unchecked, Initializable, Transmutable}},
 };
 
 program_entrypoint!(process_instruction);
@@ -519,11 +514,17 @@ fn cheatcode_is_account(_: &AccountInfo) {}
 fn test_ptoken_domain_data(acc: &AccountInfo) {
     cheatcode_is_account(&acc);
 
+    unsafe {
+        let test = acc.borrow_data_unchecked();
+        let iacc:Result<&Account, _> = load_unchecked(test);
+
+        let iacc = iacc.unwrap();
+        let _owner = iacc.owner;
+    }
+
     let owner = unsafe {acc.owner()};
     assert!(acc.is_owned_by(owner));
     // QUESTION: is pinocchio::Account ever written to through AccountInfo?
-
-
 }
 
 // wrapper to ensure the above test is in the SMIR JSON
