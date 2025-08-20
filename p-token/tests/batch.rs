@@ -326,7 +326,7 @@ async fn batch_transfer() {
     //   - amount: 1_000_000_000
     //   - mint: mint_key
     //   - is_native: false
-    //   - program_id: invalid_program_id
+    //   - program_id: TOKEN_PROGRAM_ID
     let source_account_key = Pubkey::new_unique();
     let source_account = create_token_account(
         &mint_key,
@@ -514,7 +514,7 @@ async fn batch_fail_swap_tokens_with_invalid_program_owner() {
     let authority_key = Pubkey::new_unique();
 
     // Account A
-    //   - amoun: 1_000
+    //   - amount: 1_000
     //   - mint: native_mint
     //   - is_native: false
     //   - program_id: invalid_program_id
@@ -528,7 +528,7 @@ async fn batch_fail_swap_tokens_with_invalid_program_owner() {
     );
 
     // Account B
-    //   - amoun: 0
+    //   - amount: 0
     //   - mint: native_mint
     //   - is_native: true
     //   - program_id: TOKEN_PROGRAM_ID
@@ -536,7 +536,7 @@ async fn batch_fail_swap_tokens_with_invalid_program_owner() {
     let account_b = create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
 
     // Account C
-    //   - amoun: 0
+    //   - amount: 0
     //   - mint: native_mint
     //   - is_native: true
     //   - program_id: TOKEN_PROGRAM_ID
