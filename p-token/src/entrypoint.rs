@@ -502,19 +502,31 @@ fn inner_process_remaining_instruction(
 
 // Cheatcodes to inject AccountInfo assumptions
 #[inline(never)]
-#[allow(dead_code)]
 fn cheatcode_is_account(_: &AccountInfo) {}
-// #[inline(never)]
-// fn cheatcode_is_mint(_: &AccountInfo) {}
+#[inline(never)]
+fn cheatcode_is_mint(_: &AccountInfo) {}
 // #[inline(never)]
 // fn cheatcode_is_multisig(_: &AccountInfo) {}
 
+use spl_token_interface::state::mint::Mint;
+
 // special test for basic domain data access
 #[inline(never)]
-fn test_ptoken_domain_data(acc: &AccountInfo) {
+fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo) {
+    cheatcode_is_mint(&mint);
+
+    unsafe {
+    // let _imint = get_mint(&mint);
+        let test = mint.borrow_data_unchecked();
+        let imint = load_unchecked::<Mint>(test);
+        let imint = imint.unwrap();
+        assert!(imint.is_initialized().unwrap());
+    }
+
     cheatcode_is_account(&acc);
 
     unsafe {
+    // let _iacc = get_account(&acc);
         let test = acc.borrow_data_unchecked();
         let iacc:Result<&Account, _> = load_unchecked(test);
 
@@ -530,8 +542,26 @@ fn test_ptoken_domain_data(acc: &AccountInfo) {
 // wrapper to ensure the above test is in the SMIR JSON
 #[no_mangle]
 pub unsafe extern "C" fn use_tests(acc: &AccountInfo) {
-    test_ptoken_domain_data(&acc);
+    test_ptoken_domain_data(&acc, &acc);
 }
+
+fn get_account(account_info: &AccountInfo) -> &Account {
+    unsafe {
+        let byte_ptr = account_info.borrow_data_unchecked();
+        let acc_ref = load_unchecked::<Account>(byte_ptr).unwrap();
+        acc_ref
+    }
+}
+
+fn get_mint(account_info: &AccountInfo) -> &Mint {
+    unsafe {
+        let byte_ptr = account_info.borrow_data_unchecked();
+        let acc_ref = load_unchecked::<Mint>(byte_ptr).unwrap();
+        acc_ref
+    }
+}
+
+
 
 
 // Hack Tests For Stable MIR JSON ---------------------------------------------
@@ -638,13 +668,6 @@ pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instr
     result
 }
 
-
-fn get_account(account_info: &AccountInfo) -> spl_token_interface::state::account::Account { unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const spl_token_interface::state::account::Account)
-            .read()
-    }
-}
-
 /// accounts[0] // New Account Info
 /// accounts[1] // Mint Info
 /// accounts[2] // Owner Info
@@ -714,21 +737,20 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
     result
 }
 
+
+
 /// accounts[0] // Source Info
 /// accounts[1] // Destination Info
 /// accounts[2] // Authority Info
 /// instruction_data[0..8] // Little Endian Bytes of u64 amount
 #[inline(never)]
 pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
-    use spl_token_interface::state::{account, account_state};
+    use spl_token_interface::state::account_state;
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let amount = unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
