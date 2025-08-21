@@ -171,18 +171,14 @@ pub fn process_transfer(
         if source_account.is_native() {
             // SAFETY: single mutable borrow to `source_account_info` lamports.
             let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
-            *source_lamports = source_lamports
-                .checked_sub(amount)
-                .ok_or(TokenError::Overflow)?;
+            *source_lamports -= amount;
 
             // SAFETY: single mutable borrow to `destination_account_info` lamports; the
             // account is already validated to be different from
             // `source_account_info`.
             let destination_lamports =
                 unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
-            *destination_lamports = destination_lamports
-                .checked_add(amount)
-                .ok_or(TokenError::Overflow)?;
+            *destination_lamports += amount;
         }
     }
 
