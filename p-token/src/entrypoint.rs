@@ -825,16 +825,9 @@ pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8;
     use spl_token_interface::state::{mint, account, account_state};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let initial_supply = get_mint(&accounts[0]).supply();
@@ -905,19 +898,13 @@ pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult 
 /// instruction_data[0..9] // Little Endian Bytes of u64 amount, and decimals
 #[inline(never)]
 pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 9]) -> ProgramResult {
-    use spl_token_interface::state::{account, account_state, mint::Mint};
+    use spl_token_interface::state::{account_state, mint::Mint};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
-            .read()
-    };
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+    cheatcode_is_account(&accounts[3]);
 
     //-Initial State-----------------------------------------------------------
     let amount = unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
@@ -1075,12 +1062,8 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
     use spl_token_interface::state::{account, account_state};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    // let get_account = |account_info: &AccountInfo| unsafe {
-    //     (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-    //         .read()
-    // };
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
@@ -1142,12 +1125,8 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
 /// instruction_data[34..66] // instruction_data[33] == 1 ==> Freeze Authority Pubkey
 #[inline(never)]
 pub fn test_process_initialize_mint2_freeze(accounts: &[AccountInfo; 1], instruction_data: &[u8; 66]) -> ProgramResult {
-    use spl_token_interface::state::mint::Mint;
-    //-Helpers-----------------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
-            .read()
-    };
+
+    cheatcode_is_mint(&accounts[0]);
 
     //-Initial State-----------------------------------------------------------
     // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
@@ -1192,12 +1171,8 @@ pub fn test_process_initialize_mint2_freeze(accounts: &[AccountInfo; 1], instruc
 /// instruction_data[33]     // Freeze Authority Exists? 0 for no freeze
 #[inline(never)]
 pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], instruction_data: &[u8; 34]) -> ProgramResult {
-    use spl_token_interface::state::mint::Mint;
-    //-Helpers-----------------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
-            .read()
-    };
+
+    cheatcode_is_mint(&accounts[0]);
 
     //-Initial State-----------------------------------------------------------
     // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
@@ -1272,16 +1247,9 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
     use spl_token_interface::state::{mint, account, account_state};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let initial_supply = get_mint(&accounts[0]).supply();
@@ -1350,14 +1318,9 @@ fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramRes
     use spl_token_interface::state::mint;
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
+    cheatcode_is_mint(&accounts[0]);
 
     //-Initial State-----------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
 
     //-Process Instruction-----------------------------------------------------
     let result = process_get_account_data_size(accounts);
