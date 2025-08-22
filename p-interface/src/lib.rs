@@ -28,6 +28,8 @@ pub const fn likely(b: bool) -> bool {
     }
 }
 
+/// Return a given `bool` value with a hint to the compiler that `false` is the
+/// likely case.
 #[inline(always)]
 pub const fn unlikely(b: bool) -> bool {
     if b {
