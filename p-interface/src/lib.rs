@@ -16,7 +16,8 @@ pub mod program {
 #[cold]
 pub const fn unlikely_branch() {}
 
-
+/// Return the given `bool` value with a hint to the compiler that `true` is the
+/// likely case.
 #[inline(always)]
 pub const fn likely(b: bool) -> bool {
     if b {
