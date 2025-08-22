@@ -9,7 +9,8 @@ pub mod program {
     pinocchio_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 }
 
-/// A "dummy" function with a hint to the compiler that it is unlikely to be called.
+/// A "dummy" function with a hint to the compiler that it is unlikely to be
+/// called.
 ///
 /// This function is used as a hint to the compiler to optimize other code paths
 /// instead of the one where the function is used.
