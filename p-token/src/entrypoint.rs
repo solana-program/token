@@ -3,7 +3,7 @@ use {
     pinocchio::{
         account_info::AccountInfo, no_allocator, nostd_panic_handler, program_entrypoint, program_error::{ProgramError, ToStr}, pubkey::Pubkey, sysvars::Sysvar, ProgramResult
     },
-    spl_token_interface::{error::TokenError, state::{account::Account, load_unchecked, Initializable, Transmutable}},
+    spl_token_interface::{error::TokenError, state::{account::Account, load_unchecked, load_mut_unchecked, Initializable, Transmutable}},
 };
 
 program_entrypoint!(process_instruction);
@@ -514,25 +514,25 @@ use spl_token_interface::state::mint::Mint;
 #[inline(never)]
 fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo) {
     cheatcode_is_mint(&mint);
-
     unsafe {
-    // let _imint = get_mint(&mint);
-        let test = mint.borrow_data_unchecked();
-        let imint = load_unchecked::<Mint>(test);
+        let test = mint.borrow_mut_data_unchecked();
+        let imint = load_mut_unchecked::<Mint>(test);
         let imint = imint.unwrap();
-        assert!(imint.is_initialized().unwrap());
+        imint.set_initialized();
     }
+    let imint = get_mint(&mint);
+    assert!(imint.is_initialized().unwrap());
 
     cheatcode_is_account(&acc);
-
     unsafe {
-    // let _iacc = get_account(&acc);
-        let test = acc.borrow_data_unchecked();
-        let iacc:Result<&Account, _> = load_unchecked(test);
-
+        let test = acc.borrow_mut_data_unchecked();
+        let iacc:Result<&mut Account, _> = load_mut_unchecked(test);
         let iacc = iacc.unwrap();
-        let _owner = iacc.owner;
+        iacc.set_native(true);
+
     }
+    let iacc = get_account(&acc);
+    assert!(iacc.is_native());
 
     let owner = unsafe {acc.owner()};
     assert!(acc.is_owned_by(owner));
