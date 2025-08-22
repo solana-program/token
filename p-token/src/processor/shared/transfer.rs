@@ -171,8 +171,8 @@ pub fn process_transfer(
         if source_account.is_native() {
             // SAFETY: single mutable borrow to `source_account_info` lamports.
             let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
-            // Note: The amount of a source token account is already validated and the `lamports`
-            //  on the account is always greater than `amount`.
+            // Note: The amount of a source token account is already validated and the
+            // `lamports` on the account is always greater than `amount`.
             *source_lamports -= amount;
 
             // SAFETY: single mutable borrow to `destination_account_info` lamports; the
