@@ -1,20 +1,146 @@
 use {
     crate::processor::*,
+    core::{
+        mem::{size_of, transmute, MaybeUninit},
+        slice::from_raw_parts,
+    },
     pinocchio::{
         account_info::AccountInfo,
-        no_allocator, nostd_panic_handler, program_entrypoint,
+        entrypoint::deserialize,
+        no_allocator, nostd_panic_handler,
         program_error::{ProgramError, ToStr},
         pubkey::Pubkey,
-        ProgramResult,
+        ProgramResult, MAX_TX_ACCOUNTS, SUCCESS,
     },
-    pinocchio_token_interface::error::TokenError,
+    pinocchio_token_interface::{error::TokenError, likely},
 };
 
-program_entrypoint!(process_instruction);
 // Do not allocate memory.
 no_allocator!();
 // Use the no_std panic handler.
 nostd_panic_handler!();
+
+/// Custom program entrypoint to give priority to transfer
+/// instructions.
+///
+/// This entrypoint prioritizes transfer instructions by checking the
+/// account data lengths and the instruction data for the transfer
+/// discriminator. When it can reliably determine that the instruction
+/// is a transfer, it will invoke those processors directly, which
+/// improves the CU consumption.
+#[no_mangle]
+pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
+    /// Offset for the first account.
+    const ACCOUNT1_HEADER_OFFSET: usize = 0x0008;
+
+    /// Offset for the first account data length.
+    const ACCOUNT1_DATA_LEN: usize = 0x0058;
+
+    /// Offset for the second account.
+    ///
+    /// Note that this assumes that the first account has zero
+    /// data, which is being validated before the offset is used.
+    const ACCOUNT2_HEADER_OFFSET: usize = 0x2910;
+
+    /// Offset for the second account data length.
+    ///
+    ///
+    /// Note that this assumes that the first account has zero
+    /// data, which is being validated before the offset is used.
+    const ACCOUNT2_DATA_LEN: usize = 0x2960;
+
+    /// Offset for the second account.
+    ///
+    /// Note that this assumes that both first and second accounts
+    /// have zero data, which is being validated before the offset
+    /// is used.
+    const ACCOUNT3_HEADER_OFFSET: usize = 0x5218;
+
+    /// Offset for the third account data length.
+    ///
+    /// Note that this assumes that both first and second accounts
+    /// have zero data, which is being validated before the offset
+    /// is used.
+    const ACCOUNT3_DATA_LEN: usize = 0x5268;
+
+    /// Offset for the instruction data in the case all three accounts
+    /// have zero data, which is being validated before the offset
+    /// is used.
+    const INSTRUCTION_DATA_LEN_OFFSET: usize = 0x7a78;
+
+    /// Align an address to the next multiple of 8.
+    #[inline(always)]
+    fn align(input: u64) -> u64 {
+        (input + 7) & (!7)
+    }
+
+    // Fast path for transfer.
+    //
+    // Transfer expects 3 accounts:
+    //    1. source: must be a token account (165 length)
+    //    2. destination: must be a token account (165 length)
+    //    3. authority: can be any account (variable length)
+    //
+    // The instruction will validate accounts, we are checking the lengths
+    // here to see if we are dealing with a transfer instruction.
+    //
+    // Any instruction not matching these assumptions will be handled
+    // by the regular instruction processing path.
+    if likely(
+        *input == 3
+            && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == 165)
+            && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
+            && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == 165)
+            && (*input.add(ACCOUNT3_HEADER_OFFSET) == 255),
+    ) {
+        // The `authority` account can have variable data length.
+        let account_3_data_len_aligned =
+            align(*input.add(ACCOUNT3_DATA_LEN).cast::<u64>()) as usize;
+        let offset = INSTRUCTION_DATA_LEN_OFFSET + account_3_data_len_aligned;
+
+        // Check that we have enough instruction data.
+        if likely(input.add(offset).cast::<usize>().read() >= 9) {
+            let discriminator = input.add(offset + size_of::<u64>()).cast::<u8>().read();
+
+            // Check for transfer discriminator.
+            if likely(discriminator == 3) {
+                let instruction_data =
+                    unsafe { from_raw_parts(input.add(offset + 9), size_of::<u64>()) };
+
+                let accounts = unsafe {
+                    [
+                        transmute::<*mut u8, AccountInfo>(input.add(ACCOUNT1_HEADER_OFFSET)),
+                        transmute::<*mut u8, AccountInfo>(input.add(ACCOUNT2_HEADER_OFFSET)),
+                        transmute::<*mut u8, AccountInfo>(input.add(ACCOUNT3_HEADER_OFFSET)),
+                    ]
+                };
+
+                return match process_transfer(&accounts, instruction_data) {
+                    Ok(()) => SUCCESS,
+                    Err(error) => {
+                        log_error(&error);
+                        error.into()
+                    }
+                };
+            }
+        }
+    }
+
+    const UNINIT: MaybeUninit<AccountInfo> = MaybeUninit::<AccountInfo>::uninit();
+    let mut accounts = [UNINIT; { MAX_TX_ACCOUNTS }];
+
+    let (program_id, count, instruction_data) =
+        deserialize::<{ MAX_TX_ACCOUNTS }>(input, &mut accounts);
+
+    match process_instruction(
+        program_id,
+        from_raw_parts(accounts.as_ptr() as _, count),
+        instruction_data,
+    ) {
+        Ok(()) => SUCCESS,
+        Err(error) => error.into(),
+    }
+}
 
 /// Log an error.
 #[cold]
