@@ -180,6 +180,7 @@ pub fn process_transfer(
             // `source_account_info`.
             let destination_lamports =
                 unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
+            // Note: The total lamports supply is bound to `u64::MAX`.
             *destination_lamports += amount;
         }
     }
