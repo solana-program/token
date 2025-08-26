@@ -187,7 +187,7 @@ async fn mint_to_native() {
 
     let mint_authority = Keypair::new();
 
-    let mint = Pubkey::from(spl_token_interface::native_mint::ID);
+    let mint = Pubkey::from(pinocchio_token_interface::native_mint::ID);
 
     // And a token account.
 

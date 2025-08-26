@@ -1,25 +1,14 @@
-<p align="center">
-  <a href="https://solana.com">
-    <img alt="Solana" src="https://github.com/user-attachments/assets/534af75d-6347-48dc-8943-129423b2ba63" height="80" />
-  </a>
-</p>
+# Token Interface
 
-# SPL Token Interface
+A token program interface on the Solana blockchain, usable for fungible and
+non-fungible tokens.
 
-This crate contains instructions and constructors for interacting with the [SPL Token program](https://spl.solana.com/token).
+This crate provides an interface that third parties can utilize to create and
+use their tokens.
 
-The Token program defines a common implementation for Fungible and Non Fungible tokens.
+Full documentation is available at [https://www.solana-program.com/docs/token](https://www.solana-program.com/docs/token)
 
-## Getting Started
+## Audit
 
-From your project folder:
-
-```bash
-cargo add spl-token-interface
-```
-
-This will add the `spl-token-interface` dependency to your `Cargo.toml` file.
-
-## Documentation
-
-Read more about the SPL Token interface on the crate [documentation](https://docs.rs/spl-token-interface).
+The audit repository [README](https://github.com/solana-labs/solana-program-library#audits)
+contains information about program audits.

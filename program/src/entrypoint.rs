@@ -1,11 +1,12 @@
 //! Program entrypoint
 
 use {
-    crate::{error::TokenError, processor::Processor},
+    crate::processor::Processor,
     solana_account_info::AccountInfo,
     solana_msg::msg,
     solana_program_error::{ProgramResult, ToStr},
     solana_pubkey::Pubkey,
+    spl_token_interface::error::TokenError,
 };
 
 solana_program_entrypoint::entrypoint!(process_instruction);

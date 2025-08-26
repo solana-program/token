@@ -1,20 +1,41 @@
 [package]
 name = "spl-token-interface"
-version = "0.0.0"
-description = "Instructions and types for interacting with SPL Token program"
-authors = { workspace = true}
-repository = { workspace = true}
-license = { workspace = true}
-edition = { workspace = true}
-readme = "./README.md"
-
-[lib]
-crate-type = ["rlib"]
+version = "2.0.0"
+description = "Solana Program Library Token Interface"
+documentation = "https://docs.rs/spl-token-interface"
+readme = "README.md"
+authors = { workspace = true }
+repository = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-pinocchio = { workspace = true }
-pinocchio-pubkey = "0.2"
+arrayref = "0.3.9"
+bytemuck = "1.20.0"
+num-derive = "0.4"
+num_enum = "0.7.4"
+num-traits = "0.2"
+solana-instruction = "3.0.0"
+solana-program-error = "3.0.0"
+solana-program-option = "3.0.0"
+solana-program-pack = "3.0.0"
+solana-pubkey = { version = "3.0.0", features = ["bytemuck"] }
+solana-sdk-ids = "3.0.0"
+thiserror = "2.0"
 
 [dev-dependencies]
-strum = "0.27"
-strum_macros = "0.27"
+proptest = "1.5"
+strum = "0.24"
+strum_macros = "0.24"
+
+[lib]
+crate-type = ["lib"]
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[lints]
+workspace = true
+
+[package.metadata.solana]
+program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"

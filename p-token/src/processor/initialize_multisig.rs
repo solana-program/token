@@ -1,7 +1,7 @@
 use {
     super::shared,
     pinocchio::{account_info::AccountInfo, ProgramResult},
-    spl_token_interface::error::TokenError,
+    pinocchio_token_interface::error::TokenError,
 };
 
 #[inline(always)]
