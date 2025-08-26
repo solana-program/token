@@ -12,6 +12,7 @@ use {
             multisig::{Multisig, MAX_SIGNERS},
             Transmutable,
         },
+        unlikely,
     },
 };
 
@@ -103,9 +104,10 @@ unsafe fn validate_owner(
         return Err(TokenError::OwnerMismatch.into());
     }
 
-    if owner_account_info.data_len() == Multisig::LEN
-        && owner_account_info.is_owned_by(&TOKEN_PROGRAM_ID)
-    {
+    if unlikely(
+        owner_account_info.data_len() == Multisig::LEN
+            && owner_account_info.is_owned_by(&TOKEN_PROGRAM_ID),
+    ) {
         // SAFETY: the caller guarantees that there are no mutable borrows of
         // `owner_account_info` account data and the `load` validates that the
         // account is initialized; additionally, `Multisig` accounts are only
@@ -130,7 +132,7 @@ unsafe fn validate_owner(
         if num_signers < multisig.m {
             return Err(ProgramError::MissingRequiredSignature);
         }
-    } else if !owner_account_info.is_signer() {
+    } else if unlikely(!owner_account_info.is_signer()) {
         return Err(ProgramError::MissingRequiredSignature);
     }
 

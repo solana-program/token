@@ -4,6 +4,7 @@ use {
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load, load_mut, load_mut_unchecked, mint::Mint},
+        unlikely,
     },
 };
 
@@ -76,7 +77,7 @@ pub fn process_transfer(
     //   - transfers to different accounts: we need to check that the source and
     //     destination accounts are not frozen, have the same mint, and the source
     //     account has enough tokens.
-    let remaining_amount = if self_transfer {
+    let remaining_amount = if unlikely(self_transfer) {
         if source_account.is_frozen()? {
             return Err(TokenError::AccountFrozen.into());
         }
