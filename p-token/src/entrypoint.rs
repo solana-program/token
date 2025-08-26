@@ -9,7 +9,6 @@ use {
         entrypoint::deserialize,
         no_allocator, nostd_panic_handler,
         program_error::{ProgramError, ToStr},
-        pubkey::Pubkey,
         ProgramResult, MAX_TX_ACCOUNTS, SUCCESS,
     },
     pinocchio_token_interface::{error::TokenError, likely},
@@ -87,13 +86,12 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     //
     // Any instruction not matching these assumptions will be handled
     // by the regular instruction processing path.
-    if likely(
-        *input == 3
-            && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == 165)
-            && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
-            && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == 165)
-            && (*input.add(ACCOUNT3_HEADER_OFFSET) == 255),
-    ) {
+    if *input == 3
+        && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == 165)
+        && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
+        && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == 165)
+        && (*input.add(ACCOUNT3_HEADER_OFFSET) == 255)
+    {
         // The `authority` account can have variable data length.
         let account_3_data_len_aligned =
             align(*input.add(ACCOUNT3_DATA_LEN).cast::<u64>()) as usize;
@@ -102,7 +100,7 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
         // Check that we have enough instruction data.
         //
         // Expected: instruction discriminator (u8) + amount (u64)
-        if likely(input.add(offset).cast::<usize>().read() >= size_of::<u8>() + size_of::<u64>()) {
+        if input.add(offset).cast::<usize>().read() >= size_of::<u8>() + size_of::<u64>() {
             let discriminator = input.add(offset + size_of::<u64>()).cast::<u8>().read();
 
             // Check for transfer discriminator.
@@ -137,11 +135,9 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     const UNINIT: MaybeUninit<AccountInfo> = MaybeUninit::<AccountInfo>::uninit();
     let mut accounts = [UNINIT; { MAX_TX_ACCOUNTS }];
 
-    let (program_id, count, instruction_data) =
-        deserialize::<{ MAX_TX_ACCOUNTS }>(input, &mut accounts);
+    let (_, count, instruction_data) = deserialize::<{ MAX_TX_ACCOUNTS }>(input, &mut accounts);
 
     match process_instruction(
-        program_id,
         from_raw_parts(accounts.as_ptr() as _, count),
         instruction_data,
     ) {
@@ -164,11 +160,7 @@ fn log_error(error: &ProgramError) {
 /// instructions, since it is not sound to have a "batch" instruction inside
 /// another "batch" instruction.
 #[inline(always)]
-pub fn process_instruction(
-    _program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    instruction_data: &[u8],
-) -> ProgramResult {
+pub fn process_instruction(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
     let [discriminator, remaining @ ..] = instruction_data else {
         return Err(TokenError::InvalidInstruction.into());
     };
