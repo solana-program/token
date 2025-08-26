@@ -15,7 +15,7 @@ pub mod program {
 /// This function is used as a hint to the compiler to optimize other code paths
 /// instead of the one where the function is used.
 #[cold]
-pub const fn unlikely_branch() {}
+pub const fn cold_path() {}
 
 /// Return the given `bool` value with a hint to the compiler that `true` is the
 /// likely case.
@@ -24,7 +24,7 @@ pub const fn likely(b: bool) -> bool {
     if b {
         true
     } else {
-        unlikely_branch();
+        cold_path();
         false
     }
 }
@@ -34,7 +34,7 @@ pub const fn likely(b: bool) -> bool {
 #[inline(always)]
 pub const fn unlikely(b: bool) -> bool {
     if b {
-        unlikely_branch();
+        cold_path();
         true
     } else {
         false
