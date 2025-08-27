@@ -44,14 +44,11 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
         }
     }
 
-    let destination_starting_lamports = destination_account_info.lamports();
     // SAFETY: single mutable borrow to `destination_account_info` lamports and
     // there are no "active" borrows of `source_account_info` account data.
     unsafe {
         // Moves the lamports to the destination account.
-        *destination_account_info.borrow_mut_lamports_unchecked() = destination_starting_lamports
-            .checked_add(source_account_info.lamports())
-            .ok_or(TokenError::Overflow)?;
+        *destination_account_info.borrow_mut_lamports_unchecked() += source_account_info.lamports();
         // Closes the source account.
         source_account_info.close_unchecked();
     }
