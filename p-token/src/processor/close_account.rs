@@ -49,6 +49,8 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
     // there are no "active" borrows of `source_account_info` account data.
     unsafe {
         // Moves the lamports to the destination account.
+        //
+        // Note: The total lamports supply is bound to `u64::MAX`.
         *destination_account_info.borrow_mut_lamports_unchecked() += source_account_info.lamports();
         // Closes the source account.
         source_account_info.close_unchecked();
