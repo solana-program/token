@@ -551,11 +551,6 @@ fn get_mint(account_info: &AccountInfo) -> &Mint {
 #[inline(never)]
 pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 66]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
-    //-Helpers-----------------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
-            .read()
-    };
 
     //-Initial State-----------------------------------------------------------
     let minimum_balance = unsafe {
@@ -602,11 +597,6 @@ pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruct
 #[inline(never)]
 pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
-    //-Helpers-----------------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
-            .read()
-    };
 
     //-Initial State-----------------------------------------------------------
     let minimum_balance = unsafe {
@@ -654,12 +644,6 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
     use pinocchio_token_interface::state::{account, account_state};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    // let get_account = |account_info: &AccountInfo| unsafe {
-    //     (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-    //         .read()
-    // };
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
@@ -867,16 +851,10 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
     use pinocchio_token_interface::state::{account, account_state, mint};
 
     // TODO: requires accounts[..] are all valid ptrs
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
 
     //-Initial State-----------------------------------------------------------
     let amount = || unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
@@ -943,12 +921,9 @@ pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult 
     use pinocchio_token_interface::state::account;
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let src_initialised = get_account(&accounts[0]).is_initialized();
@@ -1088,16 +1063,10 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
     use pinocchio_token_interface::state::{account, account_state, mint};
 
     // TODO: requires accounts[..] are all valid ptrs
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
 
     //-Initial State-----------------------------------------------------------
     let amount = || unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
@@ -1168,11 +1137,6 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
 
     // TODO: requires accounts[..] are all valid ptrs
 
-    //-Helpers-----------------------------------------------------------------
-    // let get_account = |account_info: &AccountInfo| unsafe {
-    //     (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-    //         .read()
-    // };
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
@@ -1401,11 +1365,9 @@ fn test_process_approve(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1])
 #[inline(never)]
 fn test_process_revoke(accounts: &[AccountInfo; 2]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
+
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
 
     //-Initial State-----------------------------------------------------------
     let src_initialised = get_account(&accounts[0]).is_initialized();
@@ -1451,16 +1413,9 @@ fn test_process_freeze_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let src_initialised = get_account(&accounts[0]).is_initialized();
@@ -1512,16 +1467,9 @@ fn test_process_thaw_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint};
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let src_initialised = get_account(&accounts[0]).is_initialized();
@@ -1643,12 +1591,8 @@ fn test_process_sync_native(accounts: &[AccountInfo; 1]) -> ProgramResult {
     use pinocchio_token_interface::{program, state::account};
 
     // TODO: requires accounts[..] are all valid ptrs
+    cheatcode_is_account(&accounts[0]);
 
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
 
     //-Initial State-----------------------------------------------------------
     let src_owner = accounts[0].owner();
@@ -1723,12 +1667,8 @@ fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 1]) -> Progr
     use pinocchio_token_interface::state::account;
 
     // TODO: requires accounts[..] are all valid ptrs
+    cheatcode_is_account(&accounts[0]);
 
-    //-Helpers-----------------------------------------------------------------
-    let get_account = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
-            .read()
-    };
 
     //-Initial State-----------------------------------------------------------
     let src_initialised = get_account(&accounts[0]).is_initialized();
@@ -1754,12 +1694,7 @@ fn test_process_amount_to_ui_amount(accounts: &[AccountInfo; 1], instruction_dat
     use pinocchio_token_interface::state::mint;
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    //-Helpers-----------------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
+    cheatcode_is_mint(&accounts[0]);
 
     //-Initial State-----------------------------------------------------------
 
@@ -1789,12 +1724,7 @@ fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 1], instruction_dat
     use pinocchio_token_interface::state::mint;
 
     // TODO: requires accounts[..] are all valid ptrs
-
-    // //-Helpers-----------------------------------------------------------------
-    let get_mint = |account_info: &AccountInfo| unsafe {
-        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
-            .read()
-    };
+    cheatcode_is_mint(&accounts[0]);
 
     // //-Initial State-----------------------------------------------------------
     let ui_amount = core::str::from_utf8(instruction_data);
