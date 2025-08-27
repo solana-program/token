@@ -8,6 +8,7 @@ use {
 };
 
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_burn(
     accounts: &[AccountInfo],
     amount: u64,

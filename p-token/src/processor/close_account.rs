@@ -11,6 +11,7 @@ use {
 };
 
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
     let [source_account_info, destination_account_info, authority_info, remaining @ ..] = accounts
     else {
