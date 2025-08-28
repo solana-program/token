@@ -12,7 +12,7 @@
 #
 #######################################################################
 
-ALL_NAMES=$(sed -n -e 's/^| \([a-zA-Z0-9:_]*\) *|.*/\1/p' tests.md)
+ALL_NAMES=$(sed -n -e 's/^| \(entrypoint[a-zA-Z0-9:_]*\) *|.*/\1/p' tests.md)
 
 TIMEOUT=300
 PROVE_OPTS="--max-iterations 20 --max-depth 100"
