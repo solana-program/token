@@ -2,10 +2,10 @@
 |-----------------------------------------------------|-----|---------|-------|------------------------------------------------------------------------------|
 | entrypoint::test_process_transfer                   | 600 | Timeout | >850  | stuck on using an alloc                                                      |
 | entrypoint::test_process_mint_to                    |     | Stuck   | 1136  | inconsistent projection involving IAcc                                       |
-| entrypoint::test_process_burn                       |     | Stuck   | 236   | AggregateKindClosure                                                         |
+| entrypoint::test_process_burn                       | 640 | Stuck   | 1684  | call to raw_eq (1 branch), reads an alloc (1 branch)                         |
 | entrypoint::test_process_close_account              |     | Stuck   | 655   | erratic branching (cheatcode rules) after #fromPAcc(#toPAcc(_)), reads alloc |
 | entrypoint::test_process_transfer_checked           |     | Timeout | ~930  | stuck on access to an alloc (1 branch)                                       |
-| entrypoint::test_process_burn_checked               |     | Stuck   | 236   | AggregateKindClosure                                                         |
+| entrypoint::test_process_burn_checked               | 670 | Stuck   | 1684  | call to raw_eq (1 branch), reads an alloc (1 branch)                         |
 | entrypoint::test_process_initialize_account3        |     |         | ~600  | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous  |
 | entrypoint::test_process_initialize_mint2_freeze    |     | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous  |
 | entrypoint::test_process_initialize_mint2_no_freeze |     | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous  |

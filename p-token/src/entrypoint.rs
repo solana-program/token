@@ -857,7 +857,7 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
 
 
     //-Initial State-----------------------------------------------------------
-    let amount = || unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
+    let amount = unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
     let src_initialised = get_account(&accounts[0]).is_initialized();
     let src_init_amount = get_account(&accounts[0]).amount();
     let src_init_state = get_account(&accounts[0]).account_state();
@@ -889,7 +889,7 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
         assert_eq!(result, Err(ProgramError::Custom(17)))
     } else if src_is_native {
         assert_eq!(result, Err(ProgramError::Custom(10)))
-    } else if src_init_amount < amount() {
+    } else if src_init_amount < amount {
         assert_eq!(result, Err(ProgramError::Custom(1)))
     } else if accounts[1].key() != &src_mint {
         assert_eq!(result, Err(ProgramError::Custom(3)))
@@ -898,13 +898,13 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
             // TODO validate_owner and delgated_amount
         }
 
-        if amount() == 0 && src_owner != pinocchio_token_interface::program::ID { // UNTESTED
+        if amount == 0 && src_owner != pinocchio_token_interface::program::ID { // UNTESTED
             assert_eq!(result, Err(ProgramError::IncorrectProgramId))
-        } else if amount() == 0 && mint_owner != pinocchio_token_interface::program::ID { // UNTESTED
+        } else if amount == 0 && mint_owner != pinocchio_token_interface::program::ID { // UNTESTED
             assert_eq!(result, Err(ProgramError::IncorrectProgramId))
         } else {
-            assert!(get_account(&accounts[0]).amount() == src_init_amount - amount());
-            assert!(get_mint(&accounts[1]).supply() == mint_init_supply - amount());
+            assert!(get_account(&accounts[0]).amount() == src_init_amount - amount);
+            assert!(get_mint(&accounts[1]).supply() == mint_init_supply - amount);
             assert!(result.is_ok());
         }
     }
@@ -1069,7 +1069,7 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
 
 
     //-Initial State-----------------------------------------------------------
-    let amount = || unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
+    let amount = unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
     let src_initialised = get_account(&accounts[0]).is_initialized();
     let src_init_amount = get_account(&accounts[0]).amount();
     let src_init_state = get_account(&accounts[0]).account_state();
@@ -1102,7 +1102,7 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
         assert_eq!(result, Err(ProgramError::Custom(17)))
     } else if src_is_native {
         assert_eq!(result, Err(ProgramError::Custom(10)))
-    } else if src_init_amount < amount() {
+    } else if src_init_amount < amount {
         assert_eq!(result, Err(ProgramError::Custom(1)))
     } else if accounts[1].key() != &src_mint {
         assert_eq!(result, Err(ProgramError::Custom(3)))
@@ -1113,13 +1113,13 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
             // TODO validate_owner and delgated_amount
         }
 
-        if amount() == 0 && src_owner != pinocchio_token_interface::program::ID { // UNTESTED
+        if amount == 0 && src_owner != pinocchio_token_interface::program::ID { // UNTESTED
             assert_eq!(result, Err(ProgramError::IncorrectProgramId))
-        } else if amount() == 0 && mint_owner != pinocchio_token_interface::program::ID { // UNTESTED
+        } else if amount == 0 && mint_owner != pinocchio_token_interface::program::ID { // UNTESTED
             assert_eq!(result, Err(ProgramError::IncorrectProgramId))
         } else {
-            assert!(get_account(&accounts[0]).amount() == src_init_amount - amount());
-            assert!(get_mint(&accounts[1]).supply() == mint_init_supply - amount());
+            assert!(get_account(&accounts[0]).amount() == src_init_amount - amount);
+            assert!(get_mint(&accounts[1]).supply() == mint_init_supply - amount);
             assert!(result.is_ok());
         }
     }
