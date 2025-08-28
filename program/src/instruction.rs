@@ -467,6 +467,13 @@ pub enum TokenInstruction<'a> {
         /// The `ui_amount` of tokens to reformat.
         ui_amount: &'a str,
     },
+    /// blablabla
+    InitializeAccount4 {
+        /// The owner of the account.
+        owner: Pubkey,
+        /// The close authority of the account.
+        close_authority: Pubkey,
+    },
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
     // token/js/src/instructions/types.ts to maintain @solana/spl-token compatibility
@@ -572,6 +579,11 @@ impl<'a> TokenInstruction<'a> {
             24 => {
                 let ui_amount = std::str::from_utf8(rest).map_err(|_| InvalidInstruction)?;
                 Self::UiAmountToAmount { ui_amount }
+            }
+            25 => {
+                let (owner, rest) = Self::unpack_pubkey(rest)?;
+                let (close_authority, _rest) = Self::unpack_pubkey(rest)?;
+                Self::InitializeAccount4 { owner, close_authority }
             }
             _ => return Err(TokenError::InvalidInstruction.into()),
         })
@@ -683,6 +695,11 @@ impl<'a> TokenInstruction<'a> {
             Self::UiAmountToAmount { ui_amount } => {
                 buf.push(24);
                 buf.extend_from_slice(ui_amount.as_bytes());
+            }
+            &Self::InitializeAccount4 { owner, close_authority } => {
+                buf.push(25);
+                buf.extend_from_slice(owner.as_ref());
+                buf.extend_from_slice(close_authority.as_ref());
             }
         };
         buf

@@ -89,6 +89,7 @@ impl Processor {
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         owner: Option<&Pubkey>,
+        close_authority: Option<&Pubkey>,
         rent_sysvar_account: bool,
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
@@ -124,7 +125,7 @@ impl Processor {
 
         account.mint = *mint_info.key;
         account.owner = *owner;
-        account.close_authority = COption::None;
+        account.close_authority = close_authority.map(|key| *key).into();
         account.delegate = COption::None;
         account.delegated_amount = 0;
         account.state = AccountState::Initialized;
@@ -151,7 +152,7 @@ impl Processor {
         program_id: &Pubkey,
         accounts: &[AccountInfo],
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, None, true)
+        Self::_process_initialize_account(program_id, accounts, None, None, true)
     }
 
     /// Processes an [`InitializeAccount2`](enum.TokenInstruction.html)
@@ -161,7 +162,7 @@ impl Processor {
         accounts: &[AccountInfo],
         owner: Pubkey,
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, Some(&owner), true)
+        Self::_process_initialize_account(program_id, accounts, Some(&owner), None, true)
     }
 
     /// Processes an [`InitializeAccount3`](enum.TokenInstruction.html)
@@ -171,7 +172,7 @@ impl Processor {
         accounts: &[AccountInfo],
         owner: Pubkey,
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, Some(&owner), false)
+        Self::_process_initialize_account(program_id, accounts, Some(&owner), None, false)
     }
 
     fn _process_initialize_multisig(
@@ -930,6 +931,17 @@ impl Processor {
         Ok(())
     }
 
+    /// Processes an [`InitializeAccount4`](enum.TokenInstruction.html)
+    /// instruction
+    pub fn process_initialize_account4(
+        program_id: &Pubkey,
+        accounts: &[AccountInfo],
+        owner: Pubkey,
+        close_authority: Pubkey,
+    ) -> ProgramResult {
+        Self::_process_initialize_account(program_id, accounts, Some(&owner), Some(&close_authority), false)
+    }
+
     /// Processes an [`Instruction`](enum.Instruction.html).
     pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], input: &[u8]) -> ProgramResult {
         let instruction = TokenInstruction::unpack(input)?;
@@ -1045,6 +1057,10 @@ impl Processor {
             TokenInstruction::UiAmountToAmount { ui_amount } => {
                 msg!("Instruction: UiAmountToAmount");
                 Self::process_ui_amount_to_amount(program_id, accounts, ui_amount)
+            }
+            TokenInstruction::InitializeAccount4 { owner, close_authority } => {
+                msg!("Instruction: InitializeAccount4");
+                Self::process_initialize_account4(program_id, accounts, owner, close_authority)
             }
         }
     }
