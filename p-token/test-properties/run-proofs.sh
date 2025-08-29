@@ -3,8 +3,8 @@
 # Run all start symbols given as arguments (or read them from tests.md
 # table if -a given) with given run options (-o) and timeout (-t).
 # Options and defaults:
-#   -t NUM   : timeout in seconds (default 300)
-#   -o STRING: prove-rs options. Default "--max-iterations 20 --max-depth 100 "
+#   -t NUM   : timeout in seconds (default 1200)
+#   -o STRING: prove-rs options. Default "--max-iterations 30 --max-depth 200 "
 #   -a       : run all start symbols from table in `tests.md` (1st column)
 #
 # Always runs verbosely, always reloads, always uses artefacts/proof
@@ -14,8 +14,8 @@
 
 ALL_NAMES=$(sed -n -e 's/^| \(entrypoint[a-zA-Z0-9:_]*\) *|.*/\1/p' tests.md)
 
-TIMEOUT=300
-PROVE_OPTS="--max-iterations 20 --max-depth 100"
+TIMEOUT=1200
+PROVE_OPTS="--max-iterations 30 --max-depth 200"
 
 while getopts ":t:o:a" opt; do
     case $opt in

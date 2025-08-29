@@ -1,23 +1,27 @@
-| Start symbol name                                   | Sec | Status  | Steps |                                                                              |
-|-----------------------------------------------------|-----|---------|-------|------------------------------------------------------------------------------|
-| entrypoint::test_process_transfer                   | 600 | Timeout | >850  | stuck on using an alloc                                                      |
-| entrypoint::test_process_mint_to                    |     | Stuck   | 1136  | inconsistent projection involving IAcc                                       |
-| entrypoint::test_process_burn                       | 640 | Stuck   | 1684  | call to raw_eq (1 branch), reads an alloc (1 branch)                         |
-| entrypoint::test_process_close_account              |     | Stuck   | 655   | erratic branching (cheatcode rules) after #fromPAcc(#toPAcc(_)), reads alloc |
-| entrypoint::test_process_transfer_checked           |     | Timeout | ~930  | stuck on access to an alloc (1 branch)                                       |
-| entrypoint::test_process_burn_checked               | 670 | Stuck   | 1684  | call to raw_eq (1 branch), reads an alloc (1 branch)                         |
-| entrypoint::test_process_initialize_account3        |     |         | ~600  | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous  |
-| entrypoint::test_process_initialize_mint2_freeze    |     | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous  |
-| entrypoint::test_process_initialize_mint2_no_freeze |     | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous  |
-| entrypoint::test_process_revoke                     | 600 | Timeout | 955   | non-det branch on cheatcodes (invalid read from stack), reads alloc          |
-| entrypoint::test_process_freeze_account             | 600 | Timeout | 1455  | reads alloc (one branch)                                                     |
-| entrypoint::test_process_thaw_account               | 600 | Timeout | 1455  | reads alloc (one branch)                                                     |
-| entrypoint::test_process_mint_to_checked            |     | Stuck   | 942   | pointer offset(8) on byte ptr in AggregateKindRawPtr                         |
-| entrypoint::test_process_sync_native                | 600 | Timeout | 167   | erratic branching (cheatcode rules) after #fromPAcc(#toPAcc(_))              |
-| entrypoint::test_process_get_account_data_size      | 600 | Timeout | 224   | erratic branching (cheatcode rules) after #fromPAcc(#toPAcc(_))              |
-| entrypoint::test_process_initialize_immutable_owner | 600 | Timeout | 1306  | erratic branching (cheatcode rules) after #fromPAcc(#toPAcc(_)), reads alloc |
-| entrypoint::test_process_amount_to_ui_amount        | 600 | Timeout | 684   | erratic branching (cheatcode rules) after #fromPAcc(#toPAcc(_))              |
-| entrypoint::test_process_ui_amount_to_amount        |     | Stuck   | 90    | call to core::str::convert::from_utf8 (stdlib)                               |
+Proofs timings and steps with default settings from run-proofs.sh:
+max-depth 200, max-iterations 30, timeout 20min (1200)
+
+|                                                     |      |         | Steps |                                                                             |
+| Start symbol name                                   | Sec  | Status  | max   |                                                                             |
+|-----------------------------------------------------|------|---------|-------|-----------------------------------------------------------------------------|
+| entrypoint::test_process_transfer                   | 1200 | Timeout | 2178  | erratic branching on invalid IAcc projection, reads alloc (err case)        |
+| entrypoint::test_process_mint_to                    | 340  | Stuck   | 1136  | inconsistent projection involving IAcc                                      |
+| entrypoint::test_process_burn                       | 692  | Stuck   | 1684  | call to raw_eq (with alloc as arg.), reads alloc (err case)                 |
+| entrypoint::test_process_close_account              | 520  | Stuck   | 1468  | call to raw_eq (with alloc as arg.), reads alloc                            |
+| entrypoint::test_process_transfer_checked           | 1080 | Stuck   | 1951  | ptr offset, reads alloc (err case)                                          |
+| entrypoint::test_process_burn_checked               | 670  | Stuck   | 1684  | call to raw_eq (with alloc as arg.), reads alloc (err case)                 |
+| entrypoint::test_process_initialize_account3        | 700  | Stuck   | 610   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous |
+| entrypoint::test_process_initialize_mint2_freeze    | 412  | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous |
+| entrypoint::test_process_initialize_mint2_no_freeze | 390  | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous |
+| entrypoint::test_process_revoke                     | 1200 | Timeout | 955   | non-det branch on cheatcodes (invalid read from stack), reads alloc         |
+| entrypoint::test_process_freeze_account             | 1200 | Timeout | 1903  | various branches on key prefix values, reads alloc (err case)               |
+| entrypoint::test_process_thaw_account               | 1200 | Timeout | 1903  | various branches on key prefix values, reads alloc (err case)               |
+| entrypoint::test_process_mint_to_checked            | 310  | Stuck   | 942   | pointer offset(8) on byte ptr in AggregateKindRawPtr                        |
+| entrypoint::test_process_sync_native                | 590  | Stuck   | 1508  | 2 calls to raw_eq (with alloc as arg.), reads alloc (err case)              |
+| entrypoint::test_process_get_account_data_size      | 105  | Stuck   | 319   | call to raw_eq (with alloc as arg.)                                         |
+| entrypoint::test_process_initialize_immutable_owner | 410  | Stuck   | 1442  | call to core::result::unwrap_failed, reads alloc (2 err cases)              |
+| entrypoint::test_process_amount_to_ui_amount        | 398  | Stuck   | 779   | call to raw_eq (with alloc as arg.)                                         |
+| entrypoint::test_process_ui_amount_to_amount        | 251  | Stuck   | 90    | call to core::str::convert::from_utf8 (stdlib)                              |
 
 The following tests are missing a cheat code setup:
 (keep the first column so the `run-proofs.sh` script does not try to run these)
