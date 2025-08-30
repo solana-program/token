@@ -6,7 +6,7 @@ use {
     },
     pinocchio::{
         account_info::AccountInfo,
-        entrypoint::deserialize_into,
+        entrypoint::deserialize,
         hint::likely,
         no_allocator, nostd_panic_handler,
         program_error::{ProgramError, ToStr},
@@ -88,7 +88,7 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     /// previous accounts have zero data.
     ///
     /// This value is adjusted before it is used.
-    const IX3_INSTRUCTION_DATA_LEN_OFFSET: usize = 0x7a28;
+    const IX3_INSTRUCTION_DATA_LEN_OFFSET: usize = 0x7a78;
 
     /// Align an address to the next multiple of 8.
     #[inline(always)]
@@ -202,10 +202,10 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     const UNINIT: MaybeUninit<AccountInfo> = MaybeUninit::<AccountInfo>::uninit();
     let mut accounts = [UNINIT; { MAX_TX_ACCOUNTS }];
 
-    let (count, instruction_data) = deserialize_into(input, &mut accounts);
+    let (_, count, instruction_data) = deserialize(input, &mut accounts);
 
     match process_instruction(
-        from_raw_parts(accounts.as_ptr() as _, count as usize),
+        from_raw_parts(accounts.as_ptr() as _, count),
         instruction_data,
     ) {
         Ok(()) => SUCCESS,
@@ -331,12 +331,12 @@ pub(crate) fn inner_process_instruction(
 
             process_burn_checked(accounts, instruction_data)
         }
-        // 16 - InitializeAccount2
-        16 => {
+        // 17 - SyncNative
+        17 => {
             #[cfg(feature = "logging")]
-            pinocchio::msg!("Instruction: InitializeAccount2");
+            pinocchio::msg!("Instruction: SyncNative");
 
-            process_initialize_account2(accounts, instruction_data)
+            process_sync_native(accounts)
         }
         // 18 - InitializeAccount3
         18 => {
@@ -351,6 +351,13 @@ pub(crate) fn inner_process_instruction(
             pinocchio::msg!("Instruction: InitializeMint2");
 
             process_initialize_mint2(accounts, instruction_data)
+        }
+        // 22 - InitializeImmutableOwner
+        22 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: InitializeImmutableOwner");
+
+            process_initialize_immutable_owner(accounts)
         }
         d => inner_process_remaining_instruction(accounts, instruction_data, d),
     }
@@ -424,12 +431,12 @@ fn inner_process_remaining_instruction(
 
             process_mint_to_checked(accounts, instruction_data)
         }
-        // 17 - SyncNative
-        17 => {
+        // 16 - InitializeAccount2
+        16 => {
             #[cfg(feature = "logging")]
-            pinocchio::msg!("Instruction: SyncNative");
+            pinocchio::msg!("Instruction: InitializeAccount2");
 
-            process_sync_native(accounts)
+            process_initialize_account2(accounts, instruction_data)
         }
         // 19 - InitializeMultisig2
         19 => {
@@ -444,13 +451,6 @@ fn inner_process_remaining_instruction(
             pinocchio::msg!("Instruction: GetAccountDataSize");
 
             process_get_account_data_size(accounts)
-        }
-        // 22 - InitializeImmutableOwner
-        22 => {
-            #[cfg(feature = "logging")]
-            pinocchio::msg!("Instruction: InitializeImmutableOwner");
-
-            process_initialize_immutable_owner(accounts)
         }
         // 23 - AmountToUiAmount
         23 => {
