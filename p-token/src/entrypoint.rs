@@ -1,18 +1,18 @@
 use {
     crate::processor::*,
     core::{
-        mem::{transmute, MaybeUninit},
+        mem::{size_of, transmute, MaybeUninit},
         slice::from_raw_parts,
     },
     pinocchio::{
         account_info::AccountInfo,
         entrypoint::deserialize,
-        hint::likely,
+        log::sol_log,
         no_allocator, nostd_panic_handler,
         program_error::{ProgramError, ToStr},
         ProgramResult, MAX_TX_ACCOUNTS, SUCCESS,
     },
-    pinocchio_token_interface::error::TokenError,
+    pinocchio_token_interface::{error::TokenError, likely},
 };
 
 // Do not allocate memory.
@@ -216,7 +216,7 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
 /// Log an error.
 #[cold]
 fn log_error(error: &ProgramError) {
-    pinocchio::log::sol_log(error.to_str::<TokenError>());
+    sol_log(error.to_str::<TokenError>());
 }
 
 /// Process an instruction.
