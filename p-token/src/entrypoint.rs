@@ -481,6 +481,8 @@ fn cheatcode_is_account(_: &AccountInfo) {}
 fn cheatcode_is_mint(_: &AccountInfo) {}
 // #[inline(never)]
 // fn cheatcode_is_multisig(_: &AccountInfo) {}
+#[inline(never)]
+fn cheatcode_is_rent(_: &AccountInfo) {}
 
 use pinocchio_token_interface::state::mint::Mint;
 use pinocchio_token_interface::state::account::Account;
@@ -489,7 +491,18 @@ use pinocchio_token_interface::state::{load_mut_unchecked, load_unchecked};
 
 // special test for basic domain data access
 #[inline(never)]
-fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo) {
+fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo, rent: &AccountInfo) {
+    cheatcode_is_rent(rent);
+    let prent = unsafe {
+        let test = rent.borrow_data_unchecked();
+        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(test)
+    };
+    // cannot call any functions that use f64 in any way
+    // assume burn_percent value <=100 and calculate with it
+    let rent_collected = 10;
+    let (burnt, distributed) = prent.calculate_burn(rent_collected);
+    assert!(burnt <= rent_collected && distributed <= rent_collected); // fails if burn_percent > 100
+
     cheatcode_is_mint(&mint);
     unsafe {
         let test = mint.borrow_mut_data_unchecked();
@@ -519,7 +532,7 @@ fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo) {
 // wrapper to ensure the above test is in the SMIR JSON
 #[no_mangle]
 pub unsafe extern "C" fn use_tests(acc: &AccountInfo) {
-    test_ptoken_domain_data(&acc, &acc);
+    test_ptoken_domain_data(&acc, &acc, &acc);
 }
 
 fn get_account(account_info: &AccountInfo) -> &Account {
