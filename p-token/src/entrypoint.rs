@@ -487,6 +487,7 @@ fn cheatcode_is_rent(_: &AccountInfo) {}
 use pinocchio_token_interface::state::mint::Mint;
 use pinocchio_token_interface::state::account::Account;
 use pinocchio_token_interface::state::{load_mut_unchecked, load_unchecked};
+use pinocchio::sysvars::rent::Rent;
 
 
 // special test for basic domain data access
@@ -495,7 +496,7 @@ fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo, rent: &Account
     cheatcode_is_rent(rent);
     let prent = unsafe {
         let test = rent.borrow_data_unchecked();
-        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(test)
+        Rent::from_bytes_unchecked(test)
     };
     // cannot call any functions that use f64 in any way
     // assume burn_percent value <=100 and calculate with it
@@ -551,8 +552,11 @@ fn get_mint(account_info: &AccountInfo) -> &Mint {
     }
 }
 
-
-
+fn get_rent(account_info: &AccountInfo) -> &Rent {
+    unsafe {
+        Rent::from_bytes_unchecked(account_info.borrow_data_unchecked())
+    }
+}
 
 // Hack Tests For Stable MIR JSON ---------------------------------------------
 /// accounts[0] // Mint Info
@@ -565,10 +569,12 @@ fn get_mint(account_info: &AccountInfo) -> &Mint {
 pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 66]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
 
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_rent(&accounts[1]);
+
     //-Initial State-----------------------------------------------------------
-    let minimum_balance = unsafe {
-        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[1].borrow_data_unchecked())
-    }.minimum_balance(accounts[0].data_len());
+    let minimum_balance =
+        get_rent(&accounts[1]).minimum_balance(accounts[0].data_len()); // TODO float problem
     let mint_is_initialised_prior = get_mint(&accounts[0]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -611,10 +617,12 @@ pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruct
 pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
 
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_rent(&accounts[1]);
+
     //-Initial State-----------------------------------------------------------
-    let minimum_balance = unsafe {
-        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[1].borrow_data_unchecked())
-    }.minimum_balance(accounts[0].data_len());
+    let minimum_balance =
+        get_rent(&accounts[1]).minimum_balance(accounts[0].data_len()); // TODO float problem
     let mint_is_initialised_prior = get_mint(&accounts[0]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -657,15 +665,19 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
     use pinocchio_token_interface::state::{account, account_state};
 
     // TODO: requires accounts[..] are all valid ptrs
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+    cheatcode_is_rent(&accounts[3]);
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
         .account_state()
         .unwrap();
 
-    let minimum_balance = unsafe {
-        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[3].borrow_data_unchecked())
-    }.minimum_balance(accounts[0].data_len());
+    //-Initial State-----------------------------------------------------------
+    let minimum_balance =
+        get_rent(&accounts[3]).minimum_balance(accounts[0].data_len()); // TODO float problem
 
     let is_native_mint = accounts[1].key() == &pinocchio_token_interface::native_mint::ID;
 
@@ -1149,16 +1161,17 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
     use pinocchio_token_interface::state::{account, account_state};
 
     // TODO: requires accounts[..] are all valid ptrs
-
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_rent(&accounts[2]);
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
         .account_state()
         .unwrap();
 
-    let minimum_balance = unsafe {
-        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[2].borrow_data_unchecked())
-    }.minimum_balance(accounts[0].data_len());
+    let minimum_balance = 
+        get_rent(&accounts[2]).minimum_balance(accounts[0].data_len());
 
     let is_native_mint = accounts[1].key() == &pinocchio_token_interface::native_mint::ID;
 
