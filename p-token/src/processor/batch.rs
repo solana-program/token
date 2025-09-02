@@ -84,7 +84,8 @@ pub fn process_batch(mut accounts: &[AccountInfo], mut instruction_data: &[u8]) 
                 // 13 - ApproveChecked
                 // 22 - InitializeImmutableOwner
                 // 38 - WithdrawExcessLamports
-                4..=13 | 22 | 38 => {
+                // 45 - UnwrapLamports
+                4..=13 | 22 | 38 | 45 => {
                     let [a0, ..] = ix_accounts else {
                         return Err(ProgramError::NotEnoughAccountKeys);
                     };
