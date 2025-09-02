@@ -498,6 +498,21 @@ pub enum TokenInstruction {
     ///   3. `..+M` `[signer]` M signer accounts.
     WithdrawExcessLamports = 38,
 
+    /// Transfer lamports from a native SOL account to a destination account.
+    ///
+    /// This is useful to unwrap lamports from a wrapped SOL account.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[signer]` The source account's owner/delegate.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `u64` The amount of lamports to transfer.
+    UnwrapLamports,
+
     /// Executes a batch of instructions. The instructions to be executed are
     /// specified in sequence on the instruction data. Each instruction
     /// provides:
