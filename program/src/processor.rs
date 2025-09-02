@@ -764,12 +764,19 @@ impl Processor {
             return Err(ProgramError::InvalidAccountData);
         }
 
-
         let mut source_account = Account::unpack(&source_account_info.data.borrow())?;
 
-        let close_authority = source_account.close_authority.unwrap_or(source_account.owner);
+        let (owner_is_close_authority, close_authority) = source_account
+            .close_authority
+            .map(|close_authority| {
+                (
+                    Self::cmp_pubkeys(&close_authority, &source_account.owner),
+                    close_authority,
+                )
+            })
+            .unwrap_or((true, source_account.owner));
 
-        if source_account.is_native() && !Self::cmp_pubkeys(&source_account.owner, &close_authority) {
+        if source_account.is_native() && !owner_is_close_authority {
             // Owner can unwrap native tokens even without the close authority
             if !source_account.is_owned_by_system_program_or_incinerator() {
                 Self::validate_owner(
@@ -783,7 +790,9 @@ impl Processor {
             }
 
             let destination_starting_lamports = destination_account_info.lamports();
-            let rent_exempt_reserve = source_account.is_native.expect("source_account.is_native() is true in this branch");
+            let rent_exempt_reserve = source_account
+                .is_native
+                .expect("source_account.is_native() is true in this branch");
             **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
                 .checked_add(source_account_info.lamports())
                 .ok_or(TokenError::Overflow)?
@@ -794,7 +803,9 @@ impl Processor {
             source_account.amount = 0;
         } else {
             // Close authority is closing the account to recover the full rent
-            if !((source_account.amount == 0) || (source_account.is_native() && Self::cmp_pubkeys(&source_account.owner, &close_authority))) {
+            if !((source_account.amount == 0)
+                || (source_account.is_native() && owner_is_close_authority))
+            {
                 return Err(TokenError::NonNativeHasBalance.into());
             }
 
