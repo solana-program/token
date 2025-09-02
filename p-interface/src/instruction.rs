@@ -511,7 +511,7 @@ pub enum TokenInstruction {
     /// Data expected by this instruction:
     ///
     ///   - `u64` The amount of lamports to transfer.
-    UnwrapLamports,
+    UnwrapLamports = 45,
 
     /// Executes a batch of instructions. The instructions to be executed are
     /// specified in sequence on the instruction data. Each instruction
