@@ -41,6 +41,7 @@ pub mod thaw_account;
 pub mod transfer;
 pub mod transfer_checked;
 pub mod ui_amount_to_amount;
+pub mod unwrap_lamports;
 pub mod withdraw_excess_lamports;
 // Shared processors.
 pub mod shared;
@@ -61,6 +62,7 @@ pub use {
     set_authority::process_set_authority, sync_native::process_sync_native,
     thaw_account::process_thaw_account, transfer::process_transfer,
     transfer_checked::process_transfer_checked, ui_amount_to_amount::process_ui_amount_to_amount,
+    unwrap_lamports::process_unwrap_lamports,
     withdraw_excess_lamports::process_withdraw_excess_lamports,
 };
 

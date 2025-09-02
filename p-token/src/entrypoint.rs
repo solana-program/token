@@ -486,6 +486,13 @@ fn inner_process_remaining_instruction(
 
             process_withdraw_excess_lamports(accounts)
         }
+        // 39 - UnwrapLamports
+        39 => {
+            #[cfg(feature = "logging")]
+            pinocchio::msg!("Instruction: UnwrapLamports");
+
+            process_unwrap_lamports(accounts, instruction_data)
+        }
         _ => Err(TokenError::InvalidInstruction.into()),
     }
 }
