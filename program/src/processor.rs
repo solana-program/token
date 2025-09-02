@@ -764,10 +764,13 @@ impl Processor {
             return Err(ProgramError::InvalidAccountData);
         }
 
-        let source_account = Account::unpack(&source_account_info.data.borrow())?;
 
-        if source_account.is_native() && authority_info.key == &source_account.owner {
-            // Owner is unwrapping native tokens (wSOL)
+        let mut source_account = Account::unpack(&source_account_info.data.borrow())?;
+
+        let close_authority = source_account.close_authority.unwrap_or(source_account.owner);
+
+        if source_account.is_native() && !Self::cmp_pubkeys(&source_account.owner, &close_authority) {
+            // Owner can unwrap native tokens even without the close authority
             if !source_account.is_owned_by_system_program_or_incinerator() {
                 Self::validate_owner(
                     program_id,
@@ -780,27 +783,25 @@ impl Processor {
             }
 
             let destination_starting_lamports = destination_account_info.lamports();
-            let minimum_rent = Rent::get()?.minimum_balance(source_account_info.data_len());
+            let rent_exempt_reserve = source_account.is_native.expect("source_account.is_native() is true in this branch");
             **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
                 .checked_add(source_account_info.lamports())
                 .ok_or(TokenError::Overflow)?
-                .checked_sub(minimum_rent)
+                .checked_sub(rent_exempt_reserve)
                 .ok_or(TokenError::Overflow)?;
 
-            **source_account_info.lamports.borrow_mut() = minimum_rent;
+            **source_account_info.lamports.borrow_mut() = rent_exempt_reserve;
+            source_account.amount = 0;
         } else {
-            // Close authority is closing the account to recover the rent
-            if source_account.amount != 0 {
+            // Close authority is closing the account to recover the full rent
+            if !((source_account.amount == 0) || (source_account.is_native() && Self::cmp_pubkeys(&source_account.owner, &close_authority))) {
                 return Err(TokenError::NonNativeHasBalance.into());
             }
 
-            let authority = source_account
-                .close_authority
-                .unwrap_or(source_account.owner);
             if !source_account.is_owned_by_system_program_or_incinerator() {
                 Self::validate_owner(
                     program_id,
-                    &authority,
+                    &close_authority,
                     authority_info,
                     account_info_iter.as_slice(),
                 )?;
