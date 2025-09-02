@@ -4909,6 +4909,123 @@ fn test_close_account() {
 }
 
 #[test]
+fn test_close_native_account_with_close_authority() {
+    let program_id = spl_token::id();
+    let mint_key = Pubkey::new_unique();
+    let mut mint_account =
+        SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+    let account_key = Pubkey::new_unique();
+    let mut account_account = SolanaAccount::new(
+        account_minimum_balance() + 42,
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let destination_key = Pubkey::new_unique();
+    let mut destination_account = SolanaAccount::new(
+        account_minimum_balance(),
+        Account::get_packed_len(),
+        &program_id,
+    );
+    let owner_key = Pubkey::new_unique();
+    let mut owner_account = SolanaAccount::default();
+    let owner2_key = Pubkey::new_unique();
+    let mut owner2_account = SolanaAccount::default();
+    let mut rent_sysvar = rent_sysvar();
+
+    // initialize mint
+    do_process_instruction(
+        initialize_mint(&program_id, &mint_key, &owner_key, None, 2).unwrap(),
+        vec![&mut mint_account, &mut rent_sysvar],
+        &[Check::success()],
+    )
+    .unwrap();
+
+    do_process_instruction(
+        initialize_account(&program_id, &account_key, &spl_token::native_mint::id(), &owner_key).unwrap(),
+        vec![
+            &mut account_account,
+            &mut mint_account,
+            &mut owner_account,
+            &mut rent_sysvar,
+        ],
+        &[Check::success(),
+        Check::account(&account_key)
+        .data_slice(109, &[1, 0, 0, 0])
+        .build(),
+    Check::account(&account_key)
+        .data_slice(64, &42u64.to_le_bytes())
+        .build()],
+    )
+    .unwrap();
+    let account = Account::unpack_unchecked(&account_account.data).unwrap();
+    assert!(account.is_native());
+    assert_eq!(account.amount, 42);
+    assert_eq!(account.close_authority, COption::None);
+
+    do_process_instruction(
+        set_authority(
+            &program_id,
+            &account_key,
+            Some(&owner2_key),
+            AuthorityType::CloseAccount,
+            &owner_key,
+            &[],
+        )
+        .unwrap(),
+        vec![&mut account_account, &mut owner_account],
+        &[Check::success()],
+    )
+    .unwrap();
+    let account = Account::unpack_unchecked(&account_account.data).unwrap();
+    assert!(account.is_native());
+    assert_eq!(account.amount, 42);
+    assert_eq!(account.close_authority, COption::Some(owner2_key));
+
+    // close authority cannot close native account with non-zero balance
+    assert_eq!(
+        Err(TokenError::NonNativeHasBalance.into()),
+        do_process_instruction(
+            close_account(&program_id, &account_key, &destination_key, &owner2_key, &[]).unwrap(),
+            vec![&mut account_account, &mut owner2_account, &mut destination_account],
+            &[Check::err(TokenError::NonNativeHasBalance.into())],
+        )
+    );
+
+    // close native account when close_authority is different than owner and owner calls it unwraps the lamports
+    do_process_instruction(
+        close_account(&program_id, &account_key, &destination_key, &owner_key, &[]).unwrap(),
+        vec![&mut account_account, &mut destination_account, &mut owner_account],
+        &[Check::success(),
+        Check::account(&account_key).lamports(account_minimum_balance()).build(),
+        Check::account(&destination_key).lamports(42 + account_minimum_balance()).build()],
+    )
+    .unwrap();
+
+    let account = Account::unpack_unchecked(&account_account.data).unwrap();
+    assert!(account.is_native());
+    assert_eq!(account.amount, 0);
+    assert_eq!(account.close_authority, COption::Some(owner2_key));
+    assert_eq!(account_account.lamports, account_minimum_balance());
+    assert_eq!(destination_account.lamports, 42 + account_minimum_balance());
+
+    // now close with the close authority
+    do_process_instruction(
+        close_account(&program_id, &account_key, &destination_key, &owner2_key, &[]).unwrap(),
+        vec![&mut account_account, &mut destination_account, &mut owner2_account],
+        &[Check::success(),
+        Check::account(&account_key).lamports(0).build(),
+        Check::account(&account_key).data(&[]).build(),
+        Check::account(&destination_key).lamports(42 + 2 *account_minimum_balance()).build()]
+    )
+    .unwrap();
+
+    assert!(account_account.data.is_empty());
+    assert_eq!(account_account.lamports, 0);
+    assert_eq!(destination_account.lamports, 42 + 2 * account_minimum_balance());
+
+}
+
+#[test]
 fn test_native_token() {
     let program_id = spl_token::id();
     let mut mint_account =
