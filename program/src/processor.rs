@@ -765,31 +765,58 @@ impl Processor {
         }
 
         let source_account = Account::unpack(&source_account_info.data.borrow())?;
-        if !source_account.is_native() && source_account.amount != 0 {
-            return Err(TokenError::NonNativeHasBalance.into());
+
+        if source_account.is_native() && authority_info.key == &source_account.owner {
+            // Owner is unwrapping native tokens (wSOL)
+            if !source_account.is_owned_by_system_program_or_incinerator() {
+                Self::validate_owner(
+                    program_id,
+                    &source_account.owner,
+                    authority_info,
+                    account_info_iter.as_slice(),
+                )?;
+            } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            let destination_starting_lamports = destination_account_info.lamports();
+            let minimum_rent = Rent::get()?.minimum_balance(source_account_info.data_len());
+            **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
+                .checked_add(source_account_info.lamports())
+                .ok_or(TokenError::Overflow)?
+                .checked_sub(minimum_rent)
+                .ok_or(TokenError::Overflow)?;
+
+            **source_account_info.lamports.borrow_mut() = minimum_rent;
+        } 
+        else {
+            // Close authority is closing the account to recover the rent
+            if source_account.amount != 0 {
+                return Err(TokenError::NonNativeHasBalance.into());
+            }
+
+            let authority = source_account
+                .close_authority
+                .unwrap_or(source_account.owner);
+            if !source_account.is_owned_by_system_program_or_incinerator() {
+                Self::validate_owner(
+                    program_id,
+                    &authority,
+                    authority_info,
+                    account_info_iter.as_slice(),
+                )?;
+            } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            let destination_starting_lamports = destination_account_info.lamports();
+            **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
+                .checked_add(source_account_info.lamports())
+                .ok_or(TokenError::Overflow)?;
+
+            **source_account_info.lamports.borrow_mut() = 0;
+            delete_account(source_account_info)?;
         }
-
-        let authority = source_account
-            .close_authority
-            .unwrap_or(source_account.owner);
-        if !source_account.is_owned_by_system_program_or_incinerator() {
-            Self::validate_owner(
-                program_id,
-                &authority,
-                authority_info,
-                account_info_iter.as_slice(),
-            )?;
-        } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        let destination_starting_lamports = destination_account_info.lamports();
-        **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
-            .checked_add(source_account_info.lamports())
-            .ok_or(TokenError::Overflow)?;
-
-        **source_account_info.lamports.borrow_mut() = 0;
-        delete_account(source_account_info)?;
 
         Ok(())
     }
@@ -939,7 +966,13 @@ impl Processor {
         owner: Pubkey,
         close_authority: Pubkey,
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, Some(&owner), Some(&close_authority), false)
+        Self::_process_initialize_account(
+            program_id,
+            accounts,
+            Some(&owner),
+            Some(&close_authority),
+            false,
+        )
     }
 
     /// Processes an [`Instruction`](enum.Instruction.html).
@@ -1058,7 +1091,10 @@ impl Processor {
                 msg!("Instruction: UiAmountToAmount");
                 Self::process_ui_amount_to_amount(program_id, accounts, ui_amount)
             }
-            TokenInstruction::InitializeAccount4 { owner, close_authority } => {
+            TokenInstruction::InitializeAccount4 {
+                owner,
+                close_authority,
+            } => {
                 msg!("Instruction: InitializeAccount4");
                 Self::process_initialize_account4(program_id, accounts, owner, close_authority)
             }

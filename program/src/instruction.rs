@@ -583,7 +583,10 @@ impl<'a> TokenInstruction<'a> {
             25 => {
                 let (owner, rest) = Self::unpack_pubkey(rest)?;
                 let (close_authority, _rest) = Self::unpack_pubkey(rest)?;
-                Self::InitializeAccount4 { owner, close_authority }
+                Self::InitializeAccount4 {
+                    owner,
+                    close_authority,
+                }
             }
             _ => return Err(TokenError::InvalidInstruction.into()),
         })
@@ -696,7 +699,10 @@ impl<'a> TokenInstruction<'a> {
                 buf.push(24);
                 buf.extend_from_slice(ui_amount.as_bytes());
             }
-            &Self::InitializeAccount4 { owner, close_authority } => {
+            &Self::InitializeAccount4 {
+                owner,
+                close_authority,
+            } => {
                 buf.push(25);
                 buf.extend_from_slice(owner.as_ref());
                 buf.extend_from_slice(close_authority.as_ref());
