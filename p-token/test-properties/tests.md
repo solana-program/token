@@ -8,22 +8,22 @@ max-depth 200, max-iterations 30, timeout 20min (1200)
 | entrypoint::test_process_initialize_mint_no_freeze  | 875  | Stuck   | 1011  | branch on float computation thunk, many overflow branches, pending                |
 | entrypoint::test_process_initialize_account         | 970  | Stuck   | 1076  | call to core::result::unwrap_failed, float thunk, many overflow branches, pending |
 | entrypoint::test_process_initialize_account2        | 1010 | Stuck   | 1174  | call to core::result::unwrap_failed, float thunk, many overflow branches, pending |
-| entrypoint::test_process_transfer                   | 1200 | Timeout | 2178  | erratic branching on invalid IAcc projection, reads alloc (err case)              |
-| entrypoint::test_process_mint_to                    | 340  | Stuck   | 1136  | inconsistent projection involving IAcc                                            |
-| entrypoint::test_process_burn                       | 692  | Stuck   | 1684  | call to raw_eq (with alloc as arg.), reads alloc (err case)                       |
+| entrypoint::test_process_transfer                   | 1200 | Timeout | 2955  | call to core::result::unwrap_failed, reads alloc (2 cases)                        |
+| entrypoint::test_process_mint_to                    | 1050 | Stuck   | 2371  | call to core::result::unwrap_failed, reads alloc (2 cases)                        |
+| entrypoint::test_process_burn                       | 692  | Stuck   | 1684  | call to raw_eq (with alloc as arg.), reads alloc (1 case)                         |
 | entrypoint::test_process_close_account              | 520  | Stuck   | 1468  | call to raw_eq (with alloc as arg.), reads alloc                                  |
-| entrypoint::test_process_transfer_checked           | 1080 | Stuck   | 1951  | ptr offset, reads alloc (err case)                                                |
-| entrypoint::test_process_burn_checked               | 670  | Stuck   | 1684  | call to raw_eq (with alloc as arg.), reads alloc (err case)                       |
+| entrypoint::test_process_transfer_checked           | 1080 | Stuck   | 1951  | ptr offset, reads alloc (1 case)                                                  |
+| entrypoint::test_process_burn_checked               | 670  | Stuck   | 1684  | call to raw_eq (with alloc as arg.), reads alloc (1 case)                         |
 | entrypoint::test_process_initialize_account3        | 700  | Stuck   | 610   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous       |
 | entrypoint::test_process_initialize_mint2_freeze    | 412  | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous       |
 | entrypoint::test_process_initialize_mint2_no_freeze | 390  | Stuck   | 275   | branching/stuck on thunked ptr cast, "ExposeAddress", assert_inhab, vacuous       |
-| entrypoint::test_process_revoke                     | 1200 | Timeout | 955   | non-det branch on cheatcodes (invalid read from stack), reads alloc               |
-| entrypoint::test_process_freeze_account             | 1200 | Timeout | 1903  | various branches on key prefix values, reads alloc (err case)                     |
-| entrypoint::test_process_thaw_account               | 1200 | Timeout | 1903  | various branches on key prefix values, reads alloc (err case)                     |
+| entrypoint::test_process_revoke                     | 660  | Stuck   | 1824  | call to core::result::unwrap_failed, reads alloc (2 cases)                        |
+| entrypoint::test_process_freeze_account             | 1120 | Stuck   | 1993  | various branches on key prefix values, reads alloc (1 case)                       |
+| entrypoint::test_process_thaw_account               | 1100 | Stuck   | 1993  | various branches on key prefix values, reads alloc (1 case)                       |
 | entrypoint::test_process_mint_to_checked            | 310  | Stuck   | 942   | pointer offset(8) on byte ptr in AggregateKindRawPtr                              |
-| entrypoint::test_process_sync_native                | 590  | Stuck   | 1508  | 2 calls to raw_eq (with alloc as arg.), reads alloc (err case)                    |
+| entrypoint::test_process_sync_native                | 590  | Stuck   | 1508  | 2 calls to raw_eq (with alloc as arg.), reads alloc (1 case)                      |
 | entrypoint::test_process_get_account_data_size      | 105  | Stuck   | 319   | call to raw_eq (with alloc as arg.)                                               |
-| entrypoint::test_process_initialize_immutable_owner | 410  | Stuck   | 1442  | call to core::result::unwrap_failed, reads alloc (2 err cases)                    |
+| entrypoint::test_process_initialize_immutable_owner | 410  | Stuck   | 1442  | call to core::result::unwrap_failed, reads alloc (2 cases)                        |
 | entrypoint::test_process_amount_to_ui_amount        | 398  | Stuck   | 779   | call to raw_eq (with alloc as arg.)                                               |
 | entrypoint::test_process_ui_amount_to_amount        | 251  | Stuck   | 90    | call to core::str::convert::from_utf8 (stdlib)                                    |
 
