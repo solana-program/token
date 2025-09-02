@@ -1,16 +1,18 @@
 import { getCreateAccountInstruction } from '@solana-program/system';
 import {
   Address,
+  BaseTransactionMessage,
   Commitment,
-  CompilableTransactionMessage,
   Rpc,
   RpcSubscriptions,
   SolanaRpcApi,
   SolanaRpcSubscriptionsApi,
   TransactionMessageWithBlockhashLifetime,
+  TransactionMessageWithFeePayer,
   TransactionSigner,
   airdropFactory,
   appendTransactionMessageInstructions,
+  assertIsSendableTransaction,
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   createTransactionMessage,
@@ -72,13 +74,15 @@ export const createDefaultTransaction = async (
 
 export const signAndSendTransaction = async (
   client: Client,
-  transactionMessage: CompilableTransactionMessage &
+  transactionMessage: BaseTransactionMessage &
+    TransactionMessageWithFeePayer &
     TransactionMessageWithBlockhashLifetime,
   commitment: Commitment = 'confirmed'
 ) => {
   const signedTransaction =
     await signTransactionMessageWithSigners(transactionMessage);
   const signature = getSignatureFromTransaction(signedTransaction);
+  assertIsSendableTransaction(signedTransaction);
   await sendAndConfirmTransactionFactory(client)(signedTransaction, {
     commitment,
   });
