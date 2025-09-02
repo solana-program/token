@@ -18,7 +18,7 @@ pub const MAX_SIGNERS: usize = 11;
 const U64_BYTES: usize = 8;
 
 /// Instructions supported by the token program.
-#[repr(C)]
+#[repr(C, u8)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum TokenInstruction<'a> {
     /// Initializes a new mint and optionally deposits all the newly minted
@@ -467,13 +467,14 @@ pub enum TokenInstruction<'a> {
         /// The `ui_amount` of tokens to reformat.
         ui_amount: &'a str,
     },
-    /// Like [`InitializeAccount3`], but it allows to set a close authority at creation
+    /// Like [`InitializeAccount3`], but it allows to set a close authority at
+    /// creation
     ///
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
-    /// 
+    ///
     /// The variant is 128 to allow rebasing onto the Anza branch in the future
     InitializeAccount4 {
         /// The owner of the account.
