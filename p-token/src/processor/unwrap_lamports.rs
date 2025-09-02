@@ -26,8 +26,9 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
         return Err(TokenError::NonNativeNotSupported.into());
     }
 
-    // SAFETY: `authority_info` is not currently borrowed; in the case `authority_info` is
-    // the same as `source_account_info`, then it cannot be a multisig.
+    // SAFETY: `authority_info` is not currently borrowed; in the case
+    // `authority_info` is the same as `source_account_info`, then it cannot be
+    // a multisig.
     unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
 
     let remaining_amount = source_account
