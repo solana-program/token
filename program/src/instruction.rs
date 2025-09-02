@@ -473,6 +473,8 @@ pub enum TokenInstruction<'a> {
     ///
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
+    /// 
+    /// The variant is 128 to allow rebasing onto the Anza branch in the future
     InitializeAccount4 {
         /// The owner of the account.
         owner: Pubkey,
@@ -585,7 +587,7 @@ impl<'a> TokenInstruction<'a> {
                 let ui_amount = std::str::from_utf8(rest).map_err(|_| InvalidInstruction)?;
                 Self::UiAmountToAmount { ui_amount }
             }
-            25 => {
+            128 => {
                 let (owner, rest) = Self::unpack_pubkey(rest)?;
                 let (close_authority, _rest) = Self::unpack_pubkey(rest)?;
                 Self::InitializeAccount4 {
@@ -708,7 +710,7 @@ impl<'a> TokenInstruction<'a> {
                 owner,
                 close_authority,
             } => {
-                buf.push(25);
+                buf.push(128);
                 buf.extend_from_slice(owner.as_ref());
                 buf.extend_from_slice(close_authority.as_ref());
             }
