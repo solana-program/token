@@ -788,8 +788,7 @@ impl Processor {
                 .ok_or(TokenError::Overflow)?;
 
             **source_account_info.lamports.borrow_mut() = minimum_rent;
-        } 
-        else {
+        } else {
             // Close authority is closing the account to recover the rent
             if source_account.amount != 0 {
                 return Err(TokenError::NonNativeHasBalance.into());
