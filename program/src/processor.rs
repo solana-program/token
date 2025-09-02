@@ -776,7 +776,7 @@ impl Processor {
             })
             .unwrap_or((true, source_account.owner));
 
-        if source_account.is_native() && !owner_is_close_authority {
+        if source_account.is_native() && !owner_is_close_authority && Self::cmp_pubkeys(&source_account.owner, &authority_info.key) {
             // Owner can unwrap native tokens even without the close authority
             if !source_account.is_owned_by_system_program_or_incinerator() {
                 Self::validate_owner(
@@ -801,6 +801,7 @@ impl Processor {
 
             **source_account_info.lamports.borrow_mut() = rent_exempt_reserve;
             source_account.amount = 0;
+            Account::pack(source_account, &mut source_account_info.data.borrow_mut())?;
         } else {
             // Close authority is closing the account to recover the full rent
             if !((source_account.amount == 0)
