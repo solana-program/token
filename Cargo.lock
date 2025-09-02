@@ -7385,6 +7385,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "num_enum",
+ "pinocchio-token-interface",
  "proptest",
  "serial_test",
  "solana-account",
