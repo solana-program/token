@@ -86,13 +86,12 @@ pub fn process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResu
             source_starting_lamports - transfer_amount;
     }
 
-    let destination_starting_lamports = destination_info.lamports();
     // SAFETY: single mutable borrow to `destination_info` lamports.
     unsafe {
         // Moves the lamports to the destination account.
-        *destination_info.borrow_mut_lamports_unchecked() = destination_starting_lamports
-            .checked_add(transfer_amount)
-            .ok_or(TokenError::Overflow)?;
+        //
+        // Note: The total lamports supply is bound to `u64::MAX`.
+        *destination_info.borrow_mut_lamports_unchecked() += transfer_amount;
     }
 
     Ok(())

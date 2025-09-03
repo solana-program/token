@@ -8,6 +8,7 @@ use {
 };
 
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_burn(
     accounts: &[AccountInfo],
     amount: u64,
@@ -83,8 +84,7 @@ pub fn process_burn(
         source_account.set_amount(updated_source_amount);
         // Note: The amount of a token account is always within the range of the
         // mint supply (`u64`).
-        let mint_supply = mint.supply().checked_sub(amount).unwrap();
-        mint.set_supply(mint_supply);
+        mint.set_supply(mint.supply() - amount);
     }
 
     Ok(())
