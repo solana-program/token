@@ -18,7 +18,7 @@ pub const MAX_SIGNERS: usize = 11;
 const U64_BYTES: usize = 8;
 
 /// Instructions supported by the token program.
-#[repr(C)]
+#[repr(C, u8)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum TokenInstruction<'a> {
     /// Initializes a new mint and optionally deposits all the newly minted
@@ -467,6 +467,22 @@ pub enum TokenInstruction<'a> {
         /// The `ui_amount` of tokens to reformat.
         ui_amount: &'a str,
     },
+    /// Like [`InitializeAccount3`], but it allows to set a close authority at
+    /// creation
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writable]`  The account to initialize.
+    ///   1. `[]` The mint this account will be associated with.
+    ///
+    /// The variant is 128 to allow re-basing onto the upstream repository in
+    /// the future
+    InitializeAccountWithCloseAuthority {
+        /// The owner of the account.
+        owner: Pubkey,
+        /// The close authority of the account.
+        close_authority: Pubkey,
+    } = 128,
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
     // token/js/src/instructions/types.ts to maintain @solana/spl-token compatibility
@@ -572,6 +588,14 @@ impl<'a> TokenInstruction<'a> {
             24 => {
                 let ui_amount = std::str::from_utf8(rest).map_err(|_| InvalidInstruction)?;
                 Self::UiAmountToAmount { ui_amount }
+            }
+            128 => {
+                let (owner, rest) = Self::unpack_pubkey(rest)?;
+                let (close_authority, _rest) = Self::unpack_pubkey(rest)?;
+                Self::InitializeAccountWithCloseAuthority {
+                    owner,
+                    close_authority,
+                }
             }
             _ => return Err(TokenError::InvalidInstruction.into()),
         })
@@ -683,6 +707,14 @@ impl<'a> TokenInstruction<'a> {
             Self::UiAmountToAmount { ui_amount } => {
                 buf.push(24);
                 buf.extend_from_slice(ui_amount.as_bytes());
+            }
+            &Self::InitializeAccountWithCloseAuthority {
+                owner,
+                close_authority,
+            } => {
+                buf.push(128);
+                buf.extend_from_slice(owner.as_ref());
+                buf.extend_from_slice(close_authority.as_ref());
             }
         };
         buf

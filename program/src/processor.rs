@@ -89,6 +89,7 @@ impl Processor {
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         owner: Option<&Pubkey>,
+        close_authority: Option<&Pubkey>,
         rent_sysvar_account: bool,
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
@@ -124,7 +125,7 @@ impl Processor {
 
         account.mint = *mint_info.key;
         account.owner = *owner;
-        account.close_authority = COption::None;
+        account.close_authority = close_authority.copied().into();
         account.delegate = COption::None;
         account.delegated_amount = 0;
         account.state = AccountState::Initialized;
@@ -151,7 +152,7 @@ impl Processor {
         program_id: &Pubkey,
         accounts: &[AccountInfo],
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, None, true)
+        Self::_process_initialize_account(program_id, accounts, None, None, true)
     }
 
     /// Processes an [`InitializeAccount2`](enum.TokenInstruction.html)
@@ -161,7 +162,7 @@ impl Processor {
         accounts: &[AccountInfo],
         owner: Pubkey,
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, Some(&owner), true)
+        Self::_process_initialize_account(program_id, accounts, Some(&owner), None, true)
     }
 
     /// Processes an [`InitializeAccount3`](enum.TokenInstruction.html)
@@ -171,7 +172,7 @@ impl Processor {
         accounts: &[AccountInfo],
         owner: Pubkey,
     ) -> ProgramResult {
-        Self::_process_initialize_account(program_id, accounts, Some(&owner), false)
+        Self::_process_initialize_account(program_id, accounts, Some(&owner), None, false)
     }
 
     fn _process_initialize_multisig(
@@ -763,32 +764,72 @@ impl Processor {
             return Err(ProgramError::InvalidAccountData);
         }
 
-        let source_account = Account::unpack(&source_account_info.data.borrow())?;
-        if !source_account.is_native() && source_account.amount != 0 {
-            return Err(TokenError::NonNativeHasBalance.into());
+        let mut source_account = Account::unpack(&source_account_info.data.borrow())?;
+
+        let (owner_is_close_authority, close_authority) = match source_account.close_authority {
+            COption::Some(close_authority) => (
+                Self::cmp_pubkeys(&close_authority, &source_account.owner),
+                close_authority,
+            ),
+            COption::None => (true, source_account.owner),
+        };
+
+        if source_account.is_native()
+            && !owner_is_close_authority
+            && Self::cmp_pubkeys(&source_account.owner, authority_info.key)
+        {
+            // Owner can unwrap native tokens even without the close authority
+            if !source_account.is_owned_by_system_program_or_incinerator() {
+                Self::validate_owner(
+                    program_id,
+                    &source_account.owner,
+                    authority_info,
+                    account_info_iter.as_slice(),
+                )?;
+            } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            let destination_starting_lamports = destination_account_info.lamports();
+            let rent_exempt_reserve = source_account
+                .is_native
+                .expect("source_account.is_native() is true in this branch");
+            **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
+                .checked_add(source_account_info.lamports())
+                .ok_or(TokenError::Overflow)?
+                .checked_sub(rent_exempt_reserve)
+                .ok_or(TokenError::Overflow)?;
+
+            **source_account_info.lamports.borrow_mut() = rent_exempt_reserve;
+            source_account.amount = 0;
+            Account::pack(source_account, &mut source_account_info.data.borrow_mut())?;
+        } else {
+            // Close authority is closing the account to recover the full rent
+            if !((source_account.amount == 0)
+                || (source_account.is_native() && owner_is_close_authority))
+            {
+                return Err(TokenError::NonNativeHasBalance.into());
+            }
+
+            if !source_account.is_owned_by_system_program_or_incinerator() {
+                Self::validate_owner(
+                    program_id,
+                    &close_authority,
+                    authority_info,
+                    account_info_iter.as_slice(),
+                )?;
+            } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            let destination_starting_lamports = destination_account_info.lamports();
+            **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
+                .checked_add(source_account_info.lamports())
+                .ok_or(TokenError::Overflow)?;
+
+            **source_account_info.lamports.borrow_mut() = 0;
+            delete_account(source_account_info)?;
         }
-
-        let authority = source_account
-            .close_authority
-            .unwrap_or(source_account.owner);
-        if !source_account.is_owned_by_system_program_or_incinerator() {
-            Self::validate_owner(
-                program_id,
-                &authority,
-                authority_info,
-                account_info_iter.as_slice(),
-            )?;
-        } else if !solana_sdk_ids::incinerator::check_id(destination_account_info.key) {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        let destination_starting_lamports = destination_account_info.lamports();
-        **destination_account_info.lamports.borrow_mut() = destination_starting_lamports
-            .checked_add(source_account_info.lamports())
-            .ok_or(TokenError::Overflow)?;
-
-        **source_account_info.lamports.borrow_mut() = 0;
-        delete_account(source_account_info)?;
 
         Ok(())
     }
@@ -930,6 +971,24 @@ impl Processor {
         Ok(())
     }
 
+    /// Processes an
+    /// [`InitializeAccountWithCloseAuthority`](enum.TokenInstruction.html)
+    /// instruction
+    pub fn process_initialize_account_with_close_authority(
+        program_id: &Pubkey,
+        accounts: &[AccountInfo],
+        owner: Pubkey,
+        close_authority: Pubkey,
+    ) -> ProgramResult {
+        Self::_process_initialize_account(
+            program_id,
+            accounts,
+            Some(&owner),
+            Some(&close_authority),
+            false,
+        )
+    }
+
     /// Processes an [`Instruction`](enum.Instruction.html).
     pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], input: &[u8]) -> ProgramResult {
         let instruction = TokenInstruction::unpack(input)?;
@@ -1045,6 +1104,18 @@ impl Processor {
             TokenInstruction::UiAmountToAmount { ui_amount } => {
                 msg!("Instruction: UiAmountToAmount");
                 Self::process_ui_amount_to_amount(program_id, accounts, ui_amount)
+            }
+            TokenInstruction::InitializeAccountWithCloseAuthority {
+                owner,
+                close_authority,
+            } => {
+                msg!("Instruction: InitializeAccountWithCloseAuthority");
+                Self::process_initialize_account_with_close_authority(
+                    program_id,
+                    accounts,
+                    owner,
+                    close_authority,
+                )
             }
         }
     }
