@@ -4941,20 +4941,28 @@ fn test_close_native_account_with_close_authority() {
     .unwrap();
 
     do_process_instruction(
-        initialize_account(&program_id, &account_key, &spl_token::native_mint::id(), &owner_key).unwrap(),
+        initialize_account(
+            &program_id,
+            &account_key,
+            &spl_token::native_mint::id(),
+            &owner_key,
+        )
+        .unwrap(),
         vec![
             &mut account_account,
             &mut mint_account,
             &mut owner_account,
             &mut rent_sysvar,
         ],
-        &[Check::success(),
-        Check::account(&account_key)
-        .data_slice(109, &[1, 0, 0, 0])
-        .build(),
-    Check::account(&account_key)
-        .data_slice(64, &42u64.to_le_bytes())
-        .build()],
+        &[
+            Check::success(),
+            Check::account(&account_key)
+                .data_slice(109, &[1, 0, 0, 0])
+                .build(),
+            Check::account(&account_key)
+                .data_slice(64, &42u64.to_le_bytes())
+                .build(),
+        ],
     )
     .unwrap();
     let account = Account::unpack_unchecked(&account_account.data).unwrap();
@@ -4985,19 +4993,41 @@ fn test_close_native_account_with_close_authority() {
     assert_eq!(
         Err(TokenError::NonNativeHasBalance.into()),
         do_process_instruction(
-            close_account(&program_id, &account_key, &destination_key, &owner2_key, &[]).unwrap(),
-            vec![&mut account_account, &mut owner2_account, &mut destination_account],
+            close_account(
+                &program_id,
+                &account_key,
+                &destination_key,
+                &owner2_key,
+                &[]
+            )
+            .unwrap(),
+            vec![
+                &mut account_account,
+                &mut owner2_account,
+                &mut destination_account
+            ],
             &[Check::err(TokenError::NonNativeHasBalance.into())],
         )
     );
 
-    // close native account when close_authority is different than owner and owner calls it unwraps the lamports
+    // close native account when close_authority is different than owner and owner
+    // calls it unwraps the lamports
     do_process_instruction(
         close_account(&program_id, &account_key, &destination_key, &owner_key, &[]).unwrap(),
-        vec![&mut account_account, &mut destination_account, &mut owner_account],
-        &[Check::success(),
-        Check::account(&account_key).lamports(account_minimum_balance()).build(),
-        Check::account(&destination_key).lamports(42 + account_minimum_balance()).build()],
+        vec![
+            &mut account_account,
+            &mut destination_account,
+            &mut owner_account,
+        ],
+        &[
+            Check::success(),
+            Check::account(&account_key)
+                .lamports(account_minimum_balance())
+                .build(),
+            Check::account(&destination_key)
+                .lamports(42 + account_minimum_balance())
+                .build(),
+        ],
     )
     .unwrap();
 
@@ -5010,19 +5040,36 @@ fn test_close_native_account_with_close_authority() {
 
     // now close with the close authority
     do_process_instruction(
-        close_account(&program_id, &account_key, &destination_key, &owner2_key, &[]).unwrap(),
-        vec![&mut account_account, &mut destination_account, &mut owner2_account],
-        &[Check::success(),
-        Check::account(&account_key).lamports(0).build(),
-        Check::account(&account_key).data(&[]).build(),
-        Check::account(&destination_key).lamports(42 + 2 *account_minimum_balance()).build()]
+        close_account(
+            &program_id,
+            &account_key,
+            &destination_key,
+            &owner2_key,
+            &[],
+        )
+        .unwrap(),
+        vec![
+            &mut account_account,
+            &mut destination_account,
+            &mut owner2_account,
+        ],
+        &[
+            Check::success(),
+            Check::account(&account_key).lamports(0).build(),
+            Check::account(&account_key).data(&[]).build(),
+            Check::account(&destination_key)
+                .lamports(42 + 2 * account_minimum_balance())
+                .build(),
+        ],
     )
     .unwrap();
 
     assert!(account_account.data.is_empty());
     assert_eq!(account_account.lamports, 0);
-    assert_eq!(destination_account.lamports, 42 + 2 * account_minimum_balance());
-
+    assert_eq!(
+        destination_account.lamports,
+        42 + 2 * account_minimum_balance()
+    );
 }
 
 #[test]

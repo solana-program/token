@@ -476,7 +476,7 @@ pub enum TokenInstruction<'a> {
     ///   1. `[]` The mint this account will be associated with.
     ///
     /// The variant is 128 to allow rebasing onto the Anza branch in the future
-    InitializeAccount4 {
+    InitializeAccountWithCloseAuthority {
         /// The owner of the account.
         owner: Pubkey,
         /// The close authority of the account.
@@ -591,7 +591,7 @@ impl<'a> TokenInstruction<'a> {
             128 => {
                 let (owner, rest) = Self::unpack_pubkey(rest)?;
                 let (close_authority, _rest) = Self::unpack_pubkey(rest)?;
-                Self::InitializeAccount4 {
+                Self::InitializeAccountWithCloseAuthority {
                     owner,
                     close_authority,
                 }
@@ -707,7 +707,7 @@ impl<'a> TokenInstruction<'a> {
                 buf.push(24);
                 buf.extend_from_slice(ui_amount.as_bytes());
             }
-            &Self::InitializeAccount4 {
+            &Self::InitializeAccountWithCloseAuthority {
                 owner,
                 close_authority,
             } => {

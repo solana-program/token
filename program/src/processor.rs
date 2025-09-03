@@ -766,17 +766,18 @@ impl Processor {
 
         let mut source_account = Account::unpack(&source_account_info.data.borrow())?;
 
-        let (owner_is_close_authority, close_authority) = source_account
-            .close_authority
-            .map(|close_authority| {
-                (
-                    Self::cmp_pubkeys(&close_authority, &source_account.owner),
-                    close_authority,
-                )
-            })
-            .unwrap_or((true, source_account.owner));
+        let (owner_is_close_authority, close_authority) = match source_account.close_authority {
+            COption::Some(close_authority) => (
+                Self::cmp_pubkeys(&close_authority, &source_account.owner),
+                close_authority,
+            ),
+            COption::None => (true, source_account.owner),
+        };
 
-        if source_account.is_native() && !owner_is_close_authority && Self::cmp_pubkeys(&source_account.owner, &authority_info.key) {
+        if source_account.is_native()
+            && !owner_is_close_authority
+            && Self::cmp_pubkeys(&source_account.owner, &authority_info.key)
+        {
             // Owner can unwrap native tokens even without the close authority
             if !source_account.is_owned_by_system_program_or_incinerator() {
                 Self::validate_owner(
@@ -970,9 +971,9 @@ impl Processor {
         Ok(())
     }
 
-    /// Processes an [`InitializeAccount4`](enum.TokenInstruction.html)
+    /// Processes an [`InitializeAccountWithCloseAuthority`](enum.TokenInstruction.html)
     /// instruction
-    pub fn process_initialize_account4(
+    pub fn process_initialize_account_with_close_authority(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         owner: Pubkey,
@@ -1103,12 +1104,12 @@ impl Processor {
                 msg!("Instruction: UiAmountToAmount");
                 Self::process_ui_amount_to_amount(program_id, accounts, ui_amount)
             }
-            TokenInstruction::InitializeAccount4 {
+            TokenInstruction::InitializeAccountWithCloseAuthority {
                 owner,
                 close_authority,
             } => {
-                msg!("Instruction: InitializeAccount4");
-                Self::process_initialize_account4(program_id, accounts, owner, close_authority)
+                msg!("Instruction: InitializeAccountWithCloseAuthority");
+                Self::process_initialize_account_with_close_authority(program_id, accounts, owner, close_authority)
             }
         }
     }
