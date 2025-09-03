@@ -42,14 +42,14 @@
   },
   "homepage": "https://github.com/solana-program/token#readme",
   "peerDependencies": {
-    "@solana/kit": "^2.1.0"
+    "@solana/kit": "^3.0"
   },
   "devDependencies": {
     "@ava/typescript": "^4.1.0",
-    "@solana-program/system": "^0.6.1",
+    "@solana-program/system": "^0.8.0",
     "@solana/eslint-config-solana": "^3.0.3",
-    "@solana/kit": "^2.1.0",
-    "@types/node": "^20",
+    "@solana/kit": "^3.0",
+    "@types/node": "^24",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
     "ava": "^6.1.3",
