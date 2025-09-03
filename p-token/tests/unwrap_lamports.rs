@@ -5,6 +5,7 @@ use {
     mollusk_svm::{result::Check, Mollusk},
     pinocchio_token_interface::{
         error::TokenError,
+        instruction::TokenInstruction,
         native_mint,
         state::{
             account::Account as TokenAccount, account_state::AccountState, load_mut_unchecked,
@@ -65,7 +66,7 @@ fn unwrap_lamports_instruction(
     ];
 
     // Start with the batch discriminator
-    let mut data: Vec<u8> = vec![39u8];
+    let mut data: Vec<u8> = vec![TokenInstruction::UnwrapLamports as u8];
     data.extend_from_slice(&amount.to_le_bytes());
 
     Ok(Instruction {
