@@ -125,7 +125,7 @@ impl Processor {
 
         account.mint = *mint_info.key;
         account.owner = *owner;
-        account.close_authority = close_authority.map(|key| *key).into();
+        account.close_authority = close_authority.copied().into();
         account.delegate = COption::None;
         account.delegated_amount = 0;
         account.state = AccountState::Initialized;
@@ -776,7 +776,7 @@ impl Processor {
 
         if source_account.is_native()
             && !owner_is_close_authority
-            && Self::cmp_pubkeys(&source_account.owner, &authority_info.key)
+            && Self::cmp_pubkeys(&source_account.owner, authority_info.key)
         {
             // Owner can unwrap native tokens even without the close authority
             if !source_account.is_owned_by_system_program_or_incinerator() {
@@ -971,7 +971,8 @@ impl Processor {
         Ok(())
     }
 
-    /// Processes an [`InitializeAccountWithCloseAuthority`](enum.TokenInstruction.html)
+    /// Processes an
+    /// [`InitializeAccountWithCloseAuthority`](enum.TokenInstruction.html)
     /// instruction
     pub fn process_initialize_account_with_close_authority(
         program_id: &Pubkey,
@@ -1109,7 +1110,12 @@ impl Processor {
                 close_authority,
             } => {
                 msg!("Instruction: InitializeAccountWithCloseAuthority");
-                Self::process_initialize_account_with_close_authority(program_id, accounts, owner, close_authority)
+                Self::process_initialize_account_with_close_authority(
+                    program_id,
+                    accounts,
+                    owner,
+                    close_authority,
+                )
             }
         }
     }
