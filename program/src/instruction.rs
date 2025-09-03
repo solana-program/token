@@ -475,7 +475,8 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]`  The account to initialize.
     ///   1. `[]` The mint this account will be associated with.
     ///
-    /// The variant is 128 to allow rebasing onto the Anza branch in the future
+    /// The variant is 128 to allow re-basing onto the upstream repository in
+    /// the future
     InitializeAccountWithCloseAuthority {
         /// The owner of the account.
         owner: Pubkey,
