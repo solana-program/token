@@ -1,17 +1,31 @@
 use {
     super::validate_owner,
-    crate::processor::{check_account_owner, unpack_amount},
+    crate::processor::{check_account_owner, U64_BYTES},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     pinocchio_token_interface::{
         error::TokenError,
+        likely,
         state::{account::Account, load_mut},
     },
 };
 
 #[allow(clippy::arithmetic_side_effects)]
 pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
-    // Amount being unwrapped.
-    let amount = unpack_amount(instruction_data)?;
+    // instruction data: expected u8 (1) + optional u64 (8)
+    let [has_amount, maybe_amount @ ..] = instruction_data else {
+        return Err(TokenError::InvalidInstruction.into());
+    };
+
+    let maybe_amount = if likely(*has_amount == 0) {
+        None
+    } else if maybe_amount.len() >= 8 {
+        // SAFETY: The slice is guaranteed to be at least 8 bytes long.
+        Some(u64::from_le_bytes(unsafe {
+            *(maybe_amount.as_ptr() as *const [u8; U64_BYTES])
+        }))
+    } else {
+        return Err(TokenError::InvalidInstruction.into());
+    };
 
     let [source_account_info, destination_account_info, authority_info, remaining @ ..] = accounts
     else {
@@ -31,10 +45,19 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
     // a multisig.
     unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
 
-    let remaining_amount = source_account
-        .amount()
-        .checked_sub(amount)
-        .ok_or(TokenError::InsufficientFunds)?;
+    // If we have an amount, we need to validate whether there are enough lamports
+    // to unwrap or not; otherwise we just use the full amount.
+    let (amount, remaining_amount) = if let Some(amount) = maybe_amount {
+        (
+            amount,
+            source_account
+                .amount()
+                .checked_sub(amount)
+                .ok_or(TokenError::InsufficientFunds)?,
+        )
+    } else {
+        (source_account.amount(), 0)
+    };
 
     // Comparing whether the AccountInfo's "point" to the same account or
     // not - this is a faster comparison since it just checks the internal
@@ -44,7 +67,7 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
     if self_transfer || amount == 0 {
         // Validates the token account owner since we are not writing
         // to the account.
-        check_account_owner(source_account_info)?;
+        check_account_owner(source_account_info)
     } else {
         source_account.set_amount(remaining_amount);
 
@@ -55,13 +78,12 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
         *source_lamports -= amount;
 
         // SAFETY: single mutable borrow to `destination_account_info` lamports; the
-        // account is already validated to be different from
-        // `source_account_info`.
+        // account is already validated to be different from `source_account_info`.
         let destination_lamports =
             unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
         // Note: The total lamports supply is bound to `u64::MAX`.
         *destination_lamports += amount;
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
