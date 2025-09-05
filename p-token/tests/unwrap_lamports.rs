@@ -53,29 +53,6 @@ fn create_token_account(
     }
 }
 
-fn unwrap_lamports_instruction(
-    source: &Pubkey,
-    destination: &Pubkey,
-    authority: &Pubkey,
-    amount: u64,
-) -> Result<Instruction, ProgramError> {
-    let accounts = vec![
-        AccountMeta::new(*source, false),
-        AccountMeta::new(*destination, false),
-        AccountMeta::new_readonly(*authority, true),
-    ];
-
-    // Start with the batch discriminator
-    let mut data: Vec<u8> = vec![TokenInstruction::UnwrapLamports as u8];
-    data.extend_from_slice(&amount.to_le_bytes());
-
-    Ok(Instruction {
-        program_id: spl_token::ID,
-        data,
-        accounts,
-    })
-}
-
 /// Creates a Mollusk instance with the default feature set, excluding the
 /// `bpf_account_data_direct_mapping` feature.
 fn mollusk() -> Mollusk {
@@ -86,6 +63,35 @@ fn mollusk() -> Mollusk {
         &bpf_loader_upgradeable::id(),
     );
     mollusk
+}
+
+fn unwrap_lamports_instruction(
+    source: &Pubkey,
+    destination: &Pubkey,
+    authority: &Pubkey,
+    amount: Option<u64>,
+) -> Result<Instruction, ProgramError> {
+    let accounts = vec![
+        AccountMeta::new(*source, false),
+        AccountMeta::new(*destination, false),
+        AccountMeta::new_readonly(*authority, true),
+    ];
+
+    // Start with the batch discriminator
+    let mut data: Vec<u8> = vec![TokenInstruction::UnwrapLamports as u8];
+
+    if let Some(amount) = amount {
+        data.push(1);
+        data.extend_from_slice(&amount.to_le_bytes());
+    } else {
+        data.push(0);
+    }
+
+    Ok(Instruction {
+        program_id: spl_token::ID,
+        data,
+        accounts,
+    })
 }
 
 #[tokio::test]
@@ -109,7 +115,62 @@ async fn unwrap_lamports() {
         &source_account_key,
         &destination_account_key,
         &authority_key,
+        None,
+    )
+    .unwrap();
+
+    // It should succeed to unwrap 2_000_000_000 lamports.
+
+    let result = mollusk().process_and_validate_instruction(
+        &instruction,
+        &[
+            (source_account_key, source_account),
+            (destination_account_key, Account::default()),
+            (authority_key, Account::default()),
+        ],
+        &[
+            Check::success(),
+            Check::account(&destination_account_key)
+                .lamports(2_000_000_000)
+                .build(),
+            Check::account(&source_account_key)
+                .lamports(Rent::default().minimum_balance(size_of::<TokenAccount>()))
+                .build(),
+        ],
+    );
+
+    // And the remaining amount must be 0.
+
+    result.resulting_accounts.iter().for_each(|(key, account)| {
+        if *key == source_account_key {
+            let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+            assert_eq!(token_account.amount, 0);
+        }
+    });
+}
+
+#[tokio::test]
+async fn unwrap_lamports_with_amount() {
+    let native_mint = Pubkey::new_from_array(native_mint::ID);
+    let authority_key = Pubkey::new_unique();
+    let destination_account_key = Pubkey::new_unique();
+
+    // native account:
+    //   - amount: 2_000_000_000
+    let source_account_key = Pubkey::new_unique();
+    let source_account = create_token_account(
+        &native_mint,
+        &authority_key,
+        true,
         2_000_000_000,
+        &TOKEN_PROGRAM_ID,
+    );
+
+    let instruction = unwrap_lamports_instruction(
+        &source_account_key,
+        &destination_account_key,
+        &authority_key,
+        Some(2_000_000_000),
     )
     .unwrap();
 
@@ -164,7 +225,7 @@ async fn fail_unwrap_lamports_with_insufficient_funds() {
         &source_account_key,
         &destination_account_key,
         &authority_key,
-        2_000_000_000,
+        Some(2_000_000_000),
     )
     .unwrap();
 
@@ -205,7 +266,7 @@ async fn unwrap_lamports_with_parial_amount() {
         &source_account_key,
         &destination_account_key,
         &authority_key,
-        1_000_000_000,
+        Some(1_000_000_000),
     )
     .unwrap();
 
@@ -263,7 +324,7 @@ async fn fail_unwrap_lamports_with_invalid_authority() {
         &source_account_key,
         &destination_account_key,
         &fake_authority_key, // <-- wrong authority
-        2_000_000_000,
+        Some(2_000_000_000),
     )
     .unwrap();
 
@@ -305,7 +366,7 @@ async fn fail_unwrap_lamports_with_non_native_account() {
         &source_account_key,
         &destination_account_key,
         &authority_key,
-        1_000_000_000,
+        Some(1_000_000_000),
     )
     .unwrap();
 
@@ -353,7 +414,7 @@ async fn unwrap_lamports_with_self_transfer() {
         &source_account_key,
         &source_account_key, // <-- destination same as source
         &authority_key,
-        1_000_000_000,
+        Some(1_000_000_000),
     )
     .unwrap();
 
@@ -407,7 +468,7 @@ async fn fail_unwrap_lamports_with_invalid_native_account() {
         &source_account_key,
         &destination_account_key,
         &authority_key,
-        1_000_000_000,
+        Some(1_000_000_000),
     )
     .unwrap();
 

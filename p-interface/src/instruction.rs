@@ -510,7 +510,9 @@ pub enum TokenInstruction {
     ///
     /// Data expected by this instruction:
     ///
-    ///   - `u64` The amount of lamports to transfer.
+    ///   - `Option<u64>` The amount of lamports to transfer. When an amount is
+    ///     not specified, the entire balance of the source account will be
+    ///     transferred.
     UnwrapLamports = 45,
 
     /// Executes a batch of instructions. The instructions to be executed are
