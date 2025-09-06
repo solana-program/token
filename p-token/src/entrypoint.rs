@@ -139,6 +139,9 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
                     ]
                 };
 
+                #[cfg(feature = "logging")]
+                pinocchio::msg!("Instruction: TransferChecked");
+
                 return match process_transfer_checked(&accounts, instruction_data) {
                     Ok(()) => SUCCESS,
                     Err(error) => {
@@ -185,6 +188,9 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
                         transmute::<*mut u8, AccountInfo>(input.add(IX3_ACCOUNT3_HEADER_OFFSET)),
                     ]
                 };
+
+                #[cfg(feature = "logging")]
+                pinocchio::msg!("Instruction: Transfer");
 
                 return match process_transfer(&accounts, instruction_data) {
                     Ok(()) => SUCCESS,
