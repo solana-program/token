@@ -65,3 +65,48 @@ async fn set_authority() {
 
     assert!(mint.freeze_authority == COption::Some(new_authority));
 }
+
+#[tokio::test]
+async fn set_authority_invalid_account() {
+    let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
+        .start_with_context()
+        .await;
+
+    // Given a mint account.
+
+    let mint_authority = Keypair::new();
+    let freeze_authority = Keypair::new();
+
+    let _mint = mint::initialize(
+        &mut context,
+        mint_authority.pubkey(),
+        Some(freeze_authority.pubkey()),
+        &TOKEN_PROGRAM_ID,
+    )
+    .await
+    .unwrap();
+
+    // When we set a new freeze authority.
+
+    let new_authority = Pubkey::new_unique();
+
+    let set_authority_ix = spl_token::instruction::set_authority(
+        &spl_token::ID,
+        &Pubkey::new_unique(), // Changed to invalid value
+        Some(&new_authority),
+        AuthorityType::FreezeAccount,
+        &freeze_authority.pubkey(),
+        &[],
+    )
+    .unwrap();
+
+    let tx = Transaction::new_signed_with_payer(
+        &[set_authority_ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &freeze_authority],
+        context.last_blockhash,
+    );
+    let result = context.banks_client.process_transaction(tx).await;
+    let inner_error = result.err().unwrap().unwrap();
+    assert_eq!(inner_error, solana_transaction_error::TransactionError::InstructionError(0, solana_instruction::error::InstructionError::InvalidArgument));
+}

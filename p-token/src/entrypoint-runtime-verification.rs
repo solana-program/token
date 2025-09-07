@@ -1217,6 +1217,9 @@ fn test_process_approve(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8])
 #[inline(never)]
 fn test_process_revoke(accounts: &[AccountInfo; 2]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
     //-Helpers-----------------------------------------------------------------
     let get_account = |account_info: &AccountInfo| unsafe {
         (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
@@ -1254,9 +1257,124 @@ fn test_process_revoke(accounts: &[AccountInfo; 2]) -> ProgramResult {
     result
 }
 
+/// accounts[0] // Account Info
+/// accounts[1] // Authority Info
+/// instruction_data[0] // Authority Type (instruction)
+/// instruction_data[1] // New Authority Follows (0 -> No, 1 -> Yes)
+/// instruction_data[2..34] // New Authority Pubkey
 #[inline(never)]
 fn test_process_set_authority(accounts: &[AccountInfo; 2], instruction_data: &[u8]) -> ProgramResult {
-    process_set_authority(accounts, instruction_data)
+   use pinocchio_token_interface::state::{account, account_state, mint};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_init_state = get_account(&accounts[0]).account_state();
+    // let authority_type = AuthorityType::from(instruction_data[0]);
+    // let authority_type = unsafe { AuthorityType::try_from(*instruction_data.get_unchecked(0)) }; // FIXME
+    let account_data_len = accounts[0].data_len();
+    let old_mint_authority_is_none = get_mint(&accounts[0]).mint_authority().is_none(); // FIXME
+    let old_freeze_authority_is_none = get_mint(&accounts[0]).freeze_authority().is_none(); // FIXME
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_set_authority(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.len() < 2 {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if !(0..=3).contains(&instruction_data[0]) { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[1] != 0 && instruction_data[1] != 1 { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if instruction_data[1] == 1 && instruction_data.len() < 34 { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 2 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if account_data_len != account::Account::LEN && account_data_len != mint::Mint::LEN {
+         assert_eq!(result, Err(ProgramError::InvalidArgument))
+    } else {
+        if account_data_len == account::Account::LEN {
+            if !src_initialised.unwrap() { // UNTESTED
+                assert_eq!(result, Err(ProgramError::UninitializedAccount))
+            } else if src_init_state.unwrap() == account_state::AccountState::Frozen { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(17)))
+            } else if instruction_data[0] != 2 && instruction_data[0] != 3 { // UNTESTED: AuthorityType neither AccountOwner nor CloseAccount
+                assert_eq!(result, Err(ProgramError::Custom(15)))
+            } else {
+                if instruction_data[0] == 2 { // AccountOwner
+                    // TODO: Validate Owner
+
+                    if instruction_data[1] != 1 || instruction_data.len() < 34 { // UNTESTED
+                        assert_eq!(result, Err(ProgramError::Custom(12)))
+                    } else {
+                        assert_eq!(get_account(&accounts[0]).owner, instruction_data[2..34]); // UNTESTED
+                        assert_eq!(get_account(&accounts[0]).delegate(), None); // UNTESTED
+                        assert_eq!(get_account(&accounts[0]).delegated_amount(), 0); // UNTESTED
+                        if get_account(&accounts[0]).is_native() {
+                            assert_eq!(get_account(&accounts[0]).close_authority(), None); // UNTESTED
+                        }
+                        assert!(result.is_ok()) //  UNTESTED
+                    }
+                } else { // Close Account
+                    // TODO Validate Owner
+
+                    if instruction_data[1] == 1 { // UNTESTED: 1 ==> 34 <= instruction_data.len()
+                        assert_eq!(get_account(&accounts[0]).close_authority().unwrap(), &instruction_data[2..34]); // UNTESTED
+                    } else {
+                        assert_eq!(get_account(&accounts[0]).close_authority(), None); // UNTESTED
+                    }
+                    assert!(result.is_ok()) //  UNTESTED
+                }
+            }
+        } else { // account_data_len == mint::Mint::LEN
+            if !get_mint(&accounts[0]).is_initialized().unwrap() { // UNTESTED: FIXME not accessing old
+                assert_eq!(result, Err(ProgramError::UninitializedAccount))
+            } else if instruction_data[0] != 0 && instruction_data[0] != 1 { // UNTESTED: AuthorityType neither MintTokens nor FreezeAccount
+                assert_eq!(result, Err(ProgramError::Custom(15)))
+            } else {
+                if instruction_data[0] == 0 { // MintTokens
+                    if old_mint_authority_is_none { // UNTESTED
+                        assert_eq!(result, Err(ProgramError::Custom(5)))
+                    } /* else if TODO Validate owner {
+                        // TODO Validate owner
+                    } */ else {
+                        if instruction_data[1] == 1 { // UNTESTED: 1 ==> 34 <= instruction_data.len()
+                            assert_eq!(get_mint(&accounts[0]).mint_authority().unwrap(), &instruction_data[2..34]); // UNTESTED
+                        } else {
+                            assert_eq!(get_mint(&accounts[0]).mint_authority(), None); // UNTESTED
+                        }
+                        assert!(result.is_ok()) //  UNTESTED
+                    }
+                } else { // FreezeAccount
+                    if old_freeze_authority_is_none { // UNTESTED
+                        assert_eq!(result, Err(ProgramError::Custom(16)))
+                    } /* else if TODO Validate owner {
+                        // TODO Validate owner
+                    } */ else {
+                        if instruction_data[1] == 1 { // UNTESTED: 1 ==> 34 <= instruction_data.len()
+                            assert_eq!(get_mint(&accounts[0]).freeze_authority().unwrap(), &instruction_data[2..34]); // UNTESTED
+                        } else {
+                            assert_eq!(get_mint(&accounts[0]).freeze_authority(), None); // UNTESTED
+                        }
+                        assert!(result.is_ok()) //  UNTESTED
+                    }
+                }
+            }
+        }
+    }
+
+    result
 }
 
 /// accounts[0] // Source Account Info
