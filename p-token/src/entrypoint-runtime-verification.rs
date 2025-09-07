@@ -1878,7 +1878,97 @@ fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 1], instruction_dat
     result
 }
 
+/// accounts[0] // Source Account Info
+/// accounts[1] // Destination Info
+/// accounts[2] // Authority Info
 #[inline(never)]
 fn test_process_withdraw_excess_lamports(accounts: &[AccountInfo]) -> ProgramResult {
-    process_withdraw_excess_lamports(accounts)
+    use pinocchio_token_interface::state::{account, mint, multisig};
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_account = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const account::Account)
+            .read()
+    };
+    let get_mint = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const mint::Mint)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let src_data_len = accounts[0].data_len();
+    let src_account_initialised = get_account(&accounts[0]).is_initialized();
+    let src_account_is_native = get_account(&accounts[0]).is_native();
+    let src_mint_initialised = get_mint(&accounts[0]).is_initialized();
+    let src_mint_mint_authority = get_mint(&accounts[0]).mint_authority().is_some();
+    let src_init_lamports = accounts[0].lamports();
+    let dst_init_lamports = accounts[1].lamports();
+
+    // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
+    let rent = pinocchio::sysvars::rent::Rent::get().unwrap();
+    let minimum_balance = rent.minimum_balance(accounts[0].data_len());
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_withdraw_excess_lamports(accounts);
+
+    //-Assert Postconditions---------------------------------------------------
+    if accounts.len() < 3 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
+    } else if src_data_len != account::Account::LEN && src_data_len != mint::Mint::LEN && src_data_len != multisig::Multisig::LEN { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(13)));
+    } else {
+        if src_data_len == account::Account::LEN {
+            if !src_account_initialised.unwrap() { // UNTESTED
+                assert_eq!(result, Err(ProgramError::UninitializedAccount))
+            } else if src_account_is_native { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(10)))
+            }
+            // TODO Validate Owner
+            else if src_init_lamports < minimum_balance { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(0)))
+            } else if u64::MAX - src_init_lamports + minimum_balance < dst_init_lamports { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(0)))
+            } else {
+                assert_eq!(accounts[0].lamports(), minimum_balance);
+                assert_eq!(accounts[1].lamports(), dst_init_lamports + src_init_lamports - minimum_balance);
+                assert!(result.is_ok())
+            }
+        } else if src_data_len == mint::Mint::LEN {
+            if !src_mint_initialised.unwrap() { // UNTESTED
+                assert_eq!(result, Err(ProgramError::UninitializedAccount))
+            } else if src_mint_mint_authority { // UNTESTED
+                // TODO: Validate Owner
+            } else if accounts[0] != accounts[2] { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(15)))
+            } else if !accounts[2].is_signer() { // UNTESTED
+                assert_eq!(result, Err(ProgramError::MissingRequiredSignature))
+            }
+
+            else if src_init_lamports < minimum_balance { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(0)))
+            } else if u64::MAX - src_init_lamports + minimum_balance < dst_init_lamports { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(0)))
+            } else {
+                assert_eq!(accounts[0].lamports(), minimum_balance);
+                assert_eq!(accounts[1].lamports(), dst_init_lamports + src_init_lamports - minimum_balance);
+                assert!(result.is_ok())
+            }
+        } else { // src_data_len == multisig::Multisig::LEN
+            // TODO Validate Owners
+
+            if src_init_lamports < minimum_balance { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(0)))
+            } else if u64::MAX - src_init_lamports + minimum_balance < dst_init_lamports { // UNTESTED
+                assert_eq!(result, Err(ProgramError::Custom(0)))
+            } else {
+                assert_eq!(accounts[0].lamports(), minimum_balance);
+                assert_eq!(accounts[1].lamports(), dst_init_lamports + src_init_lamports - minimum_balance);
+                assert!(result.is_ok())
+            }
+        }
+    }
+
+    result
 }
