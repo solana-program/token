@@ -1163,9 +1163,73 @@ pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], inst
     result
 }
 
+/// accounts[0]   // Multisig Info
+/// accounts[1]   // Rent Sysvar Info
+/// accounts[2..] // Signers
+/// accounts[2..].len() // n
+/// instruction_data[1] // m
 #[inline(never)]
 fn test_process_initialize_multisig(accounts: &[AccountInfo; 5], instruction_data: &[u8; 1]) -> ProgramResult {
-    process_initialize_multisig(accounts, instruction_data)
+                                                          // ^ FIXME: totally arbitrary for the tests
+    use pinocchio_token_interface::state::multisig;
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_multisig = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const multisig::Multisig)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let multisig_already_initialised = get_multisig(&accounts[0]).is_initialized();
+    let multisig_init_lamports = accounts[0].lamports();
+    let minimum_balance = unsafe {
+        pinocchio::sysvars::rent::Rent::from_bytes_unchecked(accounts[1].borrow_data_unchecked())
+    }.minimum_balance(accounts[0].data_len());
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_multisig(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.is_empty() {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 2 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[1].key() != &pinocchio::sysvars::rent::RENT_ID { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidArgument))
+    } else if accounts[0].data_len() != multisig::Multisig::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if multisig_already_initialised.is_err() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if multisig_already_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if multisig_init_lamports < minimum_balance { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else if !multisig::Multisig::is_valid_signer_index((accounts.len() - 2) as u8) { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(7)))
+    } else if !multisig::Multisig::is_valid_signer_index(instruction_data[0]) { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(8)))
+    } else {
+        assert!(accounts[2..]
+            .iter()
+            .map(|signer| *signer.key())
+            .eq(
+                get_multisig(&accounts[0])
+                .signers
+                .iter()
+                .take(accounts[2..].len())
+                .copied()
+            )
+        );
+        assert_eq!(get_multisig(&accounts[0]).m, instruction_data[0]);
+        assert_eq!(get_multisig(&accounts[0]).n as usize, accounts.len() - 2);
+        assert!(get_multisig(&accounts[0]).is_initialized().is_ok());
+        assert!(get_multisig(&accounts[0]).is_initialized().unwrap());
+        assert!(result.is_ok())
+    }
+
+    result
 }
 
 /// accounts[0] // Source Account Info
@@ -1676,9 +1740,70 @@ fn test_process_sync_native(accounts: &[AccountInfo; 1]) -> ProgramResult {
     result
 }
 
+/// accounts[0]   // Multisig Info
+/// accounts[1..] // Signers
+/// accounts[1..].len() // n
+/// instruction_data[1] // m
 #[inline(never)]
 fn test_process_initialize_multisig2(accounts: &[AccountInfo; 4], instruction_data: &[u8; 1]) -> ProgramResult {
-    process_initialize_multisig2(accounts, instruction_data)
+                                                           // ^ FIXME: totally arbitrary for the tests
+    use pinocchio_token_interface::state::multisig;
+
+    // TODO: requires accounts[..] are all valid ptrs
+
+    //-Helpers-----------------------------------------------------------------
+    let get_multisig = |account_info: &AccountInfo| unsafe {
+        (account_info.borrow_data_unchecked().as_ptr() as *const multisig::Multisig)
+            .read()
+    };
+
+    //-Initial State-----------------------------------------------------------
+    let multisig_already_initialised = get_multisig(&accounts[0]).is_initialized();
+    let multisig_init_lamports = accounts[0].lamports();
+    // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
+    let rent = pinocchio::sysvars::rent::Rent::get().unwrap();
+    let minimum_balance = rent.minimum_balance(accounts[0].data_len());
+
+    //-Process Instruction-----------------------------------------------------
+    let result = process_initialize_multisig2(accounts, instruction_data);
+
+    //-Assert Postconditions---------------------------------------------------
+    if instruction_data.is_empty() {
+        assert_eq!(result, Err(ProgramError::Custom(12)))
+    } else if accounts.len() < 1 {
+        assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
+    } else if accounts[0].data_len() != multisig::Multisig::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if multisig_already_initialised.is_err() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if multisig_already_initialised.unwrap() { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(6)))
+    } else if multisig_init_lamports < minimum_balance { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(0)))
+    } else if !multisig::Multisig::is_valid_signer_index((accounts.len() - 2) as u8) { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(7)))
+    } else if !multisig::Multisig::is_valid_signer_index(instruction_data[0]) { // UNTESTED
+        assert_eq!(result, Err(ProgramError::Custom(8)))
+    } else {
+        assert!(accounts[1..]
+            .iter()
+            .map(|signer| *signer.key())
+            .eq(
+                get_multisig(&accounts[0])
+                .signers
+                .iter()
+                .take(accounts[1..].len())
+                .copied()
+            )
+        );
+        assert_eq!(get_multisig(&accounts[0]).m, instruction_data[0]);
+        assert_eq!(get_multisig(&accounts[0]).n as usize, accounts.len() - 1);
+        assert!(get_multisig(&accounts[0]).is_initialized().is_ok());
+        assert!(get_multisig(&accounts[0]).is_initialized().unwrap());
+        assert!(result.is_ok())
+    }
+
+    result
 }
 
 /// accounts[0] // Mint Info

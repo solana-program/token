@@ -74,3 +74,51 @@ async fn initialize_multisig() {
     assert_eq!(multisig.n, 3);
     assert_eq!(multisig.m, 2);
 }
+
+#[tokio::test]
+async fn initialize_multisig_invalid_multisig() {
+    let context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
+        .start_with_context()
+        .await;
+
+    // Given an account
+
+    let multisig = Keypair::new();
+    let signer1 = Pubkey::new_unique();
+    let signer2 = Pubkey::new_unique();
+    let signer3 = Pubkey::new_unique();
+    let signers = vec![&signer1, &signer2, &signer3];
+
+    let rent = context.banks_client.get_rent().await.unwrap();
+
+    let initialize_ix = spl_token::instruction::initialize_multisig(
+        &spl_token::ID,
+        &Pubkey::new_unique(), // Changed to invalid Pubkey
+        &signers,
+        2,
+    )
+    .unwrap();
+
+    // When a new multisig account is created and initialized.
+
+    let instructions = vec![
+        create_account(
+            &context.payer.pubkey(),
+            &multisig.pubkey(),
+            rent.minimum_balance(Multisig::LEN),
+            Multisig::LEN as u64,
+            &TOKEN_PROGRAM_ID,
+        ),
+        initialize_ix,
+    ];
+
+    let tx = Transaction::new_signed_with_payer(
+        &instructions,
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &multisig],
+        context.last_blockhash,
+    );
+    let result = context.banks_client.process_transaction(tx).await;
+    let inner_error = result.err().unwrap().unwrap();
+    assert_eq!(inner_error, solana_transaction_error::TransactionError::InstructionError(1, solana_instruction::error::InstructionError::InvalidAccountData));
+}
