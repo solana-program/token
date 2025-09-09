@@ -12,7 +12,12 @@ use {
         program_error::{ProgramError, ToStr},
         ProgramResult, MAX_TX_ACCOUNTS, SUCCESS,
     },
-    pinocchio_token_interface::{error::TokenError, likely},
+    pinocchio_token_interface::{
+        error::TokenError,
+        instruction::TokenInstruction,
+        likely,
+        state::{account::Account, mint::Mint, Transmutable},
+    },
 };
 
 // Do not allocate memory.
@@ -65,15 +70,15 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     /// length.
     const IX12_ACCOUNT4_DATA_LEN: usize = 0x7b20;
 
-    /// Expected offset for the instruction data in the case all
-    /// previous accounts have zero data.
+    /// Expected offset for the instruction data in the case the
+    /// fourth (authority) account has zero data.
     ///
     /// This value is adjusted before it is used.
     const IX12_EXPECTED_INSTRUCTION_DATA_LEN_OFFSET: usize = 0xa330;
 
     // Constants that apply to `transfer` (instruction 3).
 
-    /// Offset for the second account.
+    /// Offset for the third account.
     ///
     /// Note that this assumes that both first and second accounts
     /// have zero data, which is being validated before the offset
@@ -84,8 +89,8 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     /// expected to be a mint account (82 bytes).
     const IX3_ACCOUNT3_DATA_LEN: usize = 0x5268;
 
-    /// Expected offset for the instruction data in the case all
-    /// previous accounts have zero data.
+    /// Expected offset for the instruction data in the case the
+    /// third (authority) account has zero data.
     ///
     /// This value is adjusted before it is used.
     const IX3_INSTRUCTION_DATA_LEN_OFFSET: usize = 0x7a78;
@@ -107,11 +112,11 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     // Instruction data is expected to be at least 9 bytes
     // and discriminator equal to 12.
     if *input == 4
-        && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == 165)
+        && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == Account::LEN as u64)
         && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
-        && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == 82)
+        && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == Mint::LEN as u64)
         && (*input.add(IX12_ACCOUNT3_HEADER_OFFSET) == 255)
-        && (*input.add(IX12_ACCOUNT3_DATA_LEN).cast::<u64>() == 165)
+        && (*input.add(IX12_ACCOUNT3_DATA_LEN).cast::<u64>() == Account::LEN as u64)
         && (*input.add(IX12_ACCOUNT4_HEADER_OFFSET) == 255)
     {
         // The `authority` account can have variable data length.
@@ -122,11 +127,11 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
         // Check that we have enough instruction data.
         //
         // Expected: instruction discriminator (u8) + amount (u64) + decimals (u8)
-        if input.add(offset).cast::<usize>().read() >= 10 {
+        if input.add(offset).cast::<u64>().read() >= 10 {
             let discriminator = input.add(offset + size_of::<u64>()).cast::<u8>().read();
 
             // Check for transfer discriminator.
-            if likely(discriminator == 12) {
+            if likely(discriminator == TokenInstruction::TransferChecked as u8) {
                 // instruction data length (u64) + discriminator (u8)
                 let instruction_data = unsafe { from_raw_parts(input.add(offset + 9), 9) };
 
@@ -162,9 +167,9 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     // Instruction data is expected to be at least 8 bytes
     // and discriminator equal to 3.
     else if *input == 3
-        && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == 165)
+        && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == Account::LEN as u64)
         && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
-        && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == 165)
+        && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == Account::LEN as u64)
         && (*input.add(IX3_ACCOUNT3_HEADER_OFFSET) == 255)
     {
         // The `authority` account can have variable data length.
@@ -173,11 +178,11 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
         let offset = IX3_INSTRUCTION_DATA_LEN_OFFSET + account_3_data_len_aligned;
 
         // Check that we have enough instruction data.
-        if likely(input.add(offset).cast::<usize>().read() >= 9) {
+        if likely(input.add(offset).cast::<u64>().read() >= 9) {
             let discriminator = input.add(offset + size_of::<u64>()).cast::<u8>().read();
 
             // Check for transfer discriminator.
-            if likely(discriminator == 3) {
+            if likely(discriminator == TokenInstruction::Transfer as u8) {
                 let instruction_data =
                     unsafe { from_raw_parts(input.add(offset + 9), size_of::<u64>()) };
 
