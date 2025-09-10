@@ -32,7 +32,7 @@ solana-rent = "2.2.0"
 solana-sdk-ids = "2.2.0"
 solana-sysvar = { version = "2.2.0", features = ["bincode"] }
 thiserror = "2.0"
-fogo-sessions-sdk = { version = "0.3.2", features = ["token-program"] }
+fogo-sessions-sdk = { version = "0.4.1", features = ["token-program"] }
 
 [dev-dependencies]
 lazy_static = "1.5.0"
