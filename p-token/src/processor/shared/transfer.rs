@@ -1,9 +1,8 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
     pinocchio::{
-        
-        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::pubkey_eq, ProgramResult,
-    ,
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::pubkey_eq,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,

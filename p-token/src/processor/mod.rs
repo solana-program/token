@@ -2,8 +2,7 @@ use {
     core::{slice::from_raw_parts, str::from_utf8_unchecked},
     pinocchio::{
         account_info::AccountInfo,
-        hint::likely,
-        hint::unlikely,
+        hint::{likely, unlikely},
         program_error::ProgramError,
         pubkey::{pubkey_eq, Pubkey},
         syscalls::sol_memcpy_,

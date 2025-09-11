@@ -2,12 +2,14 @@ use {
     super::validate_owner,
     crate::processor::{check_account_owner, unpack_amount},
     pinocchio::{
-        account_info::AccountInfo, hint::likely, program_error::ProgramError, ProgramResult,
+        account_info::AccountInfo,
+        hint::{likely, unlikely},
+        program_error::ProgramError,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load_mut},
-        unlikely,
     },
 };
 
