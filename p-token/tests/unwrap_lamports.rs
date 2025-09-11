@@ -15,7 +15,6 @@ use {
     solana_instruction::{error::InstructionError, AccountMeta, Instruction},
     solana_program_error::ProgramError,
     solana_program_pack::Pack,
-    solana_program_test::tokio,
     solana_pubkey::Pubkey,
     solana_rent::Rent,
     solana_sdk_ids::bpf_loader_upgradeable,
@@ -53,8 +52,7 @@ fn create_token_account(
     }
 }
 
-/// Creates a Mollusk instance with the default feature set, excluding the
-/// `bpf_account_data_direct_mapping` feature.
+/// Creates a Mollusk instance with the default feature set.
 fn mollusk() -> Mollusk {
     let mut mollusk = Mollusk::default();
     mollusk.add_program(
@@ -94,8 +92,8 @@ fn unwrap_lamports_instruction(
     })
 }
 
-#[tokio::test]
-async fn unwrap_lamports() {
+#[test]
+fn unwrap_lamports() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
@@ -141,16 +139,16 @@ async fn unwrap_lamports() {
 
     // And the remaining amount must be 0.
 
-    result.resulting_accounts.iter().for_each(|(key, account)| {
-        if *key == source_account_key {
-            let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
-            assert_eq!(token_account.amount, 0);
-        }
-    });
+    let account = result.get_account(&source_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 0);
 }
 
-#[tokio::test]
-async fn unwrap_lamports_with_amount() {
+#[test]
+fn unwrap_lamports_with_amount() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
@@ -196,16 +194,16 @@ async fn unwrap_lamports_with_amount() {
 
     // And the remaining amount must be 0.
 
-    result.resulting_accounts.iter().for_each(|(key, account)| {
-        if *key == source_account_key {
-            let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
-            assert_eq!(token_account.amount, 0);
-        }
-    });
+    let account = result.get_account(&source_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 0);
 }
 
-#[tokio::test]
-async fn fail_unwrap_lamports_with_insufficient_funds() {
+#[test]
+fn fail_unwrap_lamports_with_insufficient_funds() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
@@ -245,8 +243,8 @@ async fn fail_unwrap_lamports_with_insufficient_funds() {
     );
 }
 
-#[tokio::test]
-async fn unwrap_lamports_with_parial_amount() {
+#[test]
+fn unwrap_lamports_with_parial_amount() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
@@ -294,16 +292,16 @@ async fn unwrap_lamports_with_parial_amount() {
 
     // And the remaining amount must be 1_000_000_000.
 
-    result.resulting_accounts.iter().for_each(|(key, account)| {
-        if *key == source_account_key {
-            let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
-            assert_eq!(token_account.amount, 1_000_000_000);
-        }
-    });
+    let account = result.get_account(&source_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 1_000_000_000);
 }
 
-#[tokio::test]
-async fn fail_unwrap_lamports_with_invalid_authority() {
+#[test]
+fn fail_unwrap_lamports_with_invalid_authority() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
@@ -344,8 +342,8 @@ async fn fail_unwrap_lamports_with_invalid_authority() {
     );
 }
 
-#[tokio::test]
-async fn fail_unwrap_lamports_with_non_native_account() {
+#[test]
+fn fail_unwrap_lamports_with_non_native_account() {
     let mint = Pubkey::new_unique();
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
@@ -380,22 +378,14 @@ async fn fail_unwrap_lamports_with_non_native_account() {
             (destination_account_key, Account::default()),
             (authority_key, Account::default()),
         ],
-        &[
-            Check::err(ProgramError::Custom(
-                TokenError::NonNativeNotSupported as u32,
-            )),
-            Check::account(&source_account_key)
-                .lamports(
-                    Rent::default().minimum_balance(size_of::<TokenAccount>()) + 2_000_000_000,
-                )
-                .build(),
-            Check::account(&destination_account_key).lamports(0).build(),
-        ],
+        &[Check::err(ProgramError::Custom(
+            TokenError::NonNativeNotSupported as u32,
+        ))],
     );
 }
 
-#[tokio::test]
-async fn unwrap_lamports_with_self_transfer() {
+#[test]
+fn unwrap_lamports_with_self_transfer() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
 
@@ -437,22 +427,22 @@ async fn unwrap_lamports_with_self_transfer() {
         ],
     );
 
-    result.resulting_accounts.iter().for_each(|(key, account)| {
-        if *key == source_account_key {
-            let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
-            assert_eq!(token_account.amount, 2_000_000_000);
-        }
-    });
+    let account = result.get_account(&source_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 2_000_000_000);
 }
 
-#[tokio::test]
-async fn fail_unwrap_lamports_with_invalid_native_account() {
+#[test]
+fn fail_unwrap_lamports_with_invalid_native_account() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let authority_key = Pubkey::new_unique();
     let destination_account_key = Pubkey::new_unique();
     let invalid_program_owner = Pubkey::new_unique();
 
-    // non-native account:
+    // native account:
     //   - amount: 2_000_000_000
     let source_account_key = Pubkey::new_unique();
     let mut source_account = create_token_account(
@@ -486,4 +476,154 @@ async fn fail_unwrap_lamports_with_invalid_native_account() {
             InstructionError::ExternalAccountDataModified,
         )],
     );
+}
+
+#[test]
+fn unwrap_lamports_to_native_account() {
+    let native_mint = Pubkey::new_from_array(native_mint::ID);
+    let authority_key = Pubkey::new_unique();
+
+    // native account:
+    //   - amount: 2_000_000_000
+    let source_account_key = Pubkey::new_unique();
+    let source_account = create_token_account(
+        &native_mint,
+        &authority_key,
+        true,
+        2_000_000_000,
+        &TOKEN_PROGRAM_ID,
+    );
+
+    // destination native account:
+    //   - amount: 0
+    let destination_account_key = Pubkey::new_unique();
+    let destination_account =
+        create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
+
+    let instruction = unwrap_lamports_instruction(
+        &source_account_key,
+        &destination_account_key,
+        &authority_key,
+        None,
+    )
+    .unwrap();
+
+    // It should succeed to unwrap 2_000_000_000 lamports.
+
+    let result = mollusk().process_and_validate_instruction(
+        &instruction,
+        &[
+            (source_account_key, source_account),
+            (destination_account_key, destination_account),
+            (authority_key, Account::default()),
+        ],
+        &[
+            Check::success(),
+            Check::account(&destination_account_key)
+                .lamports(
+                    Rent::default().minimum_balance(size_of::<TokenAccount>()) + 2_000_000_000,
+                )
+                .build(),
+            Check::account(&source_account_key)
+                .lamports(Rent::default().minimum_balance(size_of::<TokenAccount>()))
+                .build(),
+        ],
+    );
+
+    // And the remaining amount on the source account must be 0.
+
+    let account = result.get_account(&source_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 0);
+
+    // And the amount on the destination account must be 0 since we transferred
+    // lamports directly to the account.
+
+    let account = result.get_account(&destination_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 0);
+}
+
+#[test]
+fn unwrap_lamports_to_token_account() {
+    let native_mint = Pubkey::new_from_array(native_mint::ID);
+    let authority_key = Pubkey::new_unique();
+    let non_native_mint = Pubkey::new_unique();
+
+    // native account:
+    //   - amount: 2_000_000_000
+    let source_account_key = Pubkey::new_unique();
+    let source_account = create_token_account(
+        &native_mint,
+        &authority_key,
+        true,
+        2_000_000_000,
+        &TOKEN_PROGRAM_ID,
+    );
+
+    // destination non-native account:
+    //   - amount: 0
+    let destination_account_key = Pubkey::new_unique();
+    let destination_account = create_token_account(
+        &non_native_mint,
+        &authority_key,
+        false,
+        0,
+        &TOKEN_PROGRAM_ID,
+    );
+
+    let instruction = unwrap_lamports_instruction(
+        &source_account_key,
+        &destination_account_key,
+        &authority_key,
+        None,
+    )
+    .unwrap();
+
+    // It should succeed to unwrap 2_000_000_000 lamports.
+
+    let result = mollusk().process_and_validate_instruction(
+        &instruction,
+        &[
+            (source_account_key, source_account),
+            (destination_account_key, destination_account),
+            (authority_key, Account::default()),
+        ],
+        &[
+            Check::success(),
+            Check::account(&destination_account_key)
+                .lamports(
+                    Rent::default().minimum_balance(size_of::<TokenAccount>()) + 2_000_000_000,
+                )
+                .build(),
+            Check::account(&source_account_key)
+                .lamports(Rent::default().minimum_balance(size_of::<TokenAccount>()))
+                .build(),
+        ],
+    );
+
+    // And the remaining amount on the source account must be 0.
+
+    let account = result.get_account(&source_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 0);
+
+    // And the amount on the destination account must be 0 since we transferred
+    // lamports directly to the account.
+
+    let account = result.get_account(&destination_account_key);
+    assert!(account.is_some());
+
+    let account = account.unwrap();
+    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    assert_eq!(token_account.amount, 0);
 }
