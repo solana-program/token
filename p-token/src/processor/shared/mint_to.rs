@@ -1,6 +1,8 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{
+        account_info::AccountInfo, program_error::ProgramError, pubkey::pubkey_eq, ProgramResult,
+    },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load_mut, mint::Mint},
@@ -33,7 +35,7 @@ pub fn process_mint_to(
         return Err(TokenError::NativeNotSupported.into());
     }
 
-    if mint_info.key() != &destination_account.mint {
+    if !pubkey_eq(mint_info.key(), &destination_account.mint) {
         return Err(TokenError::MintMismatch.into());
     }
 

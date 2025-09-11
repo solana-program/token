@@ -1,6 +1,7 @@
 use {
     pinocchio::{
         account_info::AccountInfo,
+        hint::likely,
         program_error::ProgramError,
         pubkey::Pubkey,
         sysvars::{rent::Rent, Sysvar},
@@ -30,7 +31,9 @@ pub fn process_initialize_mint(
             let mint_authority = &*(instruction_data.as_ptr().add(1) as *const Pubkey);
             let freeze_authority = if *instruction_data.get_unchecked(33) == 0 {
                 None
-            } else if *instruction_data.get_unchecked(33) == 1 && instruction_data.len() >= 66 {
+            } else if likely(*instruction_data.get_unchecked(33) == 1)
+                && instruction_data.len() >= 66
+            {
                 Some(&*(instruction_data.as_ptr().add(34) as *const Pubkey))
             } else {
                 return Err(TokenError::InvalidInstruction.into());
