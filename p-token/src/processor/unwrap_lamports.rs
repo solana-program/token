@@ -7,6 +7,7 @@ use {
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load_mut},
+        unlikely,
     },
 };
 
@@ -62,7 +63,7 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
     // raw pointer.
     let self_transfer = source_account_info == destination_account_info;
 
-    if self_transfer || amount == 0 {
+    if unlikely(self_transfer || amount == 0) {
         // Validates the token account owner since we are not writing
         // to the account.
         check_account_owner(source_account_info)
