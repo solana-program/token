@@ -85,8 +85,10 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     /// is used.
     const IX3_ACCOUNT3_HEADER_OFFSET: usize = 0x5218;
 
-    /// Offset for the third account data length. This is
-    /// expected to be a mint account (82 bytes).
+    /// Offset for the third account data length.
+    ///
+    /// This is expected to be an account with variable data
+    /// length.
     const IX3_ACCOUNT3_DATA_LEN: usize = 0x5268;
 
     /// Expected offset for the instruction data in the case the
