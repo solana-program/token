@@ -1,6 +1,6 @@
 use {
     super::validate_owner,
-    crate::processor::{check_account_owner, U64_BYTES},
+    crate::processor::{check_account_owner, unpack_amount},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
     pinocchio_token_interface::{
         error::TokenError,
@@ -18,11 +18,8 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
 
     let maybe_amount = if likely(*has_amount == 0) {
         None
-    } else if maybe_amount.len() >= 8 {
-        // SAFETY: The slice is guaranteed to be at least 8 bytes long.
-        Some(u64::from_le_bytes(unsafe {
-            *(maybe_amount.as_ptr() as *const [u8; U64_BYTES])
-        }))
+    } else if *has_amount == 1 {
+        Some(unpack_amount(maybe_amount)?)
     } else {
         return Err(TokenError::InvalidInstruction.into());
     };
