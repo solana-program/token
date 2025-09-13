@@ -6,7 +6,8 @@ use {
     },
     pinocchio::{
         account_info::AccountInfo,
-        entrypoint::deserialize,
+        entrypoint::{deserialize, NON_DUP_MARKER},
+        hint::likely,
         log::sol_log,
         no_allocator, nostd_panic_handler,
         program_error::{ProgramError, ToStr},
@@ -15,7 +16,6 @@ use {
     pinocchio_token_interface::{
         error::TokenError,
         instruction::TokenInstruction,
-        likely,
         state::{account::Account, mint::Mint, Transmutable},
     },
 };
@@ -115,11 +115,11 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     // and discriminator equal to 12.
     if *input == 4
         && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == Account::LEN as u64)
-        && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
+        && (*input.add(ACCOUNT2_HEADER_OFFSET) == NON_DUP_MARKER)
         && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == Mint::LEN as u64)
-        && (*input.add(IX12_ACCOUNT3_HEADER_OFFSET) == 255)
+        && (*input.add(IX12_ACCOUNT3_HEADER_OFFSET) == NON_DUP_MARKER)
         && (*input.add(IX12_ACCOUNT3_DATA_LEN).cast::<u64>() == Account::LEN as u64)
-        && (*input.add(IX12_ACCOUNT4_HEADER_OFFSET) == 255)
+        && (*input.add(IX12_ACCOUNT4_HEADER_OFFSET) == NON_DUP_MARKER)
     {
         // The `authority` account can have variable data length.
         let account_4_data_len_aligned =
@@ -170,9 +170,9 @@ pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     // and discriminator equal to 3.
     else if *input == 3
         && (*input.add(ACCOUNT1_DATA_LEN).cast::<u64>() == Account::LEN as u64)
-        && (*input.add(ACCOUNT2_HEADER_OFFSET) == 255)
+        && (*input.add(ACCOUNT2_HEADER_OFFSET) == NON_DUP_MARKER)
         && (*input.add(ACCOUNT2_DATA_LEN).cast::<u64>() == Account::LEN as u64)
-        && (*input.add(IX3_ACCOUNT3_HEADER_OFFSET) == 255)
+        && (*input.add(IX3_ACCOUNT3_HEADER_OFFSET) == NON_DUP_MARKER)
     {
         // The `authority` account can have variable data length.
         let account_3_data_len_aligned =
