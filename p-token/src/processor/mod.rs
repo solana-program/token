@@ -1,7 +1,7 @@
 use {
     core::{slice::from_raw_parts, str::from_utf8_unchecked},
     pinocchio::{
-        account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey,
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::Pubkey,
         syscalls::sol_memcpy_, ProgramResult,
     },
     pinocchio_token_interface::{
@@ -12,7 +12,6 @@ use {
             multisig::{Multisig, MAX_SIGNERS},
             Transmutable,
         },
-        unlikely,
     },
 };
 
