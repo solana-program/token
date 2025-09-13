@@ -18,6 +18,18 @@ fn log_error(error: &ProgramError) {
     pinocchio::log::sol_log(error.to_str::<TokenError>());
 }
 
+/// Cheatcode functions for formal verification
+/// These functions serve as markers to inject assumptions about AccountInfo types
+/// They are no-ops at runtime but provide hints to the formal verification tools
+#[inline(never)]
+fn cheatcode_is_account(_: &AccountInfo) {}
+
+#[inline(never)]
+fn cheatcode_is_mint(_: &AccountInfo) {}
+
+#[inline(never)]
+fn cheatcode_is_rent(_: &AccountInfo) {}
+
 /// Process an instruction.
 ///
 /// In the first stage, the entrypoint checks the discriminator of the
@@ -302,6 +314,10 @@ fn inner_process_remaining_instruction(
 #[inline(never)]
 pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 66]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
+
+    // Cheatcode assumptions
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_rent(&accounts[1]);
     //-Helpers-----------------------------------------------------------------
     let get_mint = |account_info: &AccountInfo| unsafe {
         (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
@@ -353,6 +369,10 @@ pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruct
 #[inline(never)]
 pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instruction_data: &[u8; 34]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
+
+    // Cheatcode assumptions
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_rent(&accounts[1]);
     //-Helpers-----------------------------------------------------------------
     let get_mint = |account_info: &AccountInfo| unsafe {
         (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
@@ -403,6 +423,12 @@ pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instr
 #[inline(never)]
 pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+    cheatcode_is_rent(&accounts[3]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
@@ -472,6 +498,11 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
 #[inline(never)]
 pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
@@ -553,6 +584,11 @@ pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8
 pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
     use pinocchio_token_interface::state::{mint, account, account_state};
 
+    // Cheatcode assumptions
+    cheatcode_is_mint(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
@@ -624,6 +660,11 @@ pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8;
 #[inline(never)]
 pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
@@ -699,6 +740,11 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
 #[inline(never)]
 pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     // use pinocchio_token_interface::state::{account, account_state, mint};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
     use pinocchio_token_interface::state::account;
 
     // TODO: requires accounts[..] are all valid ptrs
@@ -759,6 +805,12 @@ pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult 
 #[inline(never)]
 pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_data: &[u8; 9]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint::Mint};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+    cheatcode_is_account(&accounts[3]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
@@ -852,6 +904,11 @@ pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_da
 pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: &[u8; 9]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint};
 
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
@@ -931,6 +988,11 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
 pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction_data: &[u8; 32]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
 
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_rent(&accounts[2]);
+
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
@@ -1001,6 +1063,10 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
 pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction_data: &[u8; 32]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
 
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
@@ -1070,6 +1136,9 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
 #[inline(never)]
 pub fn test_process_initialize_mint2_freeze(accounts: &[AccountInfo; 1], instruction_data: &[u8; 66]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
+
+    // Cheatcode assumptions
+    cheatcode_is_mint(&accounts[0]);
     //-Helpers-----------------------------------------------------------------
     let get_mint = |account_info: &AccountInfo| unsafe {
         (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
@@ -1120,6 +1189,9 @@ pub fn test_process_initialize_mint2_freeze(accounts: &[AccountInfo; 1], instruc
 #[inline(never)]
 pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], instruction_data: &[u8; 34]) -> ProgramResult {
     use pinocchio_token_interface::state::mint::Mint;
+
+    // Cheatcode assumptions
+    cheatcode_is_mint(&accounts[0]);
     //-Helpers-----------------------------------------------------------------
     let get_mint = |account_info: &AccountInfo| unsafe {
         (account_info.borrow_data_unchecked().as_ptr() as *const Mint)
@@ -1240,6 +1312,11 @@ fn test_process_initialize_multisig(accounts: &[AccountInfo; 5], instruction_dat
 fn test_process_approve(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
 
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
@@ -1281,6 +1358,10 @@ fn test_process_approve(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8])
 #[inline(never)]
 fn test_process_revoke(accounts: &[AccountInfo; 2]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_account(&accounts[1]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
@@ -1448,6 +1529,11 @@ fn test_process_set_authority(accounts: &[AccountInfo; 2], instruction_data: &[u
 fn test_process_freeze_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint};
 
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
+
     // TODO: requires accounts[..] are all valid ptrs
 
     //-Helpers-----------------------------------------------------------------
@@ -1508,6 +1594,11 @@ fn test_process_freeze_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
 #[inline(never)]
 fn test_process_thaw_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     use pinocchio_token_interface::state::{account, account_state, mint};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
+    cheatcode_is_mint(&accounts[1]);
+    cheatcode_is_account(&accounts[2]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
@@ -1699,6 +1790,9 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
 #[inline(never)]
 fn test_process_sync_native(accounts: &[AccountInfo; 1]) -> ProgramResult {
     use pinocchio_token_interface::{program, state::account};
+
+    // Cheatcode assumptions
+    cheatcode_is_account(&accounts[0]);
 
     // TODO: requires accounts[..] are all valid ptrs
 
