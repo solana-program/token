@@ -1,0 +1,258 @@
+
+┌─ 1 (root, init)
+│   #execTerminator ( terminator ( ... kind: terminatorKindCall ( ... func: operandC
+│   span: st/library/core/src/fmt/mod.rs:343
+│
+│  (100 steps)
+├─ 3
+│   #setArgsFromStack ( 1 , operandMove ( place ( ... local: local ( 8 ) , projectio
+│   function: processor::get_account_data_size::process_get_account_data_size
+│   span: essor/get_account_data_size.rs:15
+│
+│  (100 steps)
+├─ 4
+│   #setArgFromStack ( 1 , operandCopy ( place ( ... local: local ( 1 ) , projection
+│   function: pinocchio::account_info::AccountInfo::owner
+│   span: chio-0.9.0/src/account_info.rs:133
+│
+│  (24 steps)
+├─ 5
+│   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+│   function: pinocchio::account_info::AccountInfo::owner
+│   span: chio-0.9.0/src/account_info.rs:134
+┃
+┃ (1 step)
+┣━━┓
+┃  │
+┃  ├─ 6
+┃  │   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  │   function: pinocchio::account_info::AccountInfo::owner
+┃  │   span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┃ (1 step)
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  ├─ 11
+┃  ┃  │   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃  │   function: pinocchio::account_info::AccountInfo::owner
+┃  ┃  │   span: chio-0.9.0/src/account_info.rs:134
+┃  ┃  ┃
+┃  ┃  ┃ (1 step)
+┃  ┃  ┣━━┓
+┃  ┃  ┃  │
+┃  ┃  ┃  └─ 32 (leaf, pending)
+┃  ┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃  ┃
+┃  ┃  ┣━━┓
+┃  ┃  ┃  │
+┃  ┃  ┃  └─ 33 (leaf, pending)
+┃  ┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃  ┃
+┃  ┃  ┣━━┓
+┃  ┃  ┃  │
+┃  ┃  ┃  └─ 34 (leaf, pending)
+┃  ┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , project:Value ( ARGS:List [
+┃  ┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃  ┃
+┃  ┃  ┣━━┓
+┃  ┃  ┃  │
+┃  ┃  ┃  └─ 35 (leaf, pending)
+┃  ┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS:List , 0 ) ,
+┃  ┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃  ┃
+┃  ┃  ┗━━┓
+┃  ┃     │
+┃  ┃     └─ 36 (leaf, pending)
+┃  ┃         #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃         function: pinocchio::account_info::AccountInfo::owner
+┃  ┃         span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 12 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 13 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , project:Value ( ARGS:List [
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 14 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS:List , 0 ) ,
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┗━━┓
+┃     │
+┃     └─ 15 (leaf, pending)
+┃         #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃         function: pinocchio::account_info::AccountInfo::owner
+┃         span: chio-0.9.0/src/account_info.rs:134
+┃
+┣━━┓
+┃  │
+┃  ├─ 7
+┃  │   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  │   function: pinocchio::account_info::AccountInfo::owner
+┃  │   span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┃ (1 step)
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 16 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 17 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 18 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , project:Value ( ARGS:List [
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 19 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS:List , 0 ) ,
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┗━━┓
+┃     │
+┃     └─ 20 (leaf, pending)
+┃         #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃         function: pinocchio::account_info::AccountInfo::owner
+┃         span: chio-0.9.0/src/account_info.rs:134
+┃
+┣━━┓
+┃  │
+┃  ├─ 8
+┃  │   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , project:Value ( ARGS:List [
+┃  │   function: pinocchio::account_info::AccountInfo::owner
+┃  │   span: chio-0.9.0/src/account_info.rs:134
+┃  │
+┃  │  (94 steps)
+┃  └─ 21 (leaf, pending)
+┃      #execIntrinsic ( symbol ( "raw_eq" ) , operandMove ( place ( ... local: local (
+┃
+┣━━┓
+┃  │
+┃  ├─ 9
+┃  │   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS:List , 0 ) ,
+┃  │   function: pinocchio::account_info::AccountInfo::owner
+┃  │   span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┃ (1 step)
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 22 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 23 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 24 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , project:Value ( ARGS0:List [
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┣━━┓
+┃  ┃  │
+┃  ┃  └─ 25 (leaf, pending)
+┃  ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS0:List , 0 )
+┃  ┃      function: pinocchio::account_info::AccountInfo::owner
+┃  ┃      span: chio-0.9.0/src/account_info.rs:134
+┃  ┃
+┃  ┗━━┓
+┃     │
+┃     └─ 26 (leaf, pending)
+┃         #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS:List , 0 ) ,
+┃         function: pinocchio::account_info::AccountInfo::owner
+┃         span: chio-0.9.0/src/account_info.rs:134
+┃
+┗━━┓
+   │
+   ├─ 10
+   │   #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+   │   function: pinocchio::account_info::AccountInfo::owner
+   │   span: chio-0.9.0/src/account_info.rs:134
+   ┃
+   ┃ (1 step)
+   ┣━━┓
+   ┃  │
+   ┃  └─ 27 (leaf, pending)
+   ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+   ┃      function: pinocchio::account_info::AccountInfo::owner
+   ┃      span: chio-0.9.0/src/account_info.rs:134
+   ┃
+   ┣━━┓
+   ┃  │
+   ┃  └─ 28 (leaf, pending)
+   ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+   ┃      function: pinocchio::account_info::AccountInfo::owner
+   ┃      span: chio-0.9.0/src/account_info.rs:134
+   ┃
+   ┣━━┓
+   ┃  │
+   ┃  └─ 29 (leaf, pending)
+   ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , project:Value ( ARGS0:List [
+   ┃      function: pinocchio::account_info::AccountInfo::owner
+   ┃      span: chio-0.9.0/src/account_info.rs:134
+   ┃
+   ┣━━┓
+   ┃  │
+   ┃  └─ 30 (leaf, pending)
+   ┃      #traverseProjection ( toStack ( 5 , local ( 2 ) ) , getValue ( ARGS0:List , 0 )
+   ┃      function: pinocchio::account_info::AccountInfo::owner
+   ┃      span: chio-0.9.0/src/account_info.rs:134
+   ┃
+   ┗━━┓
+      │
+      └─ 31 (leaf, pending)
+          #traverseProjection ( toStack ( 5 , local ( 2 ) ) , #fromPAcc(_)_KMIR-P-TOKEN_Va
+          function: pinocchio::account_info::AccountInfo::owner
+          span: chio-0.9.0/src/account_info.rs:134
+
+
+┌─ 2 (root, leaf, target, terminal)
+│   #EndProgram ~> .K
+
+
+
+# Rules: 
+Rules applied on edge 5 -> 6:
+No edge found
+Rules applied on edge 5 -> 7:
+No edge found
+Rules applied on edge 5 -> 8:
+No edge found
+Rules applied on edge 5 -> 9:
+No edge found

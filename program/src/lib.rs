@@ -13,6 +13,24 @@ pub mod state;
 #[cfg(not(feature = "no-entrypoint"))]
 mod entrypoint;
 
+#[cfg(feature = "test-against-pinocchio")]
+mod pinocchio_test_config {
+    use solana_pubkey::Pubkey;
+
+    /// Program ID for testing against pinocchio token program
+    pub const TOKEN_PROGRAM_ID: Pubkey = Pubkey::new_from_array(pinocchio_token_interface::program::ID);
+}
+
+#[cfg(not(feature = "test-against-pinocchio"))]
+mod pinocchio_test_config {
+    use solana_pubkey::Pubkey;
+
+    /// Program ID for testing against SPL token program (default)
+    pub const TOKEN_PROGRAM_ID: Pubkey = crate::id();
+}
+
+pub use pinocchio_test_config::TOKEN_PROGRAM_ID;
+
 /// Export current sdk types for downstream users building with a different sdk
 /// version
 pub mod solana_program {
