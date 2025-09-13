@@ -72,7 +72,7 @@ ${RUSTC} --version
 # build p-token with stable-mir-json
 # NB deletes all prior token build artefacts
 cd .. # p-token
-cargo clean && cargo build
+cargo clean && cargo build --features runtime-verification
 cd test-properties
 SMIRS=$(ls ../../target/debug/deps/*smir.json | sort)
 

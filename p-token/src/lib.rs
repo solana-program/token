@@ -10,3 +10,7 @@ mod entrypoint;
 #[path = "entrypoint-runtime-verification.rs"]
 mod entrypoint;
 mod processor;
+
+// Include stubs for non-Solana platforms
+#[cfg(not(target_os = "solana"))]
+mod stubs;
