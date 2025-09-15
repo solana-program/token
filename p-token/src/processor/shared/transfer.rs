@@ -1,10 +1,11 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, ProgramResult,
+    },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load, load_mut, load_mut_unchecked, mint::Mint},
-        unlikely,
     },
 };
 

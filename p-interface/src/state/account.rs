@@ -1,7 +1,6 @@
 use {
     super::{account_state::AccountState, COption, Initializable, Transmutable},
-    crate::likely,
-    pinocchio::{program_error::ProgramError, pubkey::Pubkey},
+    pinocchio::{hint::likely, program_error::ProgramError, pubkey::Pubkey},
 };
 
 /// Incinerator address.
