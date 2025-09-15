@@ -11,6 +11,7 @@ use {
 };
 
 #[inline(always)]
+#[allow(clippy::arithmetic_side_effects)]
 pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
     let [source_account_info, destination_account_info, authority_info, remaining @ ..] = accounts
     else {
@@ -44,14 +45,15 @@ pub fn process_close_account(accounts: &[AccountInfo]) -> ProgramResult {
         }
     }
 
-    let destination_starting_lamports = destination_account_info.lamports();
     // SAFETY: single mutable borrow to `destination_account_info` lamports and
     // there are no "active" borrows of `source_account_info` account data.
     unsafe {
         // Moves the lamports to the destination account.
-        *destination_account_info.borrow_mut_lamports_unchecked() = destination_starting_lamports
-            .checked_add(source_account_info.lamports())
-            .ok_or(TokenError::Overflow)?;
+        //
+        // Note: This is safe since the runtime checks for balanced instructions
+        // before and after each CPI and instruction, and the total lamports
+        // supply is bound to `u64::MAX`.
+        *destination_account_info.borrow_mut_lamports_unchecked() += source_account_info.lamports();
         // Closes the source account.
         source_account_info.close_unchecked();
     }
