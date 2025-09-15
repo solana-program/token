@@ -1,6 +1,9 @@
 use {
     crate::processor::validate_owner,
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::pubkey_eq,
+        ProgramResult,
+    },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load, load_mut, mint::Mint},
@@ -56,7 +59,7 @@ pub fn process_approve(
     }
 
     if let Some((mint_info, expected_decimals)) = expected_mint_info {
-        if mint_info.key() != &source_account.mint {
+        if unlikely(!pubkey_eq(mint_info.key(), &source_account.mint)) {
             return Err(TokenError::MintMismatch.into());
         }
 
@@ -64,7 +67,7 @@ pub fn process_approve(
         // `load` validates that the mint is initialized.
         let mint = unsafe { load::<Mint>(mint_info.borrow_data_unchecked())? };
 
-        if expected_decimals != mint.decimals {
+        if unlikely(expected_decimals != mint.decimals) {
             return Err(TokenError::MintDecimalsMismatch.into());
         }
     }

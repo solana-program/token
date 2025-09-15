@@ -10,5 +10,6 @@ pub const ID: Pubkey = pinocchio_pubkey::pubkey!("So1111111111111111111111111111
 
 #[inline(always)]
 pub fn is_native_mint(mint: &Pubkey) -> bool {
+    // Avoid using `pubkey_eq` since it increased CU consumption.
     mint == &ID
 }

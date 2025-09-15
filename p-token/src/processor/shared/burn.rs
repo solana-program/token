@@ -1,6 +1,9 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{
+        account_info::AccountInfo, hint::likely, program_error::ProgramError, pubkey::pubkey_eq,
+        ProgramResult,
+    },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load_mut, mint::Mint},
@@ -42,7 +45,7 @@ pub fn process_burn(
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
-    if mint_info.key() != &source_account.mint {
+    if !pubkey_eq(mint_info.key(), &source_account.mint) {
         return Err(TokenError::MintMismatch.into());
     }
 
@@ -52,9 +55,9 @@ pub fn process_burn(
         }
     }
 
-    if !source_account.is_owned_by_system_program_or_incinerator() {
+    if likely(!source_account.is_owned_by_system_program_or_incinerator()) {
         match source_account.delegate() {
-            Some(delegate) if authority_info.key() == delegate => {
+            Some(delegate) if pubkey_eq(authority_info.key(), delegate) => {
                 // SAFETY: `authority_info` is not currently borrowed.
                 unsafe { validate_owner(delegate, authority_info, remaining)? };
 

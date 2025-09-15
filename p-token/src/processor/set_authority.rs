@@ -1,7 +1,8 @@
 use {
     super::validate_owner,
     pinocchio::{
-        account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
+        account_info::AccountInfo, hint::likely, program_error::ProgramError, pubkey::Pubkey,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,
@@ -22,7 +23,9 @@ pub fn process_set_authority(accounts: &[AccountInfo], instruction_data: &[u8]) 
             let authority_type = AuthorityType::try_from(*instruction_data.get_unchecked(0))?;
             let new_authority = if *instruction_data.get_unchecked(1) == 0 {
                 None
-            } else if *instruction_data.get_unchecked(1) == 1 && instruction_data.len() >= 34 {
+            } else if likely(*instruction_data.get_unchecked(1) == 1)
+                && instruction_data.len() >= 34
+            {
                 Some(&*(instruction_data.as_ptr().add(2) as *const Pubkey))
             } else {
                 return Err(TokenError::InvalidInstruction.into());

@@ -1,7 +1,8 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
     pinocchio::{
-        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, ProgramResult,
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::pubkey_eq,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,
@@ -103,7 +104,7 @@ pub fn process_transfer(
             .checked_sub(amount)
             .ok_or(TokenError::InsufficientFunds)?;
 
-        if source_account.mint != destination_account.mint {
+        if !pubkey_eq(&source_account.mint, &destination_account.mint) {
             return Err(TokenError::MintMismatch.into());
         }
 
@@ -113,7 +114,7 @@ pub fn process_transfer(
     // Validates the mint information.
 
     if let Some((mint_info, decimals)) = expected_mint_info {
-        if mint_info.key() != &source_account.mint {
+        if !pubkey_eq(mint_info.key(), &source_account.mint) {
             return Err(TokenError::MintMismatch.into());
         }
 

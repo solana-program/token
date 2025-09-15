@@ -1,6 +1,8 @@
 use {
     crate::processor::validate_owner,
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{
+        account_info::AccountInfo, program_error::ProgramError, pubkey::pubkey_eq, ProgramResult,
+    },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, account_state::AccountState, load, load_mut, mint::Mint},
@@ -24,7 +26,7 @@ pub fn process_toggle_account_state(accounts: &[AccountInfo], freeze: bool) -> P
     if source_account.is_native() {
         return Err(TokenError::NativeNotSupported.into());
     }
-    if mint_info.key() != &source_account.mint {
+    if !pubkey_eq(mint_info.key(), &source_account.mint) {
         return Err(TokenError::MintMismatch.into());
     }
 

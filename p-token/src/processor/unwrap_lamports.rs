@@ -2,7 +2,10 @@ use {
     super::validate_owner,
     crate::processor::{check_account_owner, unpack_amount},
     pinocchio::{
-        account_info::AccountInfo, hint::likely, program_error::ProgramError, ProgramResult,
+        account_info::AccountInfo,
+        hint::{likely, unlikely},
+        program_error::ProgramError,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,
@@ -62,7 +65,7 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
     // raw pointer.
     let self_transfer = source_account_info == destination_account_info;
 
-    if self_transfer || amount == 0 {
+    if unlikely(self_transfer || amount == 0) {
         // Validates the token account owner since we are not writing
         // to the account.
         check_account_owner(source_account_info)

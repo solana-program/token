@@ -1,8 +1,12 @@
 use {
     core::{slice::from_raw_parts, str::from_utf8_unchecked},
     pinocchio::{
-        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::Pubkey,
-        syscalls::sol_memcpy_, ProgramResult,
+        account_info::AccountInfo,
+        hint::{likely, unlikely},
+        program_error::ProgramError,
+        pubkey::{pubkey_eq, Pubkey},
+        syscalls::sol_memcpy_,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,
@@ -79,7 +83,7 @@ const MAX_FORMATTED_DIGITS: usize = u8::MAX as usize + 2;
 /// Checks that the account is owned by the expected program.
 #[inline(always)]
 fn check_account_owner(account_info: &AccountInfo) -> ProgramResult {
-    if account_info.is_owned_by(&TOKEN_PROGRAM_ID) {
+    if likely(account_info.is_owned_by(&TOKEN_PROGRAM_ID)) {
         Ok(())
     } else {
         Err(ProgramError::IncorrectProgramId)
@@ -101,7 +105,7 @@ unsafe fn validate_owner(
     owner_account_info: &AccountInfo,
     signers: &[AccountInfo],
 ) -> ProgramResult {
-    if expected_owner != owner_account_info.key() {
+    if unlikely(!pubkey_eq(expected_owner, owner_account_info.key())) {
         return Err(TokenError::OwnerMismatch.into());
     }
 
@@ -121,7 +125,7 @@ unsafe fn validate_owner(
 
         for signer in signers.iter() {
             for (position, key) in multisig.signers[0..multisig.n as usize].iter().enumerate() {
-                if key == signer.key() && !matched[position] {
+                if pubkey_eq(key, signer.key()) && !matched[position] {
                     if !signer.is_signer() {
                         return Err(ProgramError::MissingRequiredSignature);
                     }
