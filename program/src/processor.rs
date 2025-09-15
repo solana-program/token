@@ -689,9 +689,14 @@ impl Processor {
                         account_info_iter.as_slice(),
                     )?;
                 }
+                // If there are session limits, but there is no delegate, it means
+                // that the session has used up all its limits for this token
+                (COption::None, Some(AuthorizedTokens::Specific)) => {
+                    return Err(SessionError::LimitsExceeded.into());
+                }
                 // The signer is a delegate (either a session key with limited permissions or any
                 // public key). This code path needs to update the delegated amounts
-                (COption::Some(ref delegate), _)
+                (COption::Some(ref delegate), session)
                     if Self::cmp_pubkeys(authority_info.key, delegate) =>
                 {
                     Self::validate_owner(
@@ -702,7 +707,11 @@ impl Processor {
                     )?;
 
                     if source_account.delegated_amount < amount {
-                        return Err(TokenError::InsufficientFunds.into());
+                        return Err(if session.is_some() {
+                            SessionError::LimitsExceeded.into()
+                        } else {
+                            TokenError::InsufficientFunds.into()
+                        });
                     }
                     source_account.delegated_amount = source_account
                         .delegated_amount
