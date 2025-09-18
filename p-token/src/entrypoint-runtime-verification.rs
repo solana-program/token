@@ -344,6 +344,7 @@ fn test_ptoken_domain_data(acc: &AccountInfo, mint: &AccountInfo, rent: &Account
     assert!(iacc.is_native());
 
     let owner = acc.owner();
+    assert!(acc.is_owned_by(owner));
     // QUESTION: is pinocchio::Account ever written to through AccountInfo?
 }
 
@@ -481,7 +482,7 @@ pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instr
 /// accounts[3] // Rent Sysvar Info
 #[inline(never)]
 pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramResult {
-    use pinocchio_token_interface::state::{account, account_state};
+    use pinocchio_token_interface::state::account_state;
 
     // TODO: requires accounts[..] are all valid ptrs
     cheatcode_is_account(&accounts[0]);
@@ -619,7 +620,7 @@ pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8
 /// instruction_data[0..8] // Little Endian Bytes of u64 amount
 #[inline(never)]
 pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]) -> ProgramResult {
-    use pinocchio_token_interface::state::{mint, account, account_state};
+    use pinocchio_token_interface::state::account_state;
 
     // TODO: requires accounts[..] are all valid ptrs
     cheatcode_is_mint(&accounts[0]);
@@ -967,7 +968,7 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
 /// instruction_data[..] // Owner
 #[inline(never)]
 pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction_data: &[u8; 32]) -> ProgramResult {
-    use pinocchio_token_interface::state::{account, account_state};
+    use pinocchio_token_interface::state::account_state;
 
     // TODO: requires accounts[..] are all valid ptrs
     cheatcode_is_account(&accounts[0]);
@@ -1028,7 +1029,7 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
 /// instruction_data[..] // Owner
 #[inline(never)]
 pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction_data: &[u8; 32]) -> ProgramResult {
-    use pinocchio_token_interface::state::{account, account_state};
+    use pinocchio_token_interface::state::account_state;
 
     // TODO: requires accounts[..] are all valid ptrs
     cheatcode_is_account(&accounts[0]);
@@ -1182,8 +1183,6 @@ pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], inst
 #[inline(never)]
 fn test_process_initialize_multisig(accounts: &[AccountInfo; 5], instruction_data: &[u8; 1]) -> ProgramResult {
                                                           // ^ FIXME: totally arbitrary for the tests
-    use pinocchio_token_interface::state::multisig;
-
     // TODO: requires accounts[..] are all valid ptrs
     cheatcode_is_multisig(&accounts[0]);
     cheatcode_is_rent(&accounts[1]);
