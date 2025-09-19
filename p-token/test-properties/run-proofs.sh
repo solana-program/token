@@ -12,7 +12,7 @@
 #
 #######################################################################
 
-ALL_NAMES=$(sed -n -e 's/^| \(entrypoint[a-zA-Z0-9:_]*\) *|.*/\1/p' tests.md)
+ALL_NAMES=$(sed -n -e 's/^| \(test_p[a-zA-Z0-9:_]*\) *|.*/\1/p' tests.md)
 
 TIMEOUT=1200
 PROVE_OPTS="--max-iterations 30 --max-depth 200"
@@ -49,14 +49,17 @@ set -u
 
 echo "Running tests ${TESTS} with options '$PROVE_OPTS' and timeout $TIMEOUT"
 
+prefix=pinocchio_token_program::entrypoint::
+
 for name in $TESTS; do
     echo "============================== $name ============================"
+    start=$prefix$name
     timeout --preserve-status -v ${TIMEOUT} \
             uv --project mir-semantics/kmir run -- \
             kmir prove-rs --smir artefacts/p-token.smir.json \
-            --proof-dir artefacts/proof --reload --verbose --start-symbol $name ${PROVE_OPTS}
+            --proof-dir artefacts/proof --reload --verbose --start-symbol $start ${PROVE_OPTS}
     uv --project mir-semantics/kmir run -- \
-       kmir show --proof-dir artefacts/proof p-token.smir.$name \
+       kmir show --proof-dir artefacts/proof p-token.smir.$start \
        --full-printer > artefacts/proof/${name}-full.txt
     echo "==========================================================================="
 done
