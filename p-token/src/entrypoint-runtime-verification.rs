@@ -2106,7 +2106,7 @@ fn test_process_set_authority(accounts: &[AccountInfo; 2], instruction_data: &[u
     let old_mint_authority = get_mint(&accounts[0]).mint_authority().cloned();
     let old_freeze_authority = get_mint(&accounts[0]).freeze_authority().cloned();
     let multisig_is_initialised = get_multisig(&accounts[1]).is_initialized();
-    let mint_is_initialised = get_mint(&accounts[1]).is_initialized();
+    let mint_is_initialised = get_mint(&accounts[0]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
     let result = process_set_authority(accounts, instruction_data);
