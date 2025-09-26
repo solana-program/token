@@ -40,7 +40,7 @@ These functions are no-ops at runtime but provide type hints to the verification
 #### Run specific test:
 ```bash
 cd test-properties
-./run-verification.sh entrypoint::test_process_transfer
+./run-verification.sh test_process_transfer
 ```
 
 #### Run all tests:
@@ -52,10 +52,10 @@ cd test-properties
 #### Custom options:
 ```bash
 # With custom timeout (in seconds)
-./run-verification.sh -t 600 entrypoint::test_process_transfer
+./run-verification.sh -t 600 test_process_transfer
 
 # With custom prove-rs options
-./run-verification.sh -o "--max-iterations 50 --max-depth 300" entrypoint::test_process_transfer
+./run-verification.sh -o "--max-iterations 50 --max-depth 300" test_process_transfer
 ```
 
 ## Test Functions

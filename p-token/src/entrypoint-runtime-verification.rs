@@ -414,6 +414,8 @@ pub fn test_process_initialize_mint_freeze(accounts: &[AccountInfo; 2], instruct
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Mint::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if mint_is_initialised_prior.unwrap()  {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else if accounts[0].lamports() < minimum_balance {
@@ -459,6 +461,8 @@ pub fn test_process_initialize_mint_no_freeze(accounts: &[AccountInfo; 2], instr
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Mint::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if mint_is_initialised_prior.unwrap()  {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else if accounts[0].lamports() < minimum_balance {
@@ -491,13 +495,10 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
-        .account_state()
-        .unwrap();
+        .account_state();
 
     let minimum_balance = get_rent(&accounts[3]).minimum_balance(accounts[0].data_len()); // TODO float problem
-
     let is_native_mint = accounts[1].key() == &pinocchio_token_interface::native_mint::ID;
-
     let mint_is_initialised = get_mint(&accounts[1]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -510,12 +511,18 @@ pub fn test_process_initialize_account(accounts: &[AccountInfo; 4]) -> ProgramRe
         assert_eq!(result, Err(ProgramError::InvalidArgument))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if initial_state_new_account != account_state::AccountState::Uninitialized  {
+    } else if initial_state_new_account.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if initial_state_new_account.unwrap() != account_state::AccountState::Uninitialized {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else if accounts[0].lamports() < minimum_balance {
         assert_eq!(result, Err(ProgramError::Custom(0)))
     } else if !is_native_mint && accounts[1].owner() != &pinocchio_token_interface::program::ID {
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
+    } else if !is_native_mint
+            && accounts[1].owner() == &pinocchio_token_interface::program::ID
+            && mint_is_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !is_native_mint
             && accounts[1].owner() == &pinocchio_token_interface::program::ID
             && !mint_is_initialised.unwrap() {
@@ -573,15 +580,17 @@ pub fn test_process_transfer(accounts: &[AccountInfo; 3], instruction_data: &[u8
     } else if accounts.len() < 3 {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
         return result;
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
     } else if !src_initialised.unwrap() {
-        // I don't believe there is a way to construct an Account with AccountState::Uninitialized
-        // so it can only be an invalid account
+        assert_eq!(result, Err(ProgramError::UninitializedAccount));
+        return result;
+    } else if accounts[0] != accounts[1] && dst_initialised.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
     } else if accounts[0] != accounts[1] && !dst_initialised.unwrap() {
-        // I don't believe there is a way to construct an Account with AccountState::Uninitialized
-        // so it can only be an invalid account
-        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
     } else if get_account(&accounts[0]).account_state().unwrap() == account_state::AccountState::Frozen {
         assert_eq!(result, Err(ProgramError::Custom(17)));
@@ -764,6 +773,9 @@ pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8;
     //-Initial State-----------------------------------------------------------
     let initial_supply = get_mint(&accounts[0]).supply();
     let initial_amount = get_account(&accounts[1]).amount();
+    let mint_initialised = get_mint(&accounts[0]).is_initialized();
+    let dst_initialised = get_account(&accounts[1]).is_initialized();
+    let dst_init_state = get_account(&accounts[1]).account_state();
     let multisig_is_initialised = get_multisig(&accounts[2]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -779,10 +791,13 @@ pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8;
     } else if accounts[1].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
-    } else if !get_account(&accounts[1]).is_initialized().unwrap() {
+    } else if dst_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
+    } else if !dst_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
-    } else if get_account(&accounts[1]).account_state().unwrap() == account_state::AccountState::Frozen  {
+    } else if dst_init_state.unwrap() == account_state::AccountState::Frozen  { // unwrap must succeed due to dst_initialised not being err
         assert_eq!(result, Err(ProgramError::Custom(17)));
         return result;
     } else if get_account(&accounts[1]).is_native() {
@@ -795,7 +810,10 @@ pub fn test_process_mint_to(accounts: &[AccountInfo; 3], instruction_data: &[u8;
         // Not sure if this is even possible if we get past the case above
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
-    } else if !get_mint(&accounts[0]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
     } else {
@@ -920,9 +938,13 @@ pub fn test_process_burn(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8]
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if accounts[1].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_initialised.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
@@ -1112,6 +1134,9 @@ pub fn test_process_close_account(accounts: &[AccountInfo; 3]) -> ProgramResult 
     } else if src_data_len != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
@@ -1214,6 +1239,7 @@ pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_da
     let src_owner = get_account(&accounts[0]).owner;
     let old_src_delgate = get_account(&accounts[0]).delegate().cloned();
     let old_src_delgated_amount = get_account(&accounts[0]).delegated_amount();
+    let mint_initialised = get_mint(&accounts[1]).is_initialized();
     let multisig_is_initialised = get_multisig(&accounts[3]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -1226,20 +1252,22 @@ pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_da
     } else if accounts.len() < 4 {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
         return result;
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
     } else if !src_initialised.unwrap() {
-        // I don't believe there is a way to construct an Account with AccountState::Uninitialized
-        // so it can only be an invalid account
+        assert_eq!(result, Err(ProgramError::UninitializedAccount));
+        return result;
+    } else if accounts[0] != accounts[2] && dst_initialised.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
     } else if accounts[0] != accounts[2] && !dst_initialised.unwrap() {
-        // I don't believe there is a way to construct an Account with AccountState::Uninitialized
-        // so it can only be an invalid account
-        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
     } else if get_account(&accounts[0]).account_state().unwrap() == account_state::AccountState::Frozen {
         assert_eq!(result, Err(ProgramError::Custom(17)));
         return result;
-    } else if get_account(&accounts[0]).account_state().unwrap() == account_state::AccountState::Frozen {
+    } else if accounts[0] != accounts[2] && get_account(&accounts[2]).account_state().unwrap() == account_state::AccountState::Frozen {
         assert_eq!(result, Err(ProgramError::Custom(17)));
         return result;
     }  else if src_initial_amount < amount {
@@ -1254,7 +1282,10 @@ pub fn test_process_transfer_checked(accounts: &[AccountInfo; 4], instruction_da
     } else if accounts[1].data_len() != core::mem::size_of::<Mint>() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
-    } else if !get_mint(&accounts[1]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
     } else if instruction_data[8] != get_mint(&accounts[1]).decimals {
@@ -1454,9 +1485,13 @@ pub fn test_process_burn_checked(accounts: &[AccountInfo; 3], instruction_data: 
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if accounts[1].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_initialised.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
@@ -1625,8 +1660,7 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
-        .account_state()
-        .unwrap();
+        .account_state();
 
     let minimum_balance = get_rent(&accounts[2]).minimum_balance(accounts[0].data_len());
 
@@ -1646,12 +1680,18 @@ pub fn test_process_initialize_account2(accounts: &[AccountInfo; 3], instruction
         assert_eq!(result, Err(ProgramError::InvalidArgument))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if initial_state_new_account != account_state::AccountState::Uninitialized  {
+    } else if initial_state_new_account.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if initial_state_new_account.unwrap() != account_state::AccountState::Uninitialized {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else if accounts[0].lamports() < minimum_balance {
         assert_eq!(result, Err(ProgramError::Custom(0)))
     } else if !is_native_mint && accounts[1].owner() != &pinocchio_token_interface::program::ID {
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
+    } else if !is_native_mint
+            && accounts[1].owner() == &pinocchio_token_interface::program::ID
+            && mint_is_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !is_native_mint
             && accounts[1].owner() == &pinocchio_token_interface::program::ID
             && !mint_is_initialised.unwrap() {
@@ -1684,8 +1724,7 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
 
     //-Initial State-----------------------------------------------------------
     let initial_state_new_account =  get_account(&accounts[0])
-        .account_state()
-        .unwrap();
+        .account_state();
 
     // Note: Rent is a supported sysvar so ProgramError::UnsupportedSysvar should be impossible
     let rent = pinocchio::sysvars::rent::Rent::get().unwrap();
@@ -1705,12 +1744,18 @@ pub fn test_process_initialize_account3(accounts: &[AccountInfo; 2], instruction
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if initial_state_new_account != account_state::AccountState::Uninitialized  {
+    } else if initial_state_new_account.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if initial_state_new_account.unwrap() != account_state::AccountState::Uninitialized {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else if accounts[0].lamports() < minimum_balance {
         assert_eq!(result, Err(ProgramError::Custom(0)))
     } else if !is_native_mint && accounts[1].owner() != &pinocchio_token_interface::program::ID {
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
+    } else if !is_native_mint
+            && accounts[1].owner() == &pinocchio_token_interface::program::ID
+            && mint_is_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !is_native_mint
             && accounts[1].owner() == &pinocchio_token_interface::program::ID
             && !mint_is_initialised.unwrap() {
@@ -1760,6 +1805,8 @@ pub fn test_process_initialize_mint2_freeze(accounts: &[AccountInfo; 1], instruc
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Mint::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if mint_is_initialised_prior.unwrap()  {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else if accounts[0].lamports() < minimum_balance {
@@ -1804,6 +1851,8 @@ pub fn test_process_initialize_mint2_no_freeze(accounts: &[AccountInfo; 1], inst
     } else if accounts.len() < 1 {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_is_initialised_prior.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if mint_is_initialised_prior.unwrap()  {
         assert_eq!(result, Err(ProgramError::Custom(6)))
@@ -1902,6 +1951,8 @@ fn test_process_approve(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8])
     //-Initial State-----------------------------------------------------------
     let amount = unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
     let src_owner = get_account(&accounts[0]).owner;
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_init_state = get_account(&accounts[0]).account_state();
     let multisig_is_initialised = get_multisig(&accounts[2]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -1914,9 +1965,11 @@ fn test_process_approve(accounts: &[AccountInfo; 3], instruction_data: &[u8; 8])
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if !get_account(&accounts[0]).is_initialized().unwrap() {
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
-    } else if get_account(&accounts[0]).account_state().unwrap() == account_state::AccountState::Frozen  {
+    } else if src_init_state.unwrap() == account_state::AccountState::Frozen  { // This should be safe to unwrap due to above check passing
         assert_eq!(result, Err(ProgramError::Custom(17)))
     } else {
         { // Validate Owner
@@ -2006,12 +2059,12 @@ fn test_process_revoke(accounts: &[AccountInfo; 2]) -> ProgramResult {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if accounts.len() < 2 {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
-    } else if src_init_state.is_err() {
-        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if src_init_state.unwrap() == account_state::AccountState::Frozen {
         assert_eq!(result, Err(ProgramError::Custom(17)))
     } else {
@@ -2132,7 +2185,10 @@ fn test_process_set_authority(accounts: &[AccountInfo; 2], instruction_data: &[u
         return result;
     } else {
         if account_data_len == Account::LEN {
-            if !src_initialised.unwrap() {
+            if src_initialised.is_err() {
+                assert_eq!(result, Err(ProgramError::InvalidAccountData));
+                return result;
+            } else if !src_initialised.unwrap() {
                 assert_eq!(result, Err(ProgramError::UninitializedAccount));
                 return result;
             } else if src_init_state.unwrap() == account_state::AccountState::Frozen {
@@ -2453,6 +2509,8 @@ fn test_process_freeze_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if src_init_state.is_err() {
@@ -2464,6 +2522,8 @@ fn test_process_freeze_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     } else if accounts[1].key() != &src_mint {
         assert_eq!(result, Err(ProgramError::Custom(3)))
     } else if accounts[1].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_initialised.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
@@ -2560,6 +2620,8 @@ fn test_process_thaw_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if src_init_state.is_err() {
@@ -2571,6 +2633,8 @@ fn test_process_thaw_account(accounts: &[AccountInfo; 3]) -> ProgramResult {
     } else if accounts[1].key() != &src_mint {
         assert_eq!(result, Err(ProgramError::Custom(3)))
     } else if accounts[1].data_len() != Mint::LEN {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if mint_initialised.is_err() {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
@@ -2656,6 +2720,9 @@ fn test_process_approve_checked(accounts: &[AccountInfo; 4], instruction_data: &
     //-Initial State-----------------------------------------------------------
     let amount = unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; 8])) };
     let src_owner = get_account(&accounts[0]).owner;
+    let src_initialised = get_account(&accounts[0]).is_initialized();
+    let src_init_state = get_account(&accounts[0]).account_state();
+    let mint_initialised = get_mint(&accounts[1]).is_initialized();
     let multisig_is_initialised = get_multisig(&accounts[3]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -2668,16 +2735,20 @@ fn test_process_approve_checked(accounts: &[AccountInfo; 4], instruction_data: &
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if !get_account(&accounts[0]).is_initialized().unwrap() {
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
-    } else if get_account(&accounts[0]).account_state().unwrap() == account_state::AccountState::Frozen  {
+    } else if src_init_state.unwrap() == account_state::AccountState::Frozen  { // This should be safe to unwrap due to above check passing
         assert_eq!(result, Err(ProgramError::Custom(17)))
     } else if accounts[1].key() != &get_account(&accounts[0]).mint {
         assert_eq!(result, Err(ProgramError::Custom(3)))
     } else if accounts[1].data_len() != Mint::LEN {
         // Not sure if this is even possible if we get past the case above
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
-    } else if !get_mint(&accounts[1]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if instruction_data[8] != get_mint(&accounts[1]).decimals {
         assert_eq!(result, Err(ProgramError::Custom(18)))
@@ -2761,6 +2832,9 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
     //-Initial State-----------------------------------------------------------
     let initial_supply = get_mint(&accounts[0]).supply();
     let initial_amount = get_account(&accounts[1]).amount();
+    let mint_initialised = get_mint(&accounts[0]).is_initialized();
+    let dst_initialised = get_account(&accounts[1]).is_initialized();
+    let dst_init_state = get_account(&accounts[1]).account_state();
     let multisig_is_initialised = get_multisig(&accounts[2]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
@@ -2773,13 +2847,16 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
     } else if accounts.len() < 3 {
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys));
         return result;
-    } else if accounts[1].data_len() != Account::LEN {
+    } else if accounts[1].data_len() != Account::LEN { // TODO Daniel: is it possible for something to be provided that has the same len but is not an account?
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
-    } else if !get_account(&accounts[1]).is_initialized().unwrap() {
+    } else if dst_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
+    } else if !dst_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
-    } else if get_account(&accounts[1]).account_state().unwrap() == account_state::AccountState::Frozen  {
+    } else if dst_init_state.unwrap() == account_state::AccountState::Frozen  { // unwrap must succeed due to dst_initialised not being err
         assert_eq!(result, Err(ProgramError::Custom(17)));
         return result;
     } else if get_account(&accounts[1]).is_native() {
@@ -2792,7 +2869,10 @@ fn test_process_mint_to_checked(accounts: &[AccountInfo; 3], instruction_data: &
         // Not sure if this is even possible if we get past the case above
         assert_eq!(result, Err(ProgramError::InvalidAccountData));
         return result;
-    } else if !get_mint(&accounts[0]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData));
+        return result;
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount));
         return result;
     } else if instruction_data[8] != get_mint(&accounts[0]).decimals {
@@ -2902,6 +2982,8 @@ fn test_process_sync_native(accounts: &[AccountInfo; 1]) -> ProgramResult {
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if !src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::UninitializedAccount))
     } else if src_native_amount.is_none() {
@@ -2983,6 +3065,9 @@ fn test_process_initialize_multisig2(accounts: &[AccountInfo; 4], instruction_da
 fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramResult {
     cheatcode_is_mint(&accounts[0]);
 
+    //-Initial State-----------------------------------------------------------
+    let mint_initialised = get_mint(&accounts[0]).is_initialized();
+
     //-Process Instruction-----------------------------------------------------
     let result = process_get_account_data_size(accounts);
 
@@ -2993,7 +3078,9 @@ fn test_process_get_account_data_size(accounts: &[AccountInfo; 1]) -> ProgramRes
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
     } else if accounts[0].data_len() != Mint::LEN {
         assert_eq!(result, Err(ProgramError::Custom(2)))
-    } else if !get_mint(&accounts[0]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::Custom(2)))
     } else {
         // NOTE: This uses syscalls::sol_set_return_data
@@ -3017,6 +3104,8 @@ fn test_process_initialize_immutable_owner(accounts: &[AccountInfo; 1]) -> Progr
         assert_eq!(result, Err(ProgramError::NotEnoughAccountKeys))
     } else if accounts[0].data_len() != Account::LEN {
         assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if src_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
     } else if src_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::Custom(6)))
     } else {
@@ -3030,6 +3119,7 @@ fn test_process_amount_to_ui_amount(accounts: &[AccountInfo; 1], instruction_dat
     cheatcode_is_mint(&accounts[0]);
 
     //-Initial State-----------------------------------------------------------
+    let mint_initialised = get_mint(&accounts[0]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
     let result = process_amount_to_ui_amount(accounts, instruction_data);
@@ -3043,7 +3133,9 @@ fn test_process_amount_to_ui_amount(accounts: &[AccountInfo; 1], instruction_dat
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
     } else if accounts[0].data_len() != Mint::LEN {
         assert_eq!(result, Err(ProgramError::Custom(2)))
-    } else if !get_mint(&accounts[0]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::Custom(2)))
     } else {
         assert!(result.is_ok())
@@ -3057,6 +3149,7 @@ fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 1], instruction_dat
 
     // //-Initial State-----------------------------------------------------------
     let ui_amount = core::str::from_utf8(instruction_data);
+    let mint_initialised = get_mint(&accounts[0]).is_initialized();
 
     //-Process Instruction-----------------------------------------------------
     let result = process_ui_amount_to_amount(accounts, instruction_data);
@@ -3071,7 +3164,9 @@ fn test_process_ui_amount_to_amount(accounts: &[AccountInfo; 1], instruction_dat
         assert_eq!(result, Err(ProgramError::IncorrectProgramId))
     } else if accounts[0].data_len() != Mint::LEN {
         assert_eq!(result, Err(ProgramError::Custom(2)))
-    } else if !get_mint(&accounts[0]).is_initialized().unwrap() {
+    } else if mint_initialised.is_err() {
+        assert_eq!(result, Err(ProgramError::InvalidAccountData))
+    } else if !mint_initialised.unwrap() {
         assert_eq!(result, Err(ProgramError::Custom(2)))
     } else if ui_amount.unwrap().is_empty() {
         assert_eq!(result, Err(ProgramError::InvalidArgument))
@@ -3177,7 +3272,10 @@ fn test_process_withdraw_excess_lamports(accounts: &[AccountInfo; 3]) -> Program
         return result;
     } else {
         if src_data_len == Account::LEN {
-            if !src_account_initialised.unwrap() {
+            if src_account_initialised.is_err() {
+                assert_eq!(result, Err(ProgramError::InvalidAccountData));
+                return result;
+            } else if !src_account_initialised.unwrap() {
                 assert_eq!(result, Err(ProgramError::UninitializedAccount));
                 return result;
             } else if src_account_is_native {
@@ -3250,7 +3348,10 @@ fn test_process_withdraw_excess_lamports(accounts: &[AccountInfo; 3]) -> Program
             assert_eq!(accounts[1].lamports(), dst_init_lamports + src_init_lamports - minimum_balance);
             assert!(result.is_ok())
         } else if src_data_len == Mint::LEN {
-            if !src_mint_initialised.unwrap() {
+            if src_mint_initialised.is_err() {
+                assert_eq!(result, Err(ProgramError::InvalidAccountData));
+                return result;
+            } else if !src_mint_initialised.unwrap() {
                 assert_eq!(result, Err(ProgramError::UninitializedAccount));
                 return result;
             } else if src_mint_mint_authority.is_some() {
