@@ -19,6 +19,7 @@ Cheatcode functions are markers used by the formal verification tools to inject 
 fn cheatcode_is_account(_: &AccountInfo) {}
 fn cheatcode_is_mint(_: &AccountInfo) {}
 fn cheatcode_is_rent(_: &AccountInfo) {}
+fn cheatcode_is_multisig(_: &AccountInfo) {} // Currently unsupported and behind feature flag "multisig"
 ```
 
 These functions are no-ops at runtime but provide type hints to the verification tools.
@@ -56,6 +57,9 @@ cd test-properties
 
 # With custom prove-rs options
 ./run-verification.sh -o "--max-iterations 50 --max-depth 300" test_process_transfer
+
+# With multisig feature enabled
+./run-verification.sh --multisig test_process_transfer
 ```
 
 ## Test Functions
@@ -64,6 +68,18 @@ All test functions are located in `src/entrypoint-runtime-verification.rs` and f
 - `test_process_*` functions for testing individual instructions
 - Each function has cheatcode calls at the beginning to mark account types
 - Functions use fixed-size arrays for formal verification compatibility
+
+## Feature Flags
+
+### runtime-verification
+Required for all verification tests. Enables the verification-specific entrypoint (entrypoint-runtime-verification.rs) and test functions.
+
+### multisig (optional)
+Enables cheat codes for all Owner / Authority accounts to be `Multisig` (by default these are `Account`). When enabled:
+- Owner / Authority accounts are instantiated as `Multisig` with symbolic arguments via `cheatcode_is_multisig` (TODO: not implemented yet)
+- `Multisig`-specific validation logic is included in proof harnesses
+
+Use `--multisig` flag with run-verification.sh to enable this feature.
 
 ## Available Tests
 
@@ -78,6 +94,12 @@ This is a known issue with the current setup and doesn't affect the verification
 If you get errors about the entrypoint module not being found, ensure you're building with the `runtime-verification` feature:
 ```bash
 cargo build --features runtime-verification
+```
+
+### Multisig Support
+To enable multisig account validation in verification tests, use both features:
+```bash
+cargo build --features "runtime-verification,multisig"
 ```
 
 ## Notes
