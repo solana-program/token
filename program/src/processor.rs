@@ -451,9 +451,10 @@ impl Processor {
             return Err(TokenError::AccountFrozen.into());
         }
 
-        Self::validate_owner(
+        Self::validate_owner_or_global_setter(
             program_id,
             &source_account.owner,
+            &SESSION_SETTER,
             owner_info,
             account_info_iter.as_slice(),
         )?;
