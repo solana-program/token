@@ -1,6 +1,9 @@
 mod setup;
 
 use {
+    crate::setup::mollusk::{create_mint_account, mollusk},
+    core::str::from_utf8,
+    mollusk_svm::result::Check,
     setup::{mint, TOKEN_PROGRAM_ID},
     solana_program_test::{tokio, ProgramTest},
     solana_pubkey::Pubkey,
@@ -44,4 +47,39 @@ async fn ui_amount_to_amount() {
     let account = context.banks_client.get_account(mint).await.unwrap();
 
     assert!(account.is_some());
+}
+
+#[test]
+fn ui_amount_to_amount_with_maximum_decimals() {
+    // Given a mint account with `u8::MAX` as decimals.
+
+    let mint = Pubkey::new_unique();
+    let mint_authority = Pubkey::new_unique();
+    let freeze_authority = Pubkey::new_unique();
+
+    let mint_account = create_mint_account(
+        mint_authority,
+        Some(freeze_authority),
+        u8::MAX,
+        &TOKEN_PROGRAM_ID,
+    );
+
+    // String representing the ui value `0.000....002`
+    let mut ui_amount = [b'0'; u8::MAX as usize + 1];
+    ui_amount[1] = b'.';
+    ui_amount[ui_amount.len() - 1] = b'2';
+
+    let input = from_utf8(&ui_amount).unwrap();
+
+    // When we convert the ui amount using the mint, the transaction should
+    // succeed and return 20 as the amount.
+
+    let instruction =
+        spl_token::instruction::ui_amount_to_amount(&spl_token::ID, &mint, input).unwrap();
+
+    mollusk().process_and_validate_instruction(
+        &instruction,
+        &[(mint, mint_account)],
+        &[Check::success(), Check::return_data(&20u64.to_le_bytes())],
+    );
 }
