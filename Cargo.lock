@@ -3038,20 +3038,17 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "pinocchio"
 version = "0.9.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b971851087bc3699b001954ad02389d50c41405ece3548cbcafc88b3e20017a"
+source = "git+https://github.com/anza-xyz/pinocchio.git?branch=febo%2Fprecision-cap#d5e105383ec9fd37b9707c63eee252347dc40085"
 
 [[package]]
 name = "pinocchio-log"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f266eb7ddac75ef32c42025d5cc571da4f8c9e6d5c3d70820c204d5fee72e57a"
+source = "git+https://github.com/anza-xyz/pinocchio.git?branch=febo%2Fprecision-cap#d5e105383ec9fd37b9707c63eee252347dc40085"
 
 [[package]]
 name = "pinocchio-pubkey"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb0225638cadcbebae8932cb7f49cb5da7c15c21beb19f048f05a5ca7d93f065"
+source = "git+https://github.com/anza-xyz/pinocchio.git?branch=febo%2Fprecision-cap#d5e105383ec9fd37b9707c63eee252347dc40085"
 dependencies = [
  "five8_const",
  "pinocchio",

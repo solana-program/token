@@ -13,7 +13,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 pinocchio = { workspace = true }
-pinocchio-pubkey = "0.3"
+pinocchio-pubkey = { version = "0.3", git = "https://github.com/anza-xyz/pinocchio.git", branch = "febo/precision-cap" }
 
 [dev-dependencies]
 strum = "0.27"
