@@ -1,11 +1,12 @@
-use mollusk_svm::Mollusk;
-use pinocchio_token_interface::state::{load_mut_unchecked, mint::Mint};
-use solana_account::Account;
-use solana_pubkey::Pubkey;
-use solana_rent::Rent;
-use solana_sdk_ids::bpf_loader_upgradeable;
-
-use crate::setup::TOKEN_PROGRAM_ID;
+use {
+    crate::setup::TOKEN_PROGRAM_ID,
+    mollusk_svm::Mollusk,
+    pinocchio_token_interface::state::{load_mut_unchecked, mint::Mint},
+    solana_account::Account,
+    solana_pubkey::Pubkey,
+    solana_rent::Rent,
+    solana_sdk_ids::bpf_loader_upgradeable,
+};
 
 pub fn create_mint_account(
     mint_authority: Pubkey,
