@@ -5,6 +5,7 @@ use {
     core::str::from_utf8,
     mollusk_svm::result::Check,
     setup::{mint, TOKEN_PROGRAM_ID},
+    solana_program_error::ProgramError,
     solana_program_test::{tokio, ProgramTest},
     solana_pubkey::Pubkey,
     solana_signer::Signer,
@@ -81,5 +82,37 @@ fn ui_amount_to_amount_with_maximum_decimals() {
         &instruction,
         &[(mint, mint_account)],
         &[Check::success(), Check::return_data(&20u64.to_le_bytes())],
+    );
+}
+
+#[test]
+fn fail_ui_amount_to_amount_with_invalid_ui_amount() {
+    // Given a mint account with `u8::MAX` as decimals.
+
+    let mint = Pubkey::new_unique();
+    let mint_authority = Pubkey::new_unique();
+    let freeze_authority = Pubkey::new_unique();
+
+    let mint_account = create_mint_account(
+        mint_authority,
+        Some(freeze_authority),
+        u8::MAX,
+        &TOKEN_PROGRAM_ID,
+    );
+
+    // String representing the ui value `2.0`
+    let ui_amount = [b'2', b'.', b'0'];
+    let input = from_utf8(&ui_amount).unwrap();
+
+    // When we try to convert the ui amount using the mint, the transaction should
+    // fail with an error since the resulting value does not fit in an `u64`.
+
+    let instruction =
+        spl_token::instruction::ui_amount_to_amount(&spl_token::ID, &mint, input).unwrap();
+
+    mollusk().process_and_validate_instruction(
+        &instruction,
+        &[(mint, mint_account)],
+        &[Check::err(ProgramError::InvalidArgument)],
     );
 }
