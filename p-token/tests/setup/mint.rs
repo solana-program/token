@@ -16,6 +16,16 @@ pub async fn initialize(
     freeze_authority: Option<Pubkey>,
     program_id: &Pubkey,
 ) -> Result<Pubkey, ProgramError> {
+    initialize_with_decimals(context, mint_authority, freeze_authority, 4, program_id).await
+}
+
+pub async fn initialize_with_decimals(
+    context: &mut ProgramTestContext,
+    mint_authority: Pubkey,
+    freeze_authority: Option<Pubkey>,
+    decimals: u8,
+    program_id: &Pubkey,
+) -> Result<Pubkey, ProgramError> {
     // Mint account keypair.
     let account = Keypair::new();
 
@@ -27,7 +37,7 @@ pub async fn initialize(
         &account.pubkey(),
         &mint_authority,
         freeze_authority.as_ref(),
-        4,
+        decimals,
     )
     .unwrap();
     // Switches the program id in case we are using a "custom" one.
