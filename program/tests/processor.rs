@@ -5094,8 +5094,8 @@ fn test_native_token() {
     let owner_key = Pubkey::new_unique();
     let mut owner_account = SolanaAccount::default();
     let owner2_key = Pubkey::new_unique();
-    let mut owner2_account = SolanaAccount::default();
     let owner3_key = Pubkey::new_unique();
+    let mut owner3_account = SolanaAccount::default();
     let mut rent_sysvar = rent_sysvar();
 
     // initialize native account
@@ -5325,17 +5325,17 @@ fn test_native_token() {
     )
     .unwrap();
 
-    // close authority cleared
+    // close authority remains the same
     let account = Account::unpack_unchecked(&account_account.data).unwrap();
-    assert_eq!(account.close_authority, COption::None);
+    assert_eq!(account.close_authority, COption::Some(owner3_key));
 
     // close native account
     do_process_instruction(
-        close_account(&program_id, &account_key, &account3_key, &owner2_key, &[]).unwrap(),
+        close_account(&program_id, &account_key, &account3_key, &owner3_key, &[]).unwrap(),
         vec![
             &mut account_account,
             &mut account3_account,
-            &mut owner2_account,
+            &mut owner3_account,
         ],
         &[
             Check::success(),
