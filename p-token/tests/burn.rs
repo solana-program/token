@@ -50,9 +50,15 @@ async fn burn() {
 
     // When we burn 50 tokens.
 
-    let burn_ix =
-        spl_token::instruction::burn(&spl_token::ID, &account, &mint, &owner.pubkey(), &[], 50)
-            .unwrap();
+    let burn_ix = spl_token_interface::instruction::burn(
+        &spl_token_interface::ID,
+        &account,
+        &mint,
+        &owner.pubkey(),
+        &[],
+        50,
+    )
+    .unwrap();
 
     let tx = Transaction::new_signed_with_payer(
         &[burn_ix],
@@ -69,7 +75,7 @@ async fn burn() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.amount == 50);
 }

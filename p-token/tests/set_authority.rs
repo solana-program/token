@@ -9,7 +9,7 @@ use {
     solana_pubkey::Pubkey,
     solana_signer::Signer,
     solana_transaction::Transaction,
-    spl_token::instruction::AuthorityType,
+    spl_token_interface::instruction::AuthorityType,
 };
 
 #[tokio::test]
@@ -36,8 +36,8 @@ async fn set_authority() {
 
     let new_authority = Pubkey::new_unique();
 
-    let set_authority_ix = spl_token::instruction::set_authority(
-        &spl_token::ID,
+    let set_authority_ix = spl_token_interface::instruction::set_authority(
+        &spl_token_interface::ID,
         &mint,
         Some(&new_authority),
         AuthorityType::FreezeAccount,
@@ -61,7 +61,7 @@ async fn set_authority() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let mint = spl_token::state::Mint::unpack(&account.data).unwrap();
+    let mint = spl_token_interface::state::Mint::unpack(&account.data).unwrap();
 
     assert!(mint.freeze_authority == COption::Some(new_authority));
 }

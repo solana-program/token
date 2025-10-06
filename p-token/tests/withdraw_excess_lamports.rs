@@ -36,8 +36,8 @@ async fn withdraw_excess_lamports_from_mint() {
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_mint(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_mint(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint_authority.pubkey(),
         Some(&freeze_authority),
@@ -84,8 +84,8 @@ async fn withdraw_excess_lamports_from_mint() {
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &mint_authority.pubkey(),
@@ -144,8 +144,8 @@ async fn withdraw_excess_lamports_from_account() {
     let account_size = size_of::<Account>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_account(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_account(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint,
         &owner.pubkey(),
@@ -191,8 +191,8 @@ async fn withdraw_excess_lamports_from_account() {
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &owner.pubkey(),
@@ -242,8 +242,8 @@ async fn withdraw_excess_lamports_from_multisig() {
     let rent = context.banks_client.get_rent().await.unwrap();
     let account_size = size_of::<Multisig>();
 
-    let initialize_ix = spl_token::instruction::initialize_multisig(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_multisig(
+        &spl_token_interface::ID,
         &multisig.pubkey(),
         &signers,
         3,
@@ -289,8 +289,8 @@ async fn withdraw_excess_lamports_from_multisig() {
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &multisig.pubkey(),
         &destination,
         &multisig.pubkey(),
@@ -336,8 +336,8 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority() {
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_mint(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_mint(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint_authority.pubkey(),
         Some(&freeze_authority),
@@ -385,8 +385,8 @@ async fn fail_withdraw_excess_lamports_from_mint_wrong_authority() {
     let destination = Pubkey::new_unique();
     let wrong_authority = Keypair::new();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &wrong_authority.pubkey(),
@@ -450,8 +450,8 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority() {
     let account_size = size_of::<Account>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_account(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_account(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint,
         &owner.pubkey(),
@@ -498,8 +498,8 @@ async fn fail_withdraw_excess_lamports_from_account_wrong_authority() {
     let destination = Pubkey::new_unique();
     let wrong_owner = Keypair::new();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &wrong_owner.pubkey(),
@@ -554,8 +554,8 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority() {
     let rent = context.banks_client.get_rent().await.unwrap();
     let account_size = size_of::<Multisig>();
 
-    let initialize_ix = spl_token::instruction::initialize_multisig(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_multisig(
+        &spl_token_interface::ID,
         &multisig.pubkey(),
         &signers,
         3,
@@ -602,8 +602,8 @@ async fn fail_withdraw_excess_lamports_from_multisig_wrong_authority() {
     let destination = Pubkey::new_unique();
     let wrong_authority = Keypair::new();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &multisig.pubkey(),
         &destination,
         &wrong_authority.pubkey(),
@@ -658,8 +658,8 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer() {
     let rent = context.banks_client.get_rent().await.unwrap();
     let account_size = size_of::<Multisig>();
 
-    let initialize_ix = spl_token::instruction::initialize_multisig(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_multisig(
+        &spl_token_interface::ID,
         &multisig.pubkey(),
         &signers,
         3,
@@ -705,8 +705,8 @@ async fn fail_withdraw_excess_lamports_from_multisig_missing_signer() {
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &multisig.pubkey(),
         &destination,
         &multisig.pubkey(),
@@ -757,8 +757,8 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority() {
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_mint(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_mint(
+        &spl_token_interface::ID,
         &mint_account.pubkey(),
         &mint_authority.pubkey(),
         Some(&freeze_authority),
@@ -803,11 +803,11 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority() {
 
     // And we remove the mint authority.
 
-    let set_authority_ix = spl_token::instruction::set_authority(
-        &spl_token::ID,
+    let set_authority_ix = spl_token_interface::instruction::set_authority(
+        &spl_token_interface::ID,
         &mint_account.pubkey(),
         None,
-        spl_token::instruction::AuthorityType::MintTokens,
+        spl_token_interface::instruction::AuthorityType::MintTokens,
         &mint_authority.pubkey(),
         &[&mint_authority.pubkey()],
     )
@@ -830,7 +830,7 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Mint::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Mint::unpack(&account.data).unwrap();
 
     assert!(account.mint_authority.is_none());
 
@@ -838,8 +838,8 @@ async fn withdraw_excess_lamports_from_mint_with_no_authority() {
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &mint_account.pubkey(),
@@ -885,8 +885,8 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_mint(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_mint(
+        &spl_token_interface::ID,
         &mint_account.pubkey(),
         &mint_authority.pubkey(),
         Some(&freeze_authority),
@@ -933,8 +933,8 @@ async fn fail_withdraw_excess_lamports_from_mint_with_authority_and_mint_as_sign
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &mint_account.pubkey(),
@@ -985,8 +985,8 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_mint(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_mint(
+        &spl_token_interface::ID,
         &mint_account.pubkey(),
         &mint_authority.pubkey(),
         Some(&freeze_authority),
@@ -1031,11 +1031,11 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
 
     // And we remove the mint authority.
 
-    let set_authority_ix = spl_token::instruction::set_authority(
-        &spl_token::ID,
+    let set_authority_ix = spl_token_interface::instruction::set_authority(
+        &spl_token_interface::ID,
         &mint_account.pubkey(),
         None,
-        spl_token::instruction::AuthorityType::MintTokens,
+        spl_token_interface::instruction::AuthorityType::MintTokens,
         &mint_authority.pubkey(),
         &[&mint_authority.pubkey()],
     )
@@ -1058,7 +1058,7 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Mint::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Mint::unpack(&account.data).unwrap();
 
     assert!(account.mint_authority.is_none());
 
@@ -1066,8 +1066,8 @@ async fn fail_withdraw_excess_lamports_from_mint_with_no_authority_and_authority
 
     let destination = Pubkey::new_unique();
 
-    let mut withdraw_ix = spl_token_2022::instruction::withdraw_excess_lamports(
-        &spl_token_2022::ID,
+    let mut withdraw_ix = spl_token_2022_interface::instruction::withdraw_excess_lamports(
+        &spl_token_2022_interface::ID,
         &account_pubkey,
         &destination,
         &mint_authority.pubkey(),

@@ -33,8 +33,12 @@ async fn amount_to_ui_amount() {
     .await
     .unwrap();
 
-    let amount_to_ui_amount_ix =
-        spl_token::instruction::amount_to_ui_amount(&spl_token::ID, &mint, 1000).unwrap();
+    let amount_to_ui_amount_ix = spl_token_interface::instruction::amount_to_ui_amount(
+        &spl_token_interface::ID,
+        &mint,
+        1000,
+    )
+    .unwrap();
 
     let tx = Transaction::new_signed_with_payer(
         &[amount_to_ui_amount_ix],
@@ -70,7 +74,8 @@ fn amount_to_ui_amount_with_maximum_decimals() {
     //  succeed and return the correct UI amount.
 
     let instruction =
-        spl_token::instruction::amount_to_ui_amount(&spl_token::ID, &mint, 20).unwrap();
+        spl_token_interface::instruction::amount_to_ui_amount(&spl_token_interface::ID, &mint, 20)
+            .unwrap();
 
     // The expected UI amount is "0.000....002" without the trailing zeros.
     let mut ui_amount = [b'0'; u8::MAX as usize + 1];
@@ -102,8 +107,12 @@ fn amount_to_ui_amount_with_u64_max() {
     // When we convert an u64::MAX amount using the mint, the transaction should
     // succeed and return the correct UI amount.
 
-    let instruction =
-        spl_token::instruction::amount_to_ui_amount(&spl_token::ID, &mint, u64::MAX).unwrap();
+    let instruction = spl_token_interface::instruction::amount_to_ui_amount(
+        &spl_token_interface::ID,
+        &mint,
+        u64::MAX,
+    )
+    .unwrap();
 
     // The expected UI amount is a `u64::MAX` with 255 decimal places.
     //   - 2 digits for `0.`

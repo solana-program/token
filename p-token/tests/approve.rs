@@ -52,8 +52,8 @@ async fn approve() {
 
     let delegate = Pubkey::new_unique();
 
-    let approve_ix = spl_token::instruction::approve(
-        &spl_token::ID,
+    let approve_ix = spl_token_interface::instruction::approve(
+        &spl_token_interface::ID,
         &account,
         &delegate,
         &owner.pubkey(),
@@ -77,7 +77,7 @@ async fn approve() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.delegate.is_some());
     assert!(account.delegate.unwrap() == delegate);

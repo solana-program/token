@@ -32,8 +32,8 @@ pub async fn initialize_with_decimals(
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix = spl_token::instruction::initialize_mint(
-        &spl_token::ID,
+    let mut initialize_ix = spl_token_interface::instruction::initialize_mint(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint_authority,
         freeze_authority.as_ref(),
@@ -75,8 +75,8 @@ pub async fn mint(
     amount: u64,
     program_id: &Pubkey,
 ) -> Result<(), BanksClientError> {
-    let mut mint_ix = spl_token::instruction::mint_to(
-        &spl_token::ID,
+    let mut mint_ix = spl_token_interface::instruction::mint_to(
+        &spl_token_interface::ID,
         mint,
         account,
         &mint_authority.pubkey(),

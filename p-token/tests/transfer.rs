@@ -55,8 +55,8 @@ async fn transfer() {
     let destination_account =
         account::initialize(&mut context, &mint, &destination, &TOKEN_PROGRAM_ID).await;
 
-    let transfer_ix = spl_token::instruction::transfer(
-        &spl_token::ID,
+    let transfer_ix = spl_token_interface::instruction::transfer(
+        &spl_token_interface::ID,
         &account,
         &destination_account,
         &owner.pubkey(),
@@ -80,7 +80,7 @@ async fn transfer() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.amount == 0);
 }

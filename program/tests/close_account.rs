@@ -8,12 +8,12 @@ use {
     solana_pubkey::Pubkey,
     solana_sdk_ids::system_program,
     solana_system_interface::instruction::{create_account, transfer},
-    spl_token::{instruction, state::Account},
+    spl_token_interface::{instruction, state::Account},
 };
 
 #[test]
 fn success_init_after_close_account() {
-    let mollusk = Mollusk::new(&spl_token::id(), "spl_token");
+    let mollusk = Mollusk::new(&spl_token_interface::id(), "spl_token");
 
     let owner = Pubkey::new_unique();
     let mint = Pubkey::new_unique();
@@ -30,8 +30,14 @@ fn success_init_after_close_account() {
     mollusk.process_and_validate_instruction_chain(
         &[
             (
-                &instruction::close_account(&spl_token::id(), &account, &destination, &owner, &[])
-                    .unwrap(),
+                &instruction::close_account(
+                    &spl_token_interface::id(),
+                    &account,
+                    &destination,
+                    &owner,
+                    &[],
+                )
+                .unwrap(),
                 &[Check::success()],
             ),
             (
@@ -40,19 +46,24 @@ fn success_init_after_close_account() {
                     &account,
                     1_000_000_000,
                     Account::LEN as u64,
-                    &spl_token::id(),
+                    &spl_token_interface::id(),
                 ),
                 &[Check::success()],
             ),
             (
-                &instruction::initialize_account(&spl_token::id(), &account, &mint, &owner)
-                    .unwrap(),
+                &instruction::initialize_account(
+                    &spl_token_interface::id(),
+                    &account,
+                    &mint,
+                    &owner,
+                )
+                .unwrap(),
                 &[
                     Check::success(),
                     // Account successfully re-initialized.
                     Check::account(&account)
                         .data(setup::setup_token_account(&mint, &owner, 0).data())
-                        .owner(&spl_token::id())
+                        .owner(&spl_token_interface::id())
                         .build(),
                     // The destination should have the lamports from the closed account.
                     Check::account(&destination)
@@ -73,7 +84,7 @@ fn success_init_after_close_account() {
 
 #[test]
 fn fail_init_after_close_account() {
-    let mollusk = Mollusk::new(&spl_token::id(), "spl_token");
+    let mollusk = Mollusk::new(&spl_token_interface::id(), "spl_token");
 
     let owner = Pubkey::new_unique();
     let mint = Pubkey::new_unique();
@@ -90,8 +101,14 @@ fn fail_init_after_close_account() {
     mollusk.process_and_validate_instruction_chain(
         &[
             (
-                &instruction::close_account(&spl_token::id(), &account, &destination, &owner, &[])
-                    .unwrap(),
+                &instruction::close_account(
+                    &spl_token_interface::id(),
+                    &account,
+                    &destination,
+                    &owner,
+                    &[],
+                )
+                .unwrap(),
                 &[Check::success()],
             ),
             (
@@ -99,8 +116,13 @@ fn fail_init_after_close_account() {
                 &[Check::success()],
             ),
             (
-                &instruction::initialize_account(&spl_token::id(), &account, &mint, &owner)
-                    .unwrap(),
+                &instruction::initialize_account(
+                    &spl_token_interface::id(),
+                    &account,
+                    &mint,
+                    &owner,
+                )
+                .unwrap(),
                 &[
                     Check::err(ProgramError::InvalidAccountData),
                     // Account not re-initialized.

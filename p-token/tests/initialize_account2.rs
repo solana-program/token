@@ -39,8 +39,8 @@ async fn initialize_account2() {
     let account_size = 165;
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_account2(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_account2(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint,
         &owner,
@@ -79,7 +79,7 @@ async fn initialize_account2() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(!account.is_frozen());
     assert!(account.owner == owner);

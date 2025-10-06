@@ -39,8 +39,8 @@ async fn mint_to_checked() {
 
     // When we mint tokens to it.
 
-    let mint_ix = spl_token::instruction::mint_to_checked(
-        &spl_token::ID,
+    let mint_ix = spl_token_interface::instruction::mint_to_checked(
+        &spl_token_interface::ID,
         &mint,
         &account,
         &mint_authority.pubkey(),
@@ -65,7 +65,7 @@ async fn mint_to_checked() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.amount == 100);
 }

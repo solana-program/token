@@ -15,9 +15,13 @@ pub async fn initialize(
     let account_size = 165;
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mut initialize_ix =
-        spl_token::instruction::initialize_account(&spl_token::ID, &account.pubkey(), mint, owner)
-            .unwrap();
+    let mut initialize_ix = spl_token_interface::instruction::initialize_account(
+        &spl_token_interface::ID,
+        &account.pubkey(),
+        mint,
+        owner,
+    )
+    .unwrap();
     initialize_ix.program_id = *program_id;
 
     let instructions = vec![
@@ -50,8 +54,8 @@ pub async fn approve(
     amount: u64,
     program_id: &Pubkey,
 ) {
-    let mut approve_ix = spl_token::instruction::approve(
-        &spl_token::ID,
+    let mut approve_ix = spl_token_interface::instruction::approve(
+        &spl_token_interface::ID,
         account,
         delegate,
         &owner.pubkey(),
@@ -77,8 +81,8 @@ pub async fn freeze(
     freeze_authority: &Keypair,
     program_id: &Pubkey,
 ) {
-    let mut freeze_account_ix = spl_token::instruction::freeze_account(
-        &spl_token::ID,
+    let mut freeze_account_ix = spl_token_interface::instruction::freeze_account(
+        &spl_token_interface::ID,
         account,
         mint,
         &freeze_authority.pubkey(),

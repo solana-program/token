@@ -40,7 +40,7 @@ fn do_process_instruction(
         .map(|(account_meta, account)| (account_meta.pubkey, (*account).clone()))
         .collect();
 
-    let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
+    let mollusk = Mollusk::new(&spl_token_interface::ID, "spl_token");
     let result =
         mollusk.process_and_validate_instruction(&instruction, &instruction_accounts, checks);
 
@@ -82,7 +82,7 @@ fn do_process_instruction_dups(
         }
     });
 
-    let mollusk = Mollusk::new(&spl_token::ID, "spl_token");
+    let mollusk = Mollusk::new(&spl_token_interface::ID, "spl_token");
     let result = mollusk.process_and_validate_instruction(&instruction, &dedup_accounts, checks);
 
     // Update accounts after the instruction is processed.
@@ -129,7 +129,7 @@ fn multisig_minimum_balance() -> u64 {
 
 #[test]
 fn test_initialize_mint() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mint_key = Pubkey::new_unique();
     let mut mint_account = SolanaAccount::new(42, Mint::get_packed_len(), &program_id);
@@ -191,7 +191,7 @@ fn test_initialize_mint() {
 
 #[test]
 fn test_initialize_mint2() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mint_key = Pubkey::new_unique();
     let mut mint_account = SolanaAccount::new(42, Mint::get_packed_len(), &program_id);
@@ -252,7 +252,7 @@ fn test_initialize_mint2() {
 
 #[test]
 fn test_initialize_mint_account() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(42, Account::get_packed_len(), &program_id);
     let owner_key = Pubkey::new_unique();
@@ -351,7 +351,7 @@ fn test_initialize_mint_account() {
 
 #[test]
 fn test_transfer_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account1_key = Pubkey::new_unique();
     let mut account1_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -675,7 +675,7 @@ fn test_transfer_dups() {
 
 #[test]
 fn test_transfer() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -1196,7 +1196,7 @@ fn test_transfer() {
 
 #[test]
 fn test_self_transfer() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -1767,7 +1767,7 @@ fn test_self_transfer() {
 
 #[test]
 fn test_mintable_token_with_zero_supply() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -1889,7 +1889,7 @@ fn test_mintable_token_with_zero_supply() {
 
 #[test]
 fn test_approve_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account1_key = Pubkey::new_unique();
     let mut account1_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -2113,7 +2113,7 @@ fn test_approve_dups() {
 
 #[test]
 fn test_approve() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -2329,7 +2329,7 @@ fn test_approve() {
 
 #[test]
 fn test_set_authority_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account1_key = Pubkey::new_unique();
     let mut account1_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -2438,7 +2438,7 @@ fn test_set_authority_dups() {
 
 #[test]
 fn test_set_authority() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -2873,7 +2873,7 @@ fn test_set_authority() {
 
 #[test]
 fn test_mint_to_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account1_key = Pubkey::new_unique();
     let mut account1_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -2975,7 +2975,7 @@ fn test_mint_to_dups() {
 
 #[test]
 fn test_mint_to() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -3233,7 +3233,7 @@ fn test_mint_to() {
 
 #[test]
 fn test_burn_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account1_key = Pubkey::new_unique();
     let mut account1_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -3447,7 +3447,7 @@ fn test_burn_dups() {
 
 #[test]
 fn test_burn() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -3778,7 +3778,7 @@ fn test_burn() {
 
 #[test]
 fn test_burn_and_close_system_and_incinerator_tokens() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -4052,7 +4052,7 @@ fn test_burn_and_close_system_and_incinerator_tokens() {
 
 #[test]
 fn test_multisig() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =
         SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
@@ -4485,7 +4485,7 @@ fn test_multisig() {
 
 #[test]
 fn test_owner_close_account_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =
@@ -4557,7 +4557,7 @@ fn test_owner_close_account_dups() {
 
 #[test]
 fn test_close_authority_close_account_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =
@@ -4631,7 +4631,7 @@ fn test_close_authority_close_account_dups() {
 
 #[test]
 fn test_close_account() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =
         SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
@@ -4715,7 +4715,7 @@ fn test_close_account() {
         initialize_account(
             &program_id,
             &account2_key,
-            &spl_token::native_mint::id(),
+            &spl_token_interface::native_mint::id(),
             &owner_key,
         )
         .unwrap(),
@@ -4907,7 +4907,7 @@ fn test_close_account() {
 
 #[test]
 fn test_native_token() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let mut mint_account =
         SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
     let account_key = Pubkey::new_unique();
@@ -4936,7 +4936,7 @@ fn test_native_token() {
         initialize_account(
             &program_id,
             &account_key,
-            &spl_token::native_mint::id(),
+            &spl_token_interface::native_mint::id(),
             &owner_key,
         )
         .unwrap(),
@@ -4966,7 +4966,7 @@ fn test_native_token() {
         initialize_account(
             &program_id,
             &account2_key,
-            &spl_token::native_mint::id(),
+            &spl_token_interface::native_mint::id(),
             &owner_key,
         )
         .unwrap(),
@@ -4997,7 +4997,7 @@ fn test_native_token() {
         do_process_instruction(
             mint_to(
                 &program_id,
-                &spl_token::native_mint::id(),
+                &spl_token_interface::native_mint::id(),
                 &account_key,
                 &owner_key,
                 &[],
@@ -5187,7 +5187,7 @@ fn test_native_token() {
 
 #[test]
 fn test_overflow() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -5367,7 +5367,7 @@ fn test_overflow() {
 
 #[test]
 fn test_frozen() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -5564,7 +5564,7 @@ fn test_frozen() {
 
 #[test]
 fn test_freeze_thaw_dups() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account1_key = Pubkey::new_unique();
     let mut account1_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -5632,7 +5632,7 @@ fn test_freeze_thaw_dups() {
 
 #[test]
 fn test_freeze_account() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -5765,7 +5765,7 @@ fn test_freeze_account() {
 
 #[test]
 fn test_initialize_account2_and_3() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -5830,7 +5830,7 @@ fn test_initialize_account2_and_3() {
 
 #[test]
 fn test_sync_native() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =
         SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
@@ -5910,7 +5910,7 @@ fn test_sync_native() {
         initialize_account(
             &program_id,
             &native_account_key,
-            &spl_token::native_mint::id(),
+            &spl_token_interface::native_mint::id(),
             &owner_key,
         )
         .unwrap(),
@@ -6001,7 +6001,7 @@ fn test_sync_native() {
 #[serial]
 fn test_get_account_data_size() {
     // see integration tests for return-data validity
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mut rent_sysvar = rent_sysvar();
     let mut mint_account =
@@ -6037,7 +6037,7 @@ fn test_get_account_data_size() {
 
 #[test]
 fn test_initialize_immutable_owner() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let account_key = Pubkey::new_unique();
     let mut account_account = SolanaAccount::new(
         account_minimum_balance(),
@@ -6094,7 +6094,7 @@ fn test_initialize_immutable_owner() {
 #[test]
 #[serial]
 fn test_amount_to_ui_amount() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =
@@ -6151,7 +6151,7 @@ fn test_amount_to_ui_amount() {
 #[test]
 #[serial]
 fn test_ui_amount_to_amount() {
-    let program_id = spl_token::id();
+    let program_id = spl_token_interface::id();
     let owner_key = Pubkey::new_unique();
     let mint_key = Pubkey::new_unique();
     let mut mint_account =

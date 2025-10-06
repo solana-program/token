@@ -32,8 +32,12 @@ async fn ui_amount_to_amount() {
     .await
     .unwrap();
 
-    let ui_amount_to_amount_ix =
-        spl_token::instruction::ui_amount_to_amount(&spl_token::ID, &mint, "1000.00").unwrap();
+    let ui_amount_to_amount_ix = spl_token_interface::instruction::ui_amount_to_amount(
+        &spl_token_interface::ID,
+        &mint,
+        "1000.00",
+    )
+    .unwrap();
 
     let tx = Transaction::new_signed_with_payer(
         &[ui_amount_to_amount_ix],
@@ -75,8 +79,12 @@ fn ui_amount_to_amount_with_maximum_decimals() {
     // When we convert the ui amount using the mint, the transaction should
     // succeed and return 20 as the amount.
 
-    let instruction =
-        spl_token::instruction::ui_amount_to_amount(&spl_token::ID, &mint, input).unwrap();
+    let instruction = spl_token_interface::instruction::ui_amount_to_amount(
+        &spl_token_interface::ID,
+        &mint,
+        input,
+    )
+    .unwrap();
 
     mollusk().process_and_validate_instruction(
         &instruction,
@@ -107,8 +115,12 @@ fn fail_ui_amount_to_amount_with_invalid_ui_amount() {
     // When we try to convert the ui amount using the mint, the transaction should
     // fail with an error since the resulting value does not fit in an `u64`.
 
-    let instruction =
-        spl_token::instruction::ui_amount_to_amount(&spl_token::ID, &mint, input).unwrap();
+    let instruction = spl_token_interface::instruction::ui_amount_to_amount(
+        &spl_token_interface::ID,
+        &mint,
+        input,
+    )
+    .unwrap();
 
     mollusk().process_and_validate_instruction(
         &instruction,

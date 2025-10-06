@@ -3,7 +3,7 @@ use {
     solana_program_pack::Pack,
     solana_pubkey::Pubkey,
     solana_rent::Rent,
-    spl_token::state::{Account, AccountState, Mint},
+    spl_token_interface::state::{Account, AccountState, Mint},
 };
 
 pub fn setup_mint_account(
@@ -31,7 +31,7 @@ pub fn setup_mint_account(
     SolanaAccount {
         lamports,
         data,
-        owner: spl_token::id(),
+        owner: spl_token_interface::id(),
         ..Default::default()
     }
 }
@@ -59,7 +59,7 @@ pub fn setup_token_account(mint: &Pubkey, owner: &Pubkey, amount: u64) -> Solana
     SolanaAccount {
         lamports,
         data,
-        owner: spl_token::id(),
+        owner: spl_token_interface::id(),
         ..Default::default()
     }
 }

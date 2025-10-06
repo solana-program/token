@@ -55,8 +55,8 @@ async fn transfer_checked() {
     let destination_account =
         account::initialize(&mut context, &mint, &destination, &TOKEN_PROGRAM_ID).await;
 
-    let transfer_ix = spl_token::instruction::transfer_checked(
-        &spl_token::ID,
+    let transfer_ix = spl_token_interface::instruction::transfer_checked(
+        &spl_token_interface::ID,
         &account,
         &mint,
         &destination_account,
@@ -82,7 +82,7 @@ async fn transfer_checked() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.amount == 0);
 }

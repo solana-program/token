@@ -8,7 +8,7 @@ use {
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
-    spl_token::state::AccountState,
+    spl_token_interface::state::AccountState,
 };
 
 #[tokio::test]
@@ -34,8 +34,11 @@ async fn initialize_immutable_owner() {
             account_size as u64,
             &TOKEN_PROGRAM_ID,
         ),
-        spl_token::instruction::initialize_immutable_owner(&TOKEN_PROGRAM_ID, &account.pubkey())
-            .unwrap(),
+        spl_token_interface::instruction::initialize_immutable_owner(
+            &TOKEN_PROGRAM_ID,
+            &account.pubkey(),
+        )
+        .unwrap(),
     ];
 
     let tx = Transaction::new_signed_with_payer(
@@ -57,7 +60,7 @@ async fn initialize_immutable_owner() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack_unchecked(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack_unchecked(&account.data).unwrap();
 
     assert_eq!(account.state, AccountState::Uninitialized);
 }

@@ -50,8 +50,8 @@ async fn burn_checked() {
 
     // When we burn 50 tokens.
 
-    let burn_ix = spl_token::instruction::burn_checked(
-        &spl_token::ID,
+    let burn_ix = spl_token_interface::instruction::burn_checked(
+        &spl_token_interface::ID,
         &account,
         &mint,
         &owner.pubkey(),
@@ -76,7 +76,7 @@ async fn burn_checked() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.amount == 50);
 }

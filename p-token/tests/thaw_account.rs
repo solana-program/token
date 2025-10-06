@@ -7,7 +7,7 @@ use {
     solana_program_test::{tokio, ProgramTest},
     solana_signer::Signer,
     solana_transaction::Transaction,
-    spl_token::state::AccountState,
+    spl_token_interface::state::AccountState,
 };
 
 #[tokio::test]
@@ -51,8 +51,8 @@ async fn thaw_account() {
 
     // When we thaw the account.
 
-    let thaw_account_ix = spl_token::instruction::thaw_account(
-        &spl_token::ID,
+    let thaw_account_ix = spl_token_interface::instruction::thaw_account(
+        &spl_token_interface::ID,
         &account,
         &mint,
         &freeze_authority.pubkey(),
@@ -74,7 +74,7 @@ async fn thaw_account() {
     assert!(token_account.is_some());
 
     let token_account = token_account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&token_account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&token_account.data).unwrap();
 
     assert_eq!(token_account.state, AccountState::Initialized);
 }
