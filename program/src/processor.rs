@@ -501,10 +501,6 @@ impl Processor {
 
                     account.delegate = COption::None;
                     account.delegated_amount = 0;
-
-                    if account.is_native() {
-                        account.close_authority = COption::None;
-                    }
                 }
                 AuthorityType::CloseAccount => {
                     let authority = account.close_authority.unwrap_or(account.owner);
