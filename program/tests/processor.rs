@@ -5038,6 +5038,61 @@ fn test_close_native_account_with_close_authority() {
     assert_eq!(account_account.lamports, account_minimum_balance());
     assert_eq!(destination_account.lamports, 42 + account_minimum_balance());
 
+    // send some lamports to the account
+    account_account.lamports += 10;
+
+    // even if the "token" amount is zero now, these extra lamports belong to the
+    // account owner so close authority cannot close the account
+    assert_eq!(
+        Err(TokenError::NonNativeHasBalance.into()),
+        do_process_instruction(
+            close_account(
+                &program_id,
+                &account_key,
+                &destination_key,
+                &owner2_key,
+                &[]
+            )
+            .unwrap(),
+            vec![
+                &mut account_account,
+                &mut owner2_account,
+                &mut destination_account
+            ],
+            &[Check::err(TokenError::NonNativeHasBalance.into())],
+        )
+    );
+
+    // empty the native token account again
+    do_process_instruction(
+        close_account(&program_id, &account_key, &destination_key, &owner_key, &[]).unwrap(),
+        vec![
+            &mut account_account,
+            &mut destination_account,
+            &mut owner_account,
+        ],
+        &[
+            Check::success(),
+            Check::account(&account_key)
+                .lamports(account_minimum_balance())
+                .build(),
+            Check::account(&destination_key)
+                .lamports(42 + account_minimum_balance() + 10)
+                .build(),
+        ],
+    )
+    .unwrap();
+
+    let account = Account::unpack_unchecked(&account_account.data).unwrap();
+    assert!(account.is_native());
+    assert_eq!(account.amount, 0);
+    assert_eq!(account.close_authority, COption::Some(owner2_key));
+    assert_eq!(account_account.lamports, account_minimum_balance());
+    assert_eq!(
+        destination_account.lamports,
+        42 + account_minimum_balance() + 10
+    );
+
     // now close with the close authority
     do_process_instruction(
         close_account(
@@ -5058,7 +5113,7 @@ fn test_close_native_account_with_close_authority() {
             Check::account(&account_key).lamports(0).build(),
             Check::account(&account_key).data(&[]).build(),
             Check::account(&destination_key)
-                .lamports(42 + 2 * account_minimum_balance())
+                .lamports(42 + account_minimum_balance() + 10 + account_minimum_balance())
                 .build(),
         ],
     )
@@ -5068,7 +5123,7 @@ fn test_close_native_account_with_close_authority() {
     assert_eq!(account_account.lamports, 0);
     assert_eq!(
         destination_account.lamports,
-        42 + 2 * account_minimum_balance()
+        42 + account_minimum_balance() + 10 + account_minimum_balance()
     );
 }
 

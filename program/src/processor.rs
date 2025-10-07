@@ -804,8 +804,13 @@ impl Processor {
             Account::pack(source_account, &mut source_account_info.data.borrow_mut())?;
         } else {
             // Close authority is closing the account to recover the full rent
-            if !((source_account.amount == 0)
-                || (source_account.is_native() && owner_is_close_authority))
+            if !(source_account
+                .is_native
+                .map(|rent_exempt_reserve| {
+                    (rent_exempt_reserve == source_account_info.lamports())
+                        || owner_is_close_authority
+                })
+                .unwrap_or(source_account.amount == 0))
             {
                 return Err(TokenError::NonNativeHasBalance.into());
             }
