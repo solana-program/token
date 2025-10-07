@@ -75,7 +75,8 @@ async fn sync_native() {
     source_account.lamports += 2_000_000_000;
 
     let instruction =
-        spl_token::instruction::sync_native(&TOKEN_PROGRAM_ID, &source_account_key).unwrap();
+        spl_token_interface::instruction::sync_native(&TOKEN_PROGRAM_ID, &source_account_key)
+            .unwrap();
 
     // Executes the sync_native instruction.
 
@@ -86,7 +87,7 @@ async fn sync_native() {
 
     result.resulting_accounts.iter().for_each(|(key, account)| {
         if *key == source_account_key {
-            let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+            let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
             assert_eq!(token_account.amount, 2_000_000_000);
         }
     });

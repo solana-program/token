@@ -41,8 +41,8 @@ async fn close_account() {
 
     // When we close the account.
 
-    let close_account_ix = spl_token::instruction::close_account(
-        &spl_token::ID,
+    let close_account_ix = spl_token_interface::instruction::close_account(
+        &spl_token_interface::ID,
         &account,
         &owner.pubkey(),
         &owner.pubkey(),

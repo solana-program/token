@@ -64,8 +64,13 @@ async fn revoke() {
 
     // When we revoke the delegation.
 
-    let revoke_ix =
-        spl_token::instruction::revoke(&spl_token::ID, &account, &owner.pubkey(), &[]).unwrap();
+    let revoke_ix = spl_token_interface::instruction::revoke(
+        &spl_token_interface::ID,
+        &account,
+        &owner.pubkey(),
+        &[],
+    )
+    .unwrap();
 
     let tx = Transaction::new_signed_with_payer(
         &[revoke_ix],
@@ -82,7 +87,7 @@ async fn revoke() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.delegate.is_none());
     assert!(account.delegated_amount == 0);

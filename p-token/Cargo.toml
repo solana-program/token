@@ -40,8 +40,8 @@ solana-signer = "2.2.1"
 solana-transaction = "2.2.3"
 solana-transaction-error = "2.2.1"
 solana-system-interface = { workspace = true }
-spl-token = { version="^8", features=["no-entrypoint"] }
-spl-token-2022 = { version="^9", features=["no-entrypoint"] }
+spl-token-interface = "1"
+spl-token-2022-interface = "1"
 
 [lints]
 workspace = true

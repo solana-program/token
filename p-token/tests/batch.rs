@@ -33,7 +33,7 @@ fn batch_instruction(instructions: Vec<Instruction>) -> Result<Instruction, Prog
 
     for instruction in instructions {
         // Error out on non-token IX.
-        if instruction.program_id.ne(&spl_token::ID) {
+        if instruction.program_id.ne(&spl_token_interface::ID) {
             return Err(ProgramError::IncorrectProgramId);
         }
 
@@ -45,7 +45,7 @@ fn batch_instruction(instructions: Vec<Instruction>) -> Result<Instruction, Prog
     }
 
     Ok(Instruction {
-        program_id: spl_token::ID,
+        program_id: spl_token_interface::ID,
         data,
         accounts,
     })
@@ -59,10 +59,10 @@ async fn batch_initialize_mint_transfer_close() {
 
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let mint_len = spl_token::state::Mint::LEN;
+    let mint_len = spl_token_interface::state::Mint::LEN;
     let mint_rent = rent.minimum_balance(mint_len);
 
-    let account_len = spl_token::state::Account::LEN;
+    let account_len = spl_token_interface::state::Account::LEN;
     let account_rent = rent.minimum_balance(account_len);
 
     // Create a mint
@@ -75,7 +75,7 @@ async fn batch_initialize_mint_transfer_close() {
         mint_len as u64,
         &TOKEN_PROGRAM_ID,
     );
-    let initialize_mint_ix = spl_token::instruction::initialize_mint(
+    let initialize_mint_ix = spl_token_interface::instruction::initialize_mint(
         &TOKEN_PROGRAM_ID,
         &mint_a.pubkey(),
         &mint_authority.pubkey(),
@@ -94,14 +94,15 @@ async fn batch_initialize_mint_transfer_close() {
         mint_len as u64,
         &TOKEN_PROGRAM_ID,
     );
-    let initialize_mint_with_freeze_authority_ix = spl_token::instruction::initialize_mint2(
-        &TOKEN_PROGRAM_ID,
-        &mint_b.pubkey(),
-        &mint_authority.pubkey(),
-        Some(&freeze_authority),
-        6,
-    )
-    .unwrap();
+    let initialize_mint_with_freeze_authority_ix =
+        spl_token_interface::instruction::initialize_mint2(
+            &TOKEN_PROGRAM_ID,
+            &mint_b.pubkey(),
+            &mint_authority.pubkey(),
+            Some(&freeze_authority),
+            6,
+        )
+        .unwrap();
 
     // Create 2 token accounts for mint A and 1 for mint B
     let owner_a = Keypair::new();
@@ -123,14 +124,14 @@ async fn batch_initialize_mint_transfer_close() {
         account_len as u64,
         &TOKEN_PROGRAM_ID,
     );
-    let intialize_owner_a_ta_a = spl_token::instruction::initialize_account3(
+    let intialize_owner_a_ta_a = spl_token_interface::instruction::initialize_account3(
         &TOKEN_PROGRAM_ID,
         &owner_a_ta_a.pubkey(),
         &mint_a.pubkey(),
         &owner_a.pubkey(),
     )
     .unwrap();
-    let intialize_owner_b_ta_a = spl_token::instruction::initialize_account3(
+    let intialize_owner_b_ta_a = spl_token_interface::instruction::initialize_account3(
         &TOKEN_PROGRAM_ID,
         &owner_b_ta_a.pubkey(),
         &mint_a.pubkey(),
@@ -139,7 +140,7 @@ async fn batch_initialize_mint_transfer_close() {
     .unwrap();
 
     // Mint Token A to Owner A
-    let mint_token_a_to_owner_a = spl_token::instruction::mint_to(
+    let mint_token_a_to_owner_a = spl_token_interface::instruction::mint_to(
         &TOKEN_PROGRAM_ID,
         &mint_a.pubkey(),
         &owner_a_ta_a.pubkey(),
@@ -150,7 +151,7 @@ async fn batch_initialize_mint_transfer_close() {
     .unwrap();
 
     // Transfer Token A from Owner A to Owner B
-    let transfer_token_a_to_owner_b = spl_token::instruction::transfer(
+    let transfer_token_a_to_owner_b = spl_token_interface::instruction::transfer(
         &TOKEN_PROGRAM_ID,
         &owner_a_ta_a.pubkey(),
         &owner_b_ta_a.pubkey(),
@@ -161,7 +162,7 @@ async fn batch_initialize_mint_transfer_close() {
     .unwrap();
 
     // Close Token A
-    let close_owner_a_ta_a = spl_token::instruction::close_account(
+    let close_owner_a_ta_a = spl_token_interface::instruction::close_account(
         &TOKEN_PROGRAM_ID,
         &owner_a_ta_a.pubkey(),
         &owner_a.pubkey(),
@@ -209,7 +210,8 @@ async fn batch_initialize_mint_transfer_close() {
         .await
         .unwrap();
     assert!(mint_a_account.is_some());
-    let mint_a_account = spl_token::state::Mint::unpack(&mint_a_account.unwrap().data).unwrap();
+    let mint_a_account =
+        spl_token_interface::state::Mint::unpack(&mint_a_account.unwrap().data).unwrap();
     assert_eq!(mint_a_account.supply, 1000000);
 
     let mint_b_account = context
@@ -218,7 +220,8 @@ async fn batch_initialize_mint_transfer_close() {
         .await
         .unwrap();
     assert!(mint_b_account.is_some());
-    let mint_b_account = spl_token::state::Mint::unpack(&mint_b_account.unwrap().data).unwrap();
+    let mint_b_account =
+        spl_token_interface::state::Mint::unpack(&mint_b_account.unwrap().data).unwrap();
     assert_eq!(mint_b_account.supply, 0);
 
     let owner_b_ta_a_account = context
@@ -228,7 +231,7 @@ async fn batch_initialize_mint_transfer_close() {
         .unwrap();
     assert!(owner_b_ta_a_account.is_some());
     let owner_b_ta_a_account =
-        spl_token::state::Account::unpack(&owner_b_ta_a_account.unwrap().data).unwrap();
+        spl_token_interface::state::Account::unpack(&owner_b_ta_a_account.unwrap().data).unwrap();
     assert_eq!(owner_b_ta_a_account.amount, 1000000);
 
     let closed_owner_a_ta_a = context
@@ -345,7 +348,7 @@ async fn batch_transfer() {
     let destination_account =
         create_token_account(&mint_key, &authority_key, false, 0, &TOKEN_PROGRAM_ID);
 
-    let instruction = batch_instruction(vec![spl_token::instruction::transfer(
+    let instruction = batch_instruction(vec![spl_token_interface::instruction::transfer(
         &TOKEN_PROGRAM_ID,
         &source_account_key,
         &destination_account_key,
@@ -403,7 +406,7 @@ async fn batch_fail_transfer_with_invalid_program_owner() {
     let destination_account =
         create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
 
-    let instruction = batch_instruction(vec![spl_token::instruction::transfer(
+    let instruction = batch_instruction(vec![spl_token_interface::instruction::transfer(
         &TOKEN_PROGRAM_ID,
         &source_account_key,
         &destination_account_key,
@@ -469,7 +472,7 @@ async fn batch_fail_transfer_checked_with_invalid_program_owner() {
     let destination_account =
         create_token_account(&native_mint_key, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
 
-    let instruction = batch_instruction(vec![spl_token::instruction::transfer_checked(
+    let instruction = batch_instruction(vec![spl_token_interface::instruction::transfer_checked(
         &TOKEN_PROGRAM_ID,
         &source_account_key,
         &native_mint_key,
@@ -548,9 +551,9 @@ async fn batch_fail_swap_tokens_with_invalid_program_owner() {
     //   - transfer 300 from account A to account B
     //   - transfer 300 from account C to account A
     let instruction = batch_instruction(vec![
-        spl_token::instruction::sync_native(&TOKEN_PROGRAM_ID, &account_b_key).unwrap(),
-        spl_token::instruction::sync_native(&TOKEN_PROGRAM_ID, &account_c_key).unwrap(),
-        spl_token::instruction::transfer(
+        spl_token_interface::instruction::sync_native(&TOKEN_PROGRAM_ID, &account_b_key).unwrap(),
+        spl_token_interface::instruction::sync_native(&TOKEN_PROGRAM_ID, &account_c_key).unwrap(),
+        spl_token_interface::instruction::transfer(
             &TOKEN_PROGRAM_ID,
             &account_a_key,
             &account_b_key,
@@ -559,7 +562,7 @@ async fn batch_fail_swap_tokens_with_invalid_program_owner() {
             300,
         )
         .unwrap(),
-        spl_token::instruction::transfer(
+        spl_token_interface::instruction::transfer(
             &TOKEN_PROGRAM_ID,
             &account_c_key,
             &account_a_key,
@@ -621,7 +624,7 @@ async fn batch_fail_mint_to_with_invalid_program_owner() {
     let account_b = create_token_account(&mint_key, &authority_key, false, 0, &TOKEN_PROGRAM_ID);
 
     let instruction = batch_instruction(vec![
-        spl_token::instruction::mint_to(
+        spl_token_interface::instruction::mint_to(
             &TOKEN_PROGRAM_ID,
             &mint_key,
             &account_a_key,
@@ -630,7 +633,7 @@ async fn batch_fail_mint_to_with_invalid_program_owner() {
             1_000_000_000,
         )
         .unwrap(),
-        spl_token::instruction::mint_to(
+        spl_token_interface::instruction::mint_to(
             &TOKEN_PROGRAM_ID,
             &mint_key,
             &account_b_key,
@@ -698,7 +701,7 @@ async fn batch_fail_burn_with_invalid_program_owner() {
     );
 
     let instruction = batch_instruction(vec![
-        spl_token::instruction::mint_to(
+        spl_token_interface::instruction::mint_to(
             &TOKEN_PROGRAM_ID,
             &mint_key,
             &account_a_key,
@@ -707,7 +710,7 @@ async fn batch_fail_burn_with_invalid_program_owner() {
             1_000_000_000,
         )
         .unwrap(),
-        spl_token::instruction::mint_to(
+        spl_token_interface::instruction::mint_to(
             &TOKEN_PROGRAM_ID,
             &mint_key,
             &account_b_key,
@@ -716,7 +719,7 @@ async fn batch_fail_burn_with_invalid_program_owner() {
             1_000_000_000,
         )
         .unwrap(),
-        spl_token::instruction::burn(
+        spl_token_interface::instruction::burn(
             &TOKEN_PROGRAM_ID,
             &account_a_key,
             &mint_key,
@@ -725,7 +728,7 @@ async fn batch_fail_burn_with_invalid_program_owner() {
             1_000_000_000,
         )
         .unwrap(),
-        spl_token::instruction::burn(
+        spl_token_interface::instruction::burn(
             &TOKEN_PROGRAM_ID,
             &account_b_key,
             &mint_key,

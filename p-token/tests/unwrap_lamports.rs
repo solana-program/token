@@ -86,7 +86,7 @@ fn unwrap_lamports_instruction(
     }
 
     Ok(Instruction {
-        program_id: spl_token::ID,
+        program_id: spl_token_interface::ID,
         data,
         accounts,
     })
@@ -143,7 +143,7 @@ fn unwrap_lamports() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 0);
 }
 
@@ -198,7 +198,7 @@ fn unwrap_lamports_with_amount() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 0);
 }
 
@@ -296,7 +296,7 @@ fn unwrap_lamports_with_parial_amount() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 1_000_000_000);
 }
 
@@ -431,7 +431,7 @@ fn unwrap_lamports_with_self_transfer() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 2_000_000_000);
 }
 
@@ -536,7 +536,7 @@ fn unwrap_lamports_to_native_account() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 0);
 
     // And the amount on the destination account must be 0 since we transferred
@@ -546,7 +546,7 @@ fn unwrap_lamports_to_native_account() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 0);
 }
 
@@ -614,7 +614,7 @@ fn unwrap_lamports_to_token_account() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 0);
 
     // And the amount on the destination account must be 0 since we transferred
@@ -624,6 +624,6 @@ fn unwrap_lamports_to_token_account() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
     assert_eq!(token_account.amount, 0);
 }

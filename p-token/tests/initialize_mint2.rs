@@ -29,8 +29,8 @@ async fn initialize_mint2() {
     let account_size = size_of::<Mint>();
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_mint2(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_mint2(
+        &spl_token_interface::ID,
         &account.pubkey(),
         &mint_authority,
         Some(&freeze_authority),
@@ -70,7 +70,7 @@ async fn initialize_mint2() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let mint = spl_token::state::Mint::unpack(&account.data).unwrap();
+    let mint = spl_token_interface::state::Mint::unpack(&account.data).unwrap();
 
     assert!(mint.is_initialized);
     assert!(mint.mint_authority == COption::Some(mint_authority));

@@ -52,7 +52,7 @@ async fn approve_checked() {
 
     let delegate = Pubkey::new_unique();
 
-    let approve_ix = spl_token::instruction::approve_checked(
+    let approve_ix = spl_token_interface::instruction::approve_checked(
         &TOKEN_PROGRAM_ID,
         &account,
         &mint,
@@ -79,7 +79,7 @@ async fn approve_checked() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let account = spl_token::state::Account::unpack(&account.data).unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
     assert!(account.delegate.is_some());
     assert!(account.delegate.unwrap() == delegate);

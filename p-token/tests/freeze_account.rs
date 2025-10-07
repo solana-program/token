@@ -7,7 +7,7 @@ use {
     solana_program_test::{tokio, ProgramTest},
     solana_signer::Signer,
     solana_transaction::Transaction,
-    spl_token::state::AccountState,
+    spl_token_interface::state::AccountState,
 };
 
 #[tokio::test]
@@ -42,8 +42,8 @@ async fn freeze_account() {
 
     // When we freeze the account.
 
-    let freeze_account_ix = spl_token::instruction::freeze_account(
-        &spl_token::ID,
+    let freeze_account_ix = spl_token_interface::instruction::freeze_account(
+        &spl_token_interface::ID,
         &account,
         &mint,
         &freeze_authority.pubkey(),
@@ -65,7 +65,7 @@ async fn freeze_account() {
     assert!(token_account.is_some());
 
     let token_account = token_account.unwrap();
-    let token_account = spl_token::state::Account::unpack(&token_account.data).unwrap();
+    let token_account = spl_token_interface::state::Account::unpack(&token_account.data).unwrap();
 
     assert_eq!(token_account.state, AccountState::Frozen);
 }

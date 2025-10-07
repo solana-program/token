@@ -9,7 +9,7 @@ use {
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
-    spl_token::state::Multisig,
+    spl_token_interface::state::Multisig,
 };
 
 #[tokio::test]
@@ -28,8 +28,8 @@ async fn initialize_multisig2() {
 
     let rent = context.banks_client.get_rent().await.unwrap();
 
-    let initialize_ix = spl_token::instruction::initialize_multisig2(
-        &spl_token::ID,
+    let initialize_ix = spl_token_interface::instruction::initialize_multisig2(
+        &spl_token_interface::ID,
         &multisig.pubkey(),
         &signers,
         2,
@@ -68,7 +68,7 @@ async fn initialize_multisig2() {
     assert!(account.is_some());
 
     let account = account.unwrap();
-    let multisig = spl_token::state::Multisig::unpack(&account.data).unwrap();
+    let multisig = spl_token_interface::state::Multisig::unpack(&account.data).unwrap();
 
     assert!(multisig.is_initialized);
     assert_eq!(multisig.n, 3);
