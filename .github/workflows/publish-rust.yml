@@ -11,9 +11,9 @@ on:
         options:
           - clients/rust
           - interface
-          - p-interface
+          - pinocchio/interface
+          - pinocchio/program
           - program
-          - p-token
       level:
         description: Level
         required: true

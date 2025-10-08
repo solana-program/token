@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["interface", "p-interface", "p-token", "program"]
+members = ["interface", "pinocchio/interface", "pinocchio/program", "program"]
 
 [workspace.package]
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
