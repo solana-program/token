@@ -4,7 +4,7 @@ use {
     crate::processor::Processor,
     solana_account_info::AccountInfo,
     solana_msg::msg,
-    solana_program_error::{ProgramResult, ToStr},
+    solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
     spl_token_interface::error::TokenError,
 };
