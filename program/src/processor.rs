@@ -12,7 +12,7 @@ use {
     solana_cpi::set_return_data,
     solana_msg::msg,
     solana_program_error::{ProgramError, ProgramResult},
-    solana_program_memory::{sol_memcmp, sol_memset},
+    solana_program_memory::sol_memcmp,
     solana_program_option::COption,
     solana_program_pack::{IsInitialized, Pack},
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
@@ -1026,7 +1026,7 @@ fn delete_account(account_info: &AccountInfo) -> Result<(), ProgramError> {
     let mut account_data = account_info.data.borrow_mut();
     let data_len = account_data.len();
     unsafe {
-        sol_memset(*account_data, 0, data_len);
+        solana_program_memory::sol_memset(*account_data, 0, data_len);
     }
     Ok(())
 }
