@@ -17,7 +17,7 @@ logging = []
 [dependencies]
 pinocchio = { workspace = true }
 pinocchio-log = { version = "0.5.1", default-features = false }
-pinocchio-token-interface = { version = "^0", path = "../p-interface" }
+pinocchio-token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
 agave-feature-set = "2.2.20"
