@@ -12,13 +12,13 @@ use {
     solana_cpi::set_return_data,
     solana_msg::msg,
     solana_program_error::{ProgramError, ProgramResult},
-    solana_program_memory::sol_memcmp,
+    solana_program_memory::{sol_memcmp, sol_memset},
     solana_program_option::COption,
     solana_program_pack::{IsInitialized, Pack},
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
     solana_rent::Rent,
     solana_sdk_ids::system_program,
-    solana_sysvar::Sysvar,
+    solana_sysvar::{Sysvar, SysvarSerialize},
 };
 
 /// Program state handler.
@@ -976,7 +976,9 @@ impl Processor {
     /// Checks two pubkeys for equality in a computationally cheap way using
     /// `sol_memcmp`
     pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
-        sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
+        unsafe {
+            sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
+        }
     }
 
     /// Validates owner(s) are present
@@ -1025,7 +1027,9 @@ fn delete_account(account_info: &AccountInfo) -> Result<(), ProgramError> {
     account_info.assign(&system_program::id());
     let mut account_data = account_info.data.borrow_mut();
     let data_len = account_data.len();
-    solana_program_memory::sol_memset(*account_data, 0, data_len);
+    unsafe {
+        sol_memset(*account_data, 0, data_len);
+    }
     Ok(())
 }
 
@@ -1040,8 +1044,6 @@ fn delete_account(account_info: &AccountInfo) -> Result<(), ProgramError> {
 mod tests {
     use {
         super::*,
-        solana_clock::Epoch,
-        solana_program_error::ToStr,
         std::sync::{Arc, RwLock},
     };
 
@@ -1201,7 +1203,6 @@ mod tests {
                 &mut signer_data,
                 &program_id,
                 false,
-                Epoch::default(),
             );
             MAX_SIGNERS + 1
         ];
@@ -1224,7 +1225,6 @@ mod tests {
             &mut data,
             &program_id,
             false,
-            Epoch::default(),
         );
 
         // full 11 of 11
@@ -1326,7 +1326,6 @@ mod tests {
                     &mut signer_data,
                     &program_id,
                     false,
-                    Epoch::default(),
                 );
                 MAX_SIGNERS + 1
             ];

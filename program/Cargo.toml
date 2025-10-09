@@ -17,20 +17,20 @@ bytemuck = "1.20.0"
 num-derive = "0.4"
 num-traits = { workspace = true }
 num_enum = "0.7.3"
-solana-account-info = "2.3.0"
-solana-cpi = "2.2.1"
+solana-account-info = "3.0.0"
+solana-cpi = "3.0.0"
 solana-instruction = { workspace = true }
-solana-msg = "2.2.1"
-solana-program-entrypoint = "2.3.0"
+solana-msg = "3.0.0"
+solana-program-entrypoint = "3.0.0"
 solana-program-error = { workspace = true }
-solana-program-memory = "2.3.1"
+solana-program-memory = "3.0.0"
 solana-program-option = { workspace = true }
 solana-program-pack = { workspace = true }
 solana-pubkey = { workspace = true, features = ["bytemuck"] }
-solana-rent = "2.2.1"
-solana-sdk-ids = "2.2.1"
-solana-sysvar = { version = "2.2.2", features = ["bincode"] }
-spl-token-interface = { version = "1.0" }
+solana-rent = "3.0.0"
+solana-sdk-ids = "3.0.0"
+solana-sysvar = { version = "3.0.0", features = ["bincode"] }
+spl-token-interface = { version = "2.0" }
 thiserror = "2.0"
 
 [dev-dependencies]
@@ -39,13 +39,12 @@ mollusk-svm = { workspace = true }
 mollusk-svm-fuzz-fixture = { workspace = true }
 proptest = "1.5"
 serial_test = "3.2.0"
-solana-account = "2.2.1"
-solana-account-info = "2.3.0"
-solana-clock = "2.2.2"
-solana-native-token = "2.2.1"
-solana-program-entrypoint = "2.3.0"
-solana-rent = { version = "2.2.1", features = ["sysvar"] }
-solana-system-interface = { version="1.0", features=["bincode"] }
+solana-account = "3.0.0"
+solana-account-info = "3.0.0"
+solana-clock = "3.0.0"
+solana-native-token = "3.0.0"
+solana-rent = { version = "3.0.0", features = ["sysvar"] }
+solana-system-interface = { version = "2.0", features=["bincode"] }
 strum = "0.24"
 strum_macros = "0.24"
 
