@@ -976,9 +976,7 @@ impl Processor {
     /// Checks two pubkeys for equality in a computationally cheap way using
     /// `sol_memcmp`
     pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
-        unsafe {
-            sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
-        }
+        unsafe { sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0 }
     }
 
     /// Validates owner(s) are present
