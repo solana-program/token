@@ -300,13 +300,15 @@ fn create_token_account(
 }
 
 /// Creates a Mollusk instance with the default feature set, excluding the
-/// `bpf_account_data_direct_mapping` feature.
+/// `account_data_direct_mapping` feature.
 fn mollusk() -> Mollusk {
     let feature_set = {
-        let mut fs = FeatureSet::all_enabled();
-        fs.active_mut()
-            .remove(&agave_feature_set::bpf_account_data_direct_mapping::id());
-        fs
+        // When upgrading to v3.1, add this back in
+        //let fs = FeatureSet::all_enabled();
+        //fs.active_mut()
+        //    .remove(&agave_feature_set::account_data_direct_mapping::id());
+        //fs
+        FeatureSet::all_enabled()
     };
     let mut mollusk = Mollusk {
         feature_set,

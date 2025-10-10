@@ -75,7 +75,7 @@ fn do_process_instruction_dups(
                 data: account_info.try_borrow_data().unwrap().to_vec(),
                 owner: *account_info.owner,
                 executable: account_info.executable,
-                rent_epoch: account_info.rent_epoch,
+                rent_epoch: u64::MAX,
             };
             dedup_accounts.push((*account_info.key, account));
             cached_accounts.insert(account_info.key, account_info);
