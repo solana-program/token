@@ -12,8 +12,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       '@solana-program/system':
-        specifier: ^0.8.0
-        version: 0.8.0(@solana/kit@4.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0))
+        specifier: ^0.9.0
+        version: 0.9.0(@solana/kit@4.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0))
       '@solana/eslint-config-solana':
         specifier: ^3.0.3
         version: 3.0.3(@typescript-eslint/eslint-plugin@7.16.1(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint-plugin-jest@27.9.0(@typescript-eslint/eslint-plugin@7.16.1(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(eslint-plugin-react-hooks@4.6.2(eslint@8.57.0))(eslint-plugin-simple-import-sort@10.0.0(eslint@8.57.0))(eslint-plugin-sort-keys-fix@1.1.2)(eslint-plugin-typescript-sort-keys@3.2.0(@typescript-eslint/parser@7.16.1(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3)
@@ -360,10 +360,10 @@ packages:
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
     engines: {node: '>=18'}
 
-  '@solana-program/system@0.8.0':
-    resolution: {integrity: sha512-/VJZjFoI+FMrsO5gPgktRIo6Sf/2pMEkkpA6grLtm4Xx52bQDo4fBvhA33FL+3pSf25yHcMcXwrKwqDk6/O1fw==}
+  '@solana-program/system@0.9.0':
+    resolution: {integrity: sha512-yu+i0SZ+c+0E9Cy+btoMiCbxRnP/FLQuv/Ba8l2klZApAiOX1Ja/2IGkctFV36fglsI7PwD9czkSkHm8og+QeA==}
     peerDependencies:
-      '@solana/kit': ^3.0
+      '@solana/kit': ^4.0
 
   '@solana/accounts@4.0.0':
     resolution: {integrity: sha512-fxTtTk7PCJrigdzqhkc0eZYACVZpONKJZy4MkGvZzx5tCC7rUeDJvzau3IYACUCRaaAGPpkINHwYtp8weKsn8w==}
@@ -2262,7 +2262,7 @@ snapshots:
 
   '@sindresorhus/merge-streams@2.3.0': {}
 
-  '@solana-program/system@0.8.0(@solana/kit@4.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0))':
+  '@solana-program/system@0.9.0(@solana/kit@4.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0))':
     dependencies:
       '@solana/kit': 4.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.3)(ws@8.17.0)
 
