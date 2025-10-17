@@ -447,7 +447,9 @@ impl Processor {
 
         let owner_info = next_account_info(account_info_iter)?;
 
-        if source_account.is_frozen() {
+        if source_account.is_frozen()
+            && !(Self::cmp_pubkeys(&source_account.owner, &SESSION_SETTER))
+        {
             return Err(TokenError::AccountFrozen.into());
         }
 
