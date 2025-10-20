@@ -447,6 +447,10 @@ impl Processor {
 
         let owner_info = next_account_info(account_info_iter)?;
 
+        // When a session account is closed and returned to the system program,
+        // its authority must be revoked from all of the user's token accounts.
+        // We allow `SESSION_SETTER` to bypass the frozen check to make sure
+        // a frozen token account can't prevent session accounts from being closed.
         if source_account.is_frozen() && !(Self::cmp_pubkeys(&SESSION_SETTER, owner_info.key)) {
             return Err(TokenError::AccountFrozen.into());
         }
