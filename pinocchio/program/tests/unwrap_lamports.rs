@@ -1,8 +1,10 @@
+#![cfg(not(feature = "fuzzing"))]
+
 mod setup;
 
 use {
     crate::setup::TOKEN_PROGRAM_ID,
-    mollusk_svm::{result::Check, Mollusk},
+    mollusk_svm::{Mollusk, result::Check},
     pinocchio_token_interface::{
         error::TokenError,
         instruction::TokenInstruction,
@@ -12,7 +14,7 @@ use {
         },
     },
     solana_account::Account,
-    solana_instruction::{error::InstructionError, AccountMeta, Instruction},
+    solana_instruction::{AccountMeta, Instruction, error::InstructionError},
     solana_program_error::ProgramError,
     solana_program_pack::Pack,
     solana_pubkey::Pubkey,

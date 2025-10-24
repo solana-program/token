@@ -1,9 +1,11 @@
+#![cfg(not(feature = "fuzzing"))]
+
 mod setup;
 
 use {
     crate::setup::TOKEN_PROGRAM_ID,
     agave_feature_set::FeatureSet,
-    mollusk_svm::{result::Check, Mollusk},
+    mollusk_svm::{Mollusk, result::Check},
     pinocchio_token_interface::{
         native_mint,
         state::{
@@ -16,7 +18,7 @@ use {
     solana_keypair::Keypair,
     solana_program_error::ProgramError,
     solana_program_pack::Pack,
-    solana_program_test::{tokio, ProgramTest},
+    solana_program_test::{ProgramTest, tokio},
     solana_pubkey::Pubkey,
     solana_rent::Rent,
     solana_sdk_ids::bpf_loader_upgradeable,
@@ -350,15 +352,17 @@ async fn batch_transfer() {
     let destination_account =
         create_token_account(&mint_key, &authority_key, false, 0, &TOKEN_PROGRAM_ID);
 
-    let instruction = batch_instruction(vec![spl_token_interface::instruction::transfer(
-        &TOKEN_PROGRAM_ID,
-        &source_account_key,
-        &destination_account_key,
-        &authority_key,
-        &[],
-        500_000_000,
-    )
-    .unwrap()])
+    let instruction = batch_instruction(vec![
+        spl_token_interface::instruction::transfer(
+            &TOKEN_PROGRAM_ID,
+            &source_account_key,
+            &destination_account_key,
+            &authority_key,
+            &[],
+            500_000_000,
+        )
+        .unwrap(),
+    ])
     .unwrap();
 
     // Expected to succeed.
@@ -408,15 +412,17 @@ async fn batch_fail_transfer_with_invalid_program_owner() {
     let destination_account =
         create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
 
-    let instruction = batch_instruction(vec![spl_token_interface::instruction::transfer(
-        &TOKEN_PROGRAM_ID,
-        &source_account_key,
-        &destination_account_key,
-        &authority_key,
-        &[],
-        500_000_000,
-    )
-    .unwrap()])
+    let instruction = batch_instruction(vec![
+        spl_token_interface::instruction::transfer(
+            &TOKEN_PROGRAM_ID,
+            &source_account_key,
+            &destination_account_key,
+            &authority_key,
+            &[],
+            500_000_000,
+        )
+        .unwrap(),
+    ])
     .unwrap();
 
     // Expected to fail since source account has an invalid program owner.
@@ -474,17 +480,19 @@ async fn batch_fail_transfer_checked_with_invalid_program_owner() {
     let destination_account =
         create_token_account(&native_mint_key, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
 
-    let instruction = batch_instruction(vec![spl_token_interface::instruction::transfer_checked(
-        &TOKEN_PROGRAM_ID,
-        &source_account_key,
-        &native_mint_key,
-        &destination_account_key,
-        &authority_key,
-        &[],
-        500_000_000,
-        9,
-    )
-    .unwrap()])
+    let instruction = batch_instruction(vec![
+        spl_token_interface::instruction::transfer_checked(
+            &TOKEN_PROGRAM_ID,
+            &source_account_key,
+            &native_mint_key,
+            &destination_account_key,
+            &authority_key,
+            &[],
+            500_000_000,
+            9,
+        )
+        .unwrap(),
+    ])
     .unwrap();
 
     // Expected to fail since source account has an invalid program owner.

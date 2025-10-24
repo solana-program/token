@@ -1,22 +1,22 @@
 use {
     crate::processor::*,
     core::{
-        mem::{size_of, transmute, MaybeUninit},
+        mem::{MaybeUninit, size_of, transmute},
         slice::from_raw_parts,
     },
     pinocchio::{
+        MAX_TX_ACCOUNTS, ProgramResult, SUCCESS,
         account_info::AccountInfo,
-        entrypoint::{deserialize, NON_DUP_MARKER},
+        entrypoint::{NON_DUP_MARKER, deserialize},
         hint::likely,
         log::sol_log,
         no_allocator, nostd_panic_handler,
         program_error::{ProgramError, ToStr},
-        ProgramResult, MAX_TX_ACCOUNTS, SUCCESS,
     },
     pinocchio_token_interface::{
         error::TokenError,
         instruction::TokenInstruction,
-        state::{account::Account, mint::Mint, Transmutable},
+        state::{Transmutable, account::Account, mint::Mint},
     },
 };
 
@@ -241,10 +241,12 @@ fn log_error(error: &ProgramError) {
 /// another "batch" instruction.
 #[inline(always)]
 pub fn process_instruction(accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
+    #[cfg(not(feature = "fuzzing"))]
     let [discriminator, remaining @ ..] = instruction_data else {
         return Err(TokenError::InvalidInstruction.into());
     };
 
+    #[cfg(not(feature = "fuzzing"))]
     let result = if *discriminator == 255 {
         // 255 - Batch
         #[cfg(feature = "logging")]
@@ -254,6 +256,9 @@ pub fn process_instruction(accounts: &[AccountInfo], instruction_data: &[u8]) ->
     } else {
         inner_process_instruction(accounts, instruction_data)
     };
+
+    #[cfg(feature = "fuzzing")]
+    let result = inner_process_instruction(accounts, instruction_data);
 
     result.inspect_err(log_error)
 }
@@ -480,6 +485,7 @@ fn inner_process_remaining_instruction(
             process_ui_amount_to_amount(accounts, instruction_data)
         }
         // 38 - WithdrawExcessLamports
+        #[cfg(not(feature = "fuzzing"))]
         38 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: WithdrawExcessLamports");
@@ -487,6 +493,7 @@ fn inner_process_remaining_instruction(
             process_withdraw_excess_lamports(accounts)
         }
         // 45 - UnwrapLamports
+        #[cfg(not(feature = "fuzzing"))]
         45 => {
             #[cfg(feature = "logging")]
             pinocchio::msg!("Instruction: UnwrapLamports");

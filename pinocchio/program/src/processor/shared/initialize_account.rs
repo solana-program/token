@@ -1,18 +1,18 @@
 use {
     crate::processor::check_account_owner,
     pinocchio::{
+        ProgramResult,
         account_info::AccountInfo,
         program_error::ProgramError,
         pubkey::Pubkey,
-        sysvars::{rent::Rent, Sysvar},
-        ProgramResult,
+        sysvars::{Sysvar, rent::Rent},
     },
     pinocchio_token_interface::{
         error::TokenError,
         native_mint::is_native_mint,
         state::{
-            account::Account, account_state::AccountState, load, load_mut_unchecked, mint::Mint,
-            Initializable,
+            Initializable, account::Account, account_state::AccountState, load, load_mut_unchecked,
+            mint::Mint,
         },
     },
 };
@@ -83,6 +83,15 @@ pub fn process_initialize_account(
     account.set_account_state(AccountState::Initialized);
     account.mint = *mint_info.key();
     account.owner = *owner;
+    #[cfg(feature = "fuzzing")]
+    {
+        account.set_amount(0);
+        account.set_delegated_amount(0);
+
+        account.clear_close_authority();
+        account.clear_delegate();
+        account.set_native(false);
+    }
 
     if is_native_mint {
         account.set_native(true);

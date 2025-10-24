@@ -1,9 +1,11 @@
+#[cfg(feature = "fuzzing")]
+use crate::state::validate_option;
 use {
-    super::{account_state::AccountState, COption, Initializable, Transmutable},
+    super::{COption, Initializable, Transmutable, account_state::AccountState},
     pinocchio::{
         hint::likely,
         program_error::ProgramError,
-        pubkey::{pubkey_eq, Pubkey},
+        pubkey::{Pubkey, pubkey_eq},
     },
 };
 
@@ -72,12 +74,26 @@ impl Account {
 
     #[inline(always)]
     pub fn clear_delegate(&mut self) {
-        self.delegate.0[0] = 0;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.delegate.0[0] = 0;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.delegate.0 = [0, 0, 0, 0];
+        }
     }
 
     #[inline(always)]
     pub fn set_delegate(&mut self, delegate: &Pubkey) {
-        self.delegate.0[0] = 1;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.delegate.0[0] = 1;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.delegate.0 = [1, 0, 0, 0];
+        }
         self.delegate.1 = *delegate;
     }
 
@@ -92,7 +108,14 @@ impl Account {
 
     #[inline(always)]
     pub fn set_native(&mut self, value: bool) {
-        self.is_native[0] = value as u8;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.is_native[0] = value as u8;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.is_native = [value as u8, 0, 0, 0];
+        }
     }
 
     #[inline(always)]
@@ -126,12 +149,26 @@ impl Account {
 
     #[inline(always)]
     pub fn clear_close_authority(&mut self) {
-        self.close_authority.0[0] = 0;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.close_authority.0[0] = 0;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.close_authority.0 = [0, 0, 0, 0];
+        }
     }
 
     #[inline(always)]
     pub fn set_close_authority(&mut self, value: &Pubkey) {
-        self.close_authority.0[0] = 1;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.close_authority.0[0] = 1;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.close_authority.0 = [1, 0, 0, 0];
+        }
         self.close_authority.1 = *value;
     }
 
@@ -162,6 +199,21 @@ unsafe impl Transmutable for Account {
 impl Initializable for Account {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
-        AccountState::try_from(self.state).map(|state| likely(state != AccountState::Uninitialized))
+        #[cfg(feature = "fuzzing")]
+        // delegate
+        validate_option(self.delegate.0)?;
+
+        // state
+        let state = AccountState::try_from(self.state)?;
+
+        #[cfg(feature = "fuzzing")]
+        // is_native
+        validate_option(self.is_native)?;
+
+        #[cfg(feature = "fuzzing")]
+        // close authority
+        validate_option(self.close_authority.0)?;
+
+        Ok(likely(state != AccountState::Uninitialized))
     }
 }

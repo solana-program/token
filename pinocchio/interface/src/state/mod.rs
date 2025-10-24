@@ -1,3 +1,5 @@
+#[cfg(feature = "fuzzing")]
+use pinocchio::ProgramResult;
 use pinocchio::program_error::ProgramError;
 
 pub mod account;
@@ -94,4 +96,15 @@ pub unsafe fn load_mut_unchecked<T: Transmutable>(
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(&mut *(bytes.as_mut_ptr() as *mut T))
+}
+
+#[cfg(feature = "fuzzing")]
+/// Validates a `COption` mask value.
+#[inline(always)]
+const fn validate_option(value: [u8; 4]) -> ProgramResult {
+    if u32::from_le_bytes(value) > 1 {
+        Err(ProgramError::InvalidAccountData)
+    } else {
+        Ok(())
+    }
 }

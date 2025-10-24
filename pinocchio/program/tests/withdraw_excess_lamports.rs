@@ -1,3 +1,4 @@
+#![cfg(not(feature = "fuzzing"))]
 #![allow(clippy::arithmetic_side_effects)]
 
 mod setup;
@@ -5,11 +6,11 @@ mod setup;
 use {
     assert_matches::assert_matches,
     pinocchio_token_interface::state::{account::Account, mint::Mint, multisig::Multisig},
-    setup::{mint, TOKEN_PROGRAM_ID},
+    setup::{TOKEN_PROGRAM_ID, mint},
     solana_instruction::error::InstructionError,
     solana_keypair::Keypair,
     solana_program_pack::Pack,
-    solana_program_test::{tokio, BanksClientError, ProgramTest},
+    solana_program_test::{BanksClientError, ProgramTest, tokio},
     solana_pubkey::Pubkey,
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,

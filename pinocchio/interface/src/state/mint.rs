@@ -1,3 +1,5 @@
+#[cfg(feature = "fuzzing")]
+use crate::state::validate_option;
 use {
     super::{COption, Initializable, Transmutable},
     pinocchio::{program_error::ProgramError, pubkey::Pubkey},
@@ -45,12 +47,26 @@ impl Mint {
 
     #[inline(always)]
     pub fn clear_mint_authority(&mut self) {
-        self.mint_authority.0[0] = 0;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.mint_authority.0[0] = 0;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.mint_authority.0 = [0, 0, 0, 0];
+        }
     }
 
     #[inline(always)]
     pub fn set_mint_authority(&mut self, mint_authority: &Pubkey) {
-        self.mint_authority.0[0] = 1;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.mint_authority.0[0] = 1;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.mint_authority.0 = [1, 0, 0, 0];
+        }
         self.mint_authority.1 = *mint_authority;
     }
 
@@ -65,12 +81,26 @@ impl Mint {
 
     #[inline(always)]
     pub fn clear_freeze_authority(&mut self) {
-        self.freeze_authority.0[0] = 0;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.freeze_authority.0[0] = 0;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.freeze_authority.0 = [0, 0, 0, 0];
+        }
     }
 
     #[inline(always)]
     pub fn set_freeze_authority(&mut self, freeze_authority: &Pubkey) {
-        self.freeze_authority.0[0] = 1;
+        #[cfg(not(feature = "fuzzing"))]
+        {
+            self.freeze_authority.0[0] = 1;
+        }
+        #[cfg(feature = "fuzzing")]
+        {
+            self.freeze_authority.0 = [1, 0, 0, 0];
+        }
         self.freeze_authority.1 = *freeze_authority;
     }
 
@@ -92,10 +122,21 @@ unsafe impl Transmutable for Mint {
 impl Initializable for Mint {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {
-        match self.is_initialized {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => Err(ProgramError::InvalidAccountData),
-        }
+        #[cfg(feature = "fuzzing")]
+        // mint_authority
+        validate_option(self.mint_authority.0)?;
+
+        // is_initialized
+        let initialized = match self.is_initialized {
+            0 => false,
+            1 => true,
+            _ => return Err(ProgramError::InvalidAccountData),
+        };
+
+        #[cfg(feature = "fuzzing")]
+        // freeze_authority
+        validate_option(self.freeze_authority.0)?;
+
+        Ok(initialized)
     }
 }

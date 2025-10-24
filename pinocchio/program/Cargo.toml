@@ -12,7 +12,9 @@ readme = "./README.md"
 crate-type = ["cdylib"]
 
 [features]
+default = ["fuzzing"]
 logging = []
+fuzzing = []
 
 [dependencies]
 pinocchio = { workspace = true }

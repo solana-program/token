@@ -8,6 +8,10 @@ license = { workspace = true}
 edition = { workspace = true}
 readme = "./README.md"
 
+[features]
+default = ["fuzzing"]
+fuzzing = []
+
 [lib]
 crate-type = ["rlib"]
 
@@ -18,3 +22,6 @@ pinocchio-pubkey = "0.3"
 [dev-dependencies]
 strum = "0.27"
 strum_macros = "0.27"
+
+[lints]
+workspace = true

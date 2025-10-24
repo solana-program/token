@@ -1,15 +1,15 @@
 use {
     pinocchio::{
+        ProgramResult,
         account_info::AccountInfo,
         hint::likely,
         program_error::ProgramError,
         pubkey::Pubkey,
-        sysvars::{rent::Rent, Sysvar},
-        ProgramResult,
+        sysvars::{Sysvar, rent::Rent},
     },
     pinocchio_token_interface::{
         error::TokenError,
-        state::{load_mut_unchecked, mint::Mint, Initializable},
+        state::{Initializable, load_mut_unchecked, mint::Mint},
     },
 };
 
@@ -89,6 +89,9 @@ pub fn process_initialize_mint(
 
     if let Some(freeze_authority) = freeze_authority {
         mint.set_freeze_authority(freeze_authority);
+    } else {
+        #[cfg(feature = "fuzzing")]
+        mint.clear_freeze_authority();
     }
 
     Ok(())
