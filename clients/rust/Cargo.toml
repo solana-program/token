@@ -1,15 +1,11 @@
 [package]
 name = "spl-token-client"
 version = "0.0.0"
-description = "A generated Rust library for the Token program"
-repository = "https://github.com/solana-program/token"
 edition = "2021"
+description = "A generated Rust library for the Token program"
 readme = "README.md"
+repository = "https://github.com/solana-program/token"
 license-file = "../../LICENSE"
-
-[features]
-test-sbf = []
-serde = ["dep:serde", "dep:serde_with"]
 
 [dependencies]
 borsh = "^0.10"
@@ -19,3 +15,7 @@ serde = { version = "^1.0", features = ["derive"], optional = true }
 serde_with = { version = "^3.0", optional = true }
 solana-program = "2.1"
 thiserror = "^1.0"
+
+[features]
+serde = ["dep:serde", "dep:serde_with"]
+test-sbf = []
