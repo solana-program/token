@@ -19,6 +19,9 @@ inputs:
   rustfmt:
     description: Install Rustfmt if `true`. Defaults to `false`.
     required: false
+  tombi:
+    description: Install tombi if `true`. Defaults to `false`.
+    required: false
   solana:
     description: Install Solana if `true`. Defaults to `false`.
     required: false
@@ -94,6 +97,10 @@ runs:
       with:
         toolchain: ${{ env.TOOLCHAIN_LINT }}
         components: clippy
+
+    - name: Install tombi
+      if: ${{ inputs.tombi == 'true' }}
+      uses: tombi-toml/setup-tombi@v1
 
     - name: Install Solana
       if: ${{ inputs.solana == 'true' }}
