@@ -22,6 +22,24 @@ jobs:
       - name: Lint Client JS
         run: pnpm clients:js:lint
 
+  format_and_lint_workspace_toml:
+    name: Format & Lint workspace level Toml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          tombi: true
+
+      - name: Format workspace level Toml
+        run: pnpm workspace:toml:format
+
+      - name: Lint workspace level Toml
+        run: pnpm workspace:toml:lint
+
   format_and_lint_client_rust:
     if: false # Disabled until we have a Rust client
     name: Format & Lint Client Rust
@@ -35,6 +53,7 @@ jobs:
         with:
           clippy: true
           rustfmt: true
+          tombi: true
 
       - name: Format Client Rust
         run: pnpm clients:rust:format
@@ -54,6 +73,7 @@ jobs:
         with:
           clippy: true
           rustfmt: true
+          tombi: true
 
       - name: Format
         run: pnpm programs:format
@@ -73,6 +93,7 @@ jobs:
         with:
           clippy: true
           rustfmt: true
+          tombi: true
 
       - name: Format
         run: pnpm p-interface:format
@@ -92,6 +113,7 @@ jobs:
         with:
           clippy: true
           rustfmt: true
+          tombi: true
 
       - name: Format
         run: pnpm p-token:format
@@ -111,6 +133,7 @@ jobs:
         with:
           clippy: true
           rustfmt: true
+          tombi: true
 
       - name: Format
         run: pnpm interface:format

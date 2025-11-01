@@ -1,22 +1,27 @@
 [package]
 name = "spl-token"
 version = "9.0.0"
+authors = { workspace = true }
+edition = { workspace = true }
 description = "Solana Program Library Token"
-authors = { workspace = true}
-repository = { workspace = true}
-license = { workspace = true}
-edition = { workspace = true}
+repository = { workspace = true }
+license = { workspace = true }
 
-[features]
-no-entrypoint = []
-test-sbf = []
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[package.metadata.solana]
+program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+
+[lib]
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 arrayref = "0.3.9"
 bytemuck = "1.20.0"
 num-derive = "0.4"
-num-traits = { workspace = true }
 num_enum = "0.7.3"
+num-traits = { workspace = true }
 solana-account-info = "3.0.0"
 solana-cpi = "3.0.0"
 solana-instruction = { workspace = true }
@@ -44,18 +49,13 @@ solana-account-info = "3.0.0"
 solana-clock = "3.0.0"
 solana-native-token = "3.0.0"
 solana-rent = { version = "3.0.0", features = ["sysvar"] }
-solana-system-interface = { version = "2.0", features=["bincode"] }
+solana-system-interface = { version = "2.0", features = ["bincode"] }
 strum = "0.24"
 strum_macros = "0.24"
 
-[lib]
-crate-type = ["cdylib", "lib"]
-
-[package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
+[features]
+no-entrypoint = []
+test-sbf = []
 
 [lints]
 workspace = true
-
-[package.metadata.solana]
-program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"

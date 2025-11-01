@@ -1,6 +1,8 @@
 {
   "private": true,
   "scripts": {
+    "workspace:toml:format": "zx ./scripts/toml/format.mjs Cargo.toml rust-toolchain.toml rustfmt.toml scripts/spellcheck.toml",
+    "workspace:toml:lint": "zx ./scripts/toml/lint.mjs Cargo.toml rust-toolchain.toml rustfmt.toml scripts/spellcheck.toml",
     "programs:build": "zx ./scripts/rust/build-sbf.mjs program",
     "programs:format": "zx ./scripts/rust/format.mjs program",
     "programs:lint": "zx ./scripts/rust/lint.mjs program",

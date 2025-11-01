@@ -56,6 +56,7 @@ jobs:
         with:
           clippy: true
           rustfmt: true
+          tombi: true
           solana: true
           cargo-cache-key: cargo-test-publish-${{ inputs.package_path }}
           cargo-cache-fallback-key: cargo-test-publish
@@ -65,6 +66,12 @@ jobs:
 
       - name: Lint
         run: pnpm zx ./scripts/rust/lint.mjs "${{ inputs.package_path }}"
+
+      - name: Format Toml
+        run: pnpm zx ./scripts/toml/format.mjs "${{ inputs.package_path }}"
+
+      - name: Lint Toml
+        run: pnpm zx ./scripts/toml/lint.mjs "${{ inputs.package_path }}"
 
       - name: Build programs
         run: pnpm programs:build

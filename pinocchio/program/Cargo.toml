@@ -1,23 +1,20 @@
 [package]
 name = "pinocchio-token-program"
 version = "0.0.0"
+authors = { workspace = true }
+edition = { workspace = true }
 description = "A pinocchio-based Token (aka 'p-token') program"
-authors = { workspace = true}
-repository = { workspace = true}
-license = { workspace = true}
-edition = { workspace = true}
 readme = "./README.md"
+repository = { workspace = true }
+license = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
 
-[features]
-logging = []
-
 [dependencies]
 pinocchio = { workspace = true }
 pinocchio-log = { version = "0.5.1", default-features = false }
-pinocchio-token-interface = { version = "^0", path = "../interface" }
+pinocchio-token-interface = { path = "../interface", version = "^0" }
 
 [dev-dependencies]
 agave-feature-set = "3.0.0"
@@ -37,11 +34,14 @@ solana-rent = "3.0.0"
 solana-sdk-ids = "3.0.0"
 solana-signature = "3.0.0"
 solana-signer = "3.0.0"
+solana-system-interface = { workspace = true }
 solana-transaction = "3.0.0"
 solana-transaction-error = "3.0.0"
-solana-system-interface = { workspace = true }
-spl-token-interface = "2"
 spl-token-2022-interface = "2"
+spl-token-interface = "2"
+
+[features]
+logging = []
 
 [lints]
 workspace = true

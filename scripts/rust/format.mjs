@@ -18,7 +18,9 @@ const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
 
 // Format the client.
 if (fix) {
+  await $`tombi format ${formatArgs} ${folder}`;
   await $`cargo ${toolchain} fmt --manifest-path ${manifestPath} ${cargoArgs} -- ${fmtArgs}`;
 } else {
+  await $`tombi lint ${formatArgs} ${folder}`;
   await $`cargo ${toolchain} fmt --manifest-path ${manifestPath} ${cargoArgs} -- --check ${fmtArgs}`;
 }
