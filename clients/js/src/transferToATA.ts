@@ -7,48 +7,50 @@ import {
 import {
   findAssociatedTokenPda,
   getCreateAssociatedTokenIdempotentInstruction,
-  getMintToCheckedInstruction,
+  getTransferCheckedInstruction,
   TOKEN_PROGRAM_ADDRESS,
 } from './generated';
 
-type MintToATAInstructionPlanInput = {
+type TransferToATAInstructionPlanInput = {
   /** Funding account (must be a system account). */
   payer: TransactionSigner;
-  /** Associated token account address to mint to.
+  /** The token mint to transfer. */
+  mint: Address;
+  /** The source account for the transfer. */
+  source: Address;
+  /** The source account's owner/delegate or its multisignature account. */
+  authority: Address | TransactionSigner;
+  /** Associated token account address to transfer to.
    * Will be created if it does not already exist.
-   * Note: Use {@link getMintToATAInstructionPlanAsync} instead to derive this automatically.
+   * Note: Use {@link getTransferToATAInstructionPlanAsync} instead to derive this automatically.
    * Note: Use {@link findAssociatedTokenPda} to derive the associated token account address.
    */
-  ata: Address;
-  /** Wallet address for the associated token account. */
-  owner: Address;
-  /** The token mint for the associated token account. */
-  mint: Address;
-  /** The mint's minting authority or its multisignature account. */
-  mintAuthority: Address | TransactionSigner;
-  /** The amount of new tokens to mint. */
+  destination: Address;
+  /** Wallet address for the destination. */
+  recipient: Address;
+  /** The amount of tokens to transfer. */
   amount: number | bigint;
   /** Expected number of base 10 digits to the right of the decimal place. */
   decimals: number;
   multiSigners?: Array<TransactionSigner>;
 };
 
-type MintToATAInstructionPlanConfig = {
+type TransferToATAInstructionPlanConfig = {
   systemProgram?: Address;
   tokenProgram?: Address;
   associatedTokenProgram?: Address;
 };
 
-export function getMintToATAInstructionPlan(
-  input: MintToATAInstructionPlanInput,
-  config?: MintToATAInstructionPlanConfig
+export function getTransferToATAInstructionPlan(
+  input: TransferToATAInstructionPlanInput,
+  config?: TransferToATAInstructionPlanConfig
 ): InstructionPlan {
   return sequentialInstructionPlan([
     getCreateAssociatedTokenIdempotentInstruction(
       {
         payer: input.payer,
-        ata: input.ata,
-        owner: input.owner,
+        ata: input.destination,
+        owner: input.recipient,
         mint: input.mint,
         systemProgram: config?.systemProgram,
         tokenProgram: config?.tokenProgram,
@@ -57,12 +59,12 @@ export function getMintToATAInstructionPlan(
         programAddress: config?.associatedTokenProgram,
       }
     ),
-    // mint to this token account
-    getMintToCheckedInstruction(
+    getTransferCheckedInstruction(
       {
+        source: input.source,
         mint: input.mint,
-        token: input.ata,
-        mintAuthority: input.mintAuthority,
+        destination: input.destination,
+        authority: input.authority,
         amount: input.amount,
         decimals: input.decimals,
         multiSigners: input.multiSigners,
@@ -74,24 +76,24 @@ export function getMintToATAInstructionPlan(
   ]);
 }
 
-type MintToATAInstructionPlanAsyncInput = Omit<
-  MintToATAInstructionPlanInput,
-  'ata'
+type TransferToATAInstructionPlanAsyncInput = Omit<
+  TransferToATAInstructionPlanInput,
+  'destination'
 >;
 
-export async function getMintToATAInstructionPlanAsync(
-  input: MintToATAInstructionPlanAsyncInput,
-  config?: MintToATAInstructionPlanConfig
+export async function getTransferToATAInstructionPlanAsync(
+  input: TransferToATAInstructionPlanAsyncInput,
+  config?: TransferToATAInstructionPlanConfig
 ): Promise<InstructionPlan> {
   const [ataAddress] = await findAssociatedTokenPda({
-    owner: input.owner,
+    owner: input.recipient,
     tokenProgram: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
     mint: input.mint,
   });
-  return getMintToATAInstructionPlan(
+  return getTransferToATAInstructionPlan(
     {
       ...input,
-      ata: ataAddress,
+      destination: ataAddress,
     },
     config
   );

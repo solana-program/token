@@ -9,7 +9,8 @@ import {
   SolanaRpcSubscriptionsApi,
   TransactionMessageWithBlockhashLifetime,
   TransactionMessageWithFeePayer,
-  TransactionPlanExecutor,
+  TransactionPlan,
+  TransactionPlanResult,
   TransactionPlanner,
   TransactionSigner,
   airdropFactory,
@@ -32,9 +33,11 @@ import {
 } from '@solana/kit';
 import {
   TOKEN_PROGRAM_ADDRESS,
+  findAssociatedTokenPda,
   getInitializeAccountInstruction,
   getInitializeMintInstruction,
   getMintSize,
+  getMintToATAInstructionPlan,
   getMintToInstruction,
   getTokenSize,
 } from '../src';
@@ -42,12 +45,35 @@ import {
 type Client = {
   rpc: Rpc<SolanaRpcApi>;
   rpcSubscriptions: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
+  sendTransactionPlan: (
+    transactionPlan: TransactionPlan
+  ) => Promise<TransactionPlanResult>;
 };
 
 export const createDefaultSolanaClient = (): Client => {
   const rpc = createSolanaRpc('http://127.0.0.1:8899');
   const rpcSubscriptions = createSolanaRpcSubscriptions('ws://127.0.0.1:8900');
-  return { rpc, rpcSubscriptions };
+
+  const sendAndConfirm = sendAndConfirmTransactionFactory({
+    rpc,
+    rpcSubscriptions,
+  });
+  const transactionPlanExecutor = createTransactionPlanExecutor({
+    executeTransactionMessage: async (transactionMessage) => {
+      const signedTransaction =
+        await signTransactionMessageWithSigners(transactionMessage);
+      assertIsSendableTransaction(signedTransaction);
+      assertIsTransactionWithBlockhashLifetime(signedTransaction);
+      await sendAndConfirm(signedTransaction, { commitment: 'confirmed' });
+      return { transaction: signedTransaction };
+    },
+  });
+
+  const sendTransactionPlan = async (transactionPlan: TransactionPlan) => {
+    return transactionPlanExecutor(transactionPlan);
+  };
+
+  return { rpc, rpcSubscriptions, sendTransactionPlan };
 };
 
 export const generateKeyPairSignerWithSol = async (
@@ -110,24 +136,6 @@ export const createDefaultTransactionPlanner = (
         (tx) => setTransactionMessageFeePayerSigner(feePayer, tx),
         (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx)
       );
-    },
-  });
-};
-
-export const createDefaultTransactionPlanExecutor = (
-  client: Client,
-  commitment: Commitment = 'confirmed'
-): TransactionPlanExecutor => {
-  return createTransactionPlanExecutor({
-    executeTransactionMessage: async (transactionMessage) => {
-      const signedTransaction =
-        await signTransactionMessageWithSigners(transactionMessage);
-      assertIsSendableTransaction(signedTransaction);
-      assertIsTransactionWithBlockhashLifetime(signedTransaction);
-      await sendAndConfirmTransactionFactory(client)(signedTransaction, {
-        commitment,
-      });
-      return { transaction: signedTransaction };
     },
   });
 };
@@ -234,4 +242,38 @@ export const createTokenWithAmount = async (
   );
 
   return token.address;
+};
+
+export const createTokenPdaWithAmount = async (
+  client: Client,
+  payer: TransactionSigner,
+  mintAuthority: TransactionSigner,
+  mint: Address,
+  owner: Address,
+  amount: bigint,
+  decimals: number
+): Promise<Address> => {
+  const [token] = await findAssociatedTokenPda({
+    owner,
+    mint,
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+  });
+
+  const transactionPlan = await createDefaultTransactionPlanner(
+    client,
+    payer
+  )(
+    getMintToATAInstructionPlan({
+      payer,
+      ata: token,
+      owner,
+      mint,
+      mintAuthority,
+      amount,
+      decimals,
+    })
+  );
+
+  await client.sendTransactionPlan(transactionPlan);
+  return token;
 };

@@ -39,7 +39,7 @@ type CreateMintInstructionPlanConfig = {
   tokenProgram?: Address;
 };
 
-export function createMintInstructionPlan(
+export function getCreateMintInstructionPlan(
   input: CreateMintInstructionPlanInput,
   config?: CreateMintInstructionPlanConfig
 ): InstructionPlan {

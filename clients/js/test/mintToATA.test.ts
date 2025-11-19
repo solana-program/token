@@ -4,14 +4,13 @@ import {
   AccountState,
   TOKEN_PROGRAM_ADDRESS,
   Token,
-  mintToATAInstructionPlan,
-  mintToATAInstructionPlanAsync,
+  getMintToATAInstructionPlan,
+  getMintToATAInstructionPlanAsync,
   fetchToken,
   findAssociatedTokenPda,
 } from '../src';
 import {
   createDefaultSolanaClient,
-  createDefaultTransactionPlanExecutor,
   createDefaultTransactionPlanner,
   createMint,
   generateKeyPairSignerWithSol,
@@ -34,7 +33,7 @@ test('it creates a new associated token account with an initial balance', async 
   });
 
   // When we mint to a token account at this address.
-  const instructionPlan = mintToATAInstructionPlan({
+  const instructionPlan = getMintToATAInstructionPlan({
     payer,
     ata,
     mint,
@@ -46,8 +45,7 @@ test('it creates a new associated token account with an initial balance', async 
 
   const transactionPlanner = createDefaultTransactionPlanner(client, payer);
   const transactionPlan = await transactionPlanner(instructionPlan);
-  const transactionPlanExecutor = createDefaultTransactionPlanExecutor(client);
-  await transactionPlanExecutor(transactionPlan);
+  await client.sendTransactionPlan(transactionPlan);
 
   // Then we expect the token account to exist and have the following data.
   t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
@@ -77,7 +75,7 @@ test('it derives a new associated token account with an initial balance', async 
   const mint = await createMint(client, payer, mintAuthority.address, decimals);
 
   // When we mint to a token account for the mint.
-  const instructionPlan = await mintToATAInstructionPlanAsync({
+  const instructionPlan = await getMintToATAInstructionPlanAsync({
     payer,
     mint,
     owner: owner.address,
@@ -88,8 +86,7 @@ test('it derives a new associated token account with an initial balance', async 
 
   const transactionPlanner = createDefaultTransactionPlanner(client, payer);
   const transactionPlan = await transactionPlanner(instructionPlan);
-  const transactionPlanExecutor = createDefaultTransactionPlanExecutor(client);
-  await transactionPlanExecutor(transactionPlan);
+  await client.sendTransactionPlan(transactionPlan);
 
   // Then we expect the token account to exist and have the following data.
   const [ata] = await findAssociatedTokenPda({
@@ -130,7 +127,7 @@ test('it also mints to an existing associated token account', async (t) => {
   });
 
   // When we create and initialize a token account at this address.
-  const instructionPlan = mintToATAInstructionPlan({
+  const instructionPlan = getMintToATAInstructionPlan({
     payer,
     ata,
     mint,
@@ -142,11 +139,10 @@ test('it also mints to an existing associated token account', async (t) => {
 
   const transactionPlanner = createDefaultTransactionPlanner(client, payer);
   const transactionPlan = await transactionPlanner(instructionPlan);
-  const transactionPlanExecutor = createDefaultTransactionPlanExecutor(client);
-  await transactionPlanExecutor(transactionPlan);
+  await client.sendTransactionPlan(transactionPlan);
 
   // And then we mint additional tokens to the same account.
-  const instructionPlan2 = mintToATAInstructionPlan({
+  const instructionPlan2 = getMintToATAInstructionPlan({
     payer,
     ata,
     mint,
@@ -157,7 +153,7 @@ test('it also mints to an existing associated token account', async (t) => {
   });
 
   const transactionPlan2 = await transactionPlanner(instructionPlan2);
-  await transactionPlanExecutor(transactionPlan2);
+  await client.sendTransactionPlan(transactionPlan2);
 
   // Then we expect the token account to exist and have the following data.
   t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
