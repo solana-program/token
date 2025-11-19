@@ -9,13 +9,18 @@ import {
   SolanaRpcSubscriptionsApi,
   TransactionMessageWithBlockhashLifetime,
   TransactionMessageWithFeePayer,
+  TransactionPlanExecutor,
+  TransactionPlanner,
   TransactionSigner,
   airdropFactory,
   appendTransactionMessageInstructions,
   assertIsSendableTransaction,
+  assertIsTransactionWithBlockhashLifetime,
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   createTransactionMessage,
+  createTransactionPlanExecutor,
+  createTransactionPlanner,
   generateKeyPairSigner,
   getSignatureFromTransaction,
   lamports,
@@ -83,10 +88,48 @@ export const signAndSendTransaction = async (
     await signTransactionMessageWithSigners(transactionMessage);
   const signature = getSignatureFromTransaction(signedTransaction);
   assertIsSendableTransaction(signedTransaction);
+  assertIsTransactionWithBlockhashLifetime(signedTransaction);
   await sendAndConfirmTransactionFactory(client)(signedTransaction, {
     commitment,
   });
   return signature;
+};
+
+export const createDefaultTransactionPlanner = (
+  client: Client,
+  feePayer: TransactionSigner
+): TransactionPlanner => {
+  return createTransactionPlanner({
+    createTransactionMessage: async () => {
+      const { value: latestBlockhash } = await client.rpc
+        .getLatestBlockhash()
+        .send();
+
+      return pipe(
+        createTransactionMessage({ version: 0 }),
+        (tx) => setTransactionMessageFeePayerSigner(feePayer, tx),
+        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx)
+      );
+    },
+  });
+};
+
+export const createDefaultTransactionPlanExecutor = (
+  client: Client,
+  commitment: Commitment = 'confirmed'
+): TransactionPlanExecutor => {
+  return createTransactionPlanExecutor({
+    executeTransactionMessage: async (transactionMessage) => {
+      const signedTransaction =
+        await signTransactionMessageWithSigners(transactionMessage);
+      assertIsSendableTransaction(signedTransaction);
+      assertIsTransactionWithBlockhashLifetime(signedTransaction);
+      await sendAndConfirmTransactionFactory(client)(signedTransaction, {
+        commitment,
+      });
+      return { transaction: signedTransaction };
+    },
+  });
 };
 
 export const getBalance = async (client: Client, address: Address) =>
