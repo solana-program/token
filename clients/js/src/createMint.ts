@@ -35,36 +35,36 @@ export type CreateMintInstructionPlanInput = {
 };
 
 type CreateMintInstructionPlanConfig = {
-  systemProgramAddress?: Address;
-  tokenProgramAddress?: Address;
+  systemProgram?: Address;
+  tokenProgram?: Address;
 };
 
 export function createMintInstructionPlan(
-  params: CreateMintInstructionPlanInput,
+  input: CreateMintInstructionPlanInput,
   config?: CreateMintInstructionPlanConfig
 ): InstructionPlan {
   return sequentialInstructionPlan([
     getCreateAccountInstruction(
       {
-        payer: params.payer,
-        newAccount: params.newMint,
-        lamports: params.mintAccountLamports ?? MINIMUM_BALANCE_FOR_MINT,
+        payer: input.payer,
+        newAccount: input.newMint,
+        lamports: input.mintAccountLamports ?? MINIMUM_BALANCE_FOR_MINT,
         space: getMintSize(),
-        programAddress: config?.tokenProgramAddress ?? TOKEN_PROGRAM_ADDRESS,
+        programAddress: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
       },
       {
-        programAddress: config?.systemProgramAddress,
+        programAddress: config?.systemProgram,
       }
     ),
     getInitializeMint2Instruction(
       {
-        mint: params.newMint.address,
-        decimals: params.decimals,
-        mintAuthority: params.mintAuthority,
-        freezeAuthority: params.freezeAuthority,
+        mint: input.newMint.address,
+        decimals: input.decimals,
+        mintAuthority: input.mintAuthority,
+        freezeAuthority: input.freezeAuthority,
       },
       {
-        programAddress: config?.tokenProgramAddress,
+        programAddress: config?.tokenProgram,
       }
     ),
   ]);
