@@ -1,11 +1,10 @@
 import { generateKeyPairSigner, Account, some, none } from '@solana/kit';
 import test from 'ava';
-import { fetchMint, Mint, createMintInstructionPlan } from '../src';
+import { fetchMint, Mint, getCreateMintInstructionPlan } from '../src';
 import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   createDefaultTransactionPlanner,
-  createDefaultTransactionPlanExecutor,
 } from './_setup';
 
 test('it creates and initializes a new mint account', async (t) => {
@@ -15,7 +14,7 @@ test('it creates and initializes a new mint account', async (t) => {
   const mint = await generateKeyPairSigner();
 
   // When we create and initialize a mint account at this address.
-  const instructionPlan = createMintInstructionPlan({
+  const instructionPlan = getCreateMintInstructionPlan({
     payer: authority,
     newMint: mint,
     decimals: 2,
@@ -24,8 +23,7 @@ test('it creates and initializes a new mint account', async (t) => {
 
   const transactionPlanner = createDefaultTransactionPlanner(client, authority);
   const transactionPlan = await transactionPlanner(instructionPlan);
-  const transactionPlanExecutor = createDefaultTransactionPlanExecutor(client);
-  await transactionPlanExecutor(transactionPlan);
+  await client.sendTransactionPlan(transactionPlan);
 
   // Then we expect the mint account to exist and have the following data.
   const mintAccount = await fetchMint(client.rpc, mint.address);
@@ -52,7 +50,7 @@ test('it creates a new mint account with a freeze authority', async (t) => {
   ]);
 
   // When we create and initialize a mint account at this address.
-  const instructionPlan = createMintInstructionPlan({
+  const instructionPlan = getCreateMintInstructionPlan({
     payer: payer,
     newMint: mint,
     decimals: 2,
@@ -62,8 +60,7 @@ test('it creates a new mint account with a freeze authority', async (t) => {
 
   const transactionPlanner = createDefaultTransactionPlanner(client, payer);
   const transactionPlan = await transactionPlanner(instructionPlan);
-  const transactionPlanExecutor = createDefaultTransactionPlanExecutor(client);
-  await transactionPlanExecutor(transactionPlan);
+  await client.sendTransactionPlan(transactionPlan);
 
   // Then we expect the mint account to exist and have the following data.
   const mintAccount = await fetchMint(client.rpc, mint.address);
