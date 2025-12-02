@@ -60,30 +60,30 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
         (source_account.amount(), 0)
     };
 
-    // Comparing whether the AccountInfo's "point" to the same account or
-    // not - this is a faster comparison since it just checks the internal
-    // raw pointer.
-    let self_transfer = source_account_info == destination_account_info;
-
-    if unlikely(self_transfer || amount == 0) {
+    if unlikely(amount == 0) {
         // Validates the token account owner since we are not writing
         // to the account.
         check_account_owner(source_account_info)
     } else {
         source_account.set_amount(remaining_amount);
 
-        // SAFETY: single mutable borrow to `source_account_info` lamports.
-        let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
-        // Note: The amount of a source token account is already validated and the
-        // `lamports` on the account is always greater than `amount`.
-        *source_lamports -= amount;
+        // Comparing whether the AccountInfo's "point" to the same account or
+        // not - this is a faster comparison since it just checks the internal
+        // raw pointer.
+        if source_account_info != destination_account_info {
+            // SAFETY: single mutable borrow to `source_account_info` lamports.
+            let source_lamports = unsafe { source_account_info.borrow_mut_lamports_unchecked() };
+            // Note: The amount of a source token account is already validated and the
+            // `lamports` on the account is always greater than `amount`.
+            *source_lamports -= amount;
 
-        // SAFETY: single mutable borrow to `destination_account_info` lamports; the
-        // account is already validated to be different from `source_account_info`.
-        let destination_lamports =
-            unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
-        // Note: The total lamports supply is bound to `u64::MAX`.
-        *destination_lamports += amount;
+            // SAFETY: single mutable borrow to `destination_account_info` lamports; the
+            // account is already validated to be different from `source_account_info`.
+            let destination_lamports =
+                unsafe { destination_account_info.borrow_mut_lamports_unchecked() };
+            // Note: The total lamports supply is bound to `u64::MAX`.
+            *destination_lamports += amount;
+        }
 
         Ok(())
     }

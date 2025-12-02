@@ -409,7 +409,8 @@ fn unwrap_lamports_with_self_transfer() {
     .unwrap();
 
     // It should succeed to unwrap lamports with the same source and destination
-    // accounts.
+    // accounts. The amount should be deducted from the source account but the
+    // lamports should remain the same.
 
     let result = mollusk().process_and_validate_instruction(
         &instruction,
@@ -432,7 +433,7 @@ fn unwrap_lamports_with_self_transfer() {
 
     let account = account.unwrap();
     let token_account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
-    assert_eq!(token_account.amount, 2_000_000_000);
+    assert_eq!(token_account.amount, 1_000_000_000);
 }
 
 #[test]
