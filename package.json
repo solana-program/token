@@ -33,6 +33,7 @@
     "fixtures:run": "zx ./scripts/rust/fixtures.mjs run",
     "p-interface:format": "zx ./scripts/rust/format.mjs pinocchio/interface",
     "p-interface:lint": "zx ./scripts/rust/lint.mjs pinocchio/interface",
+    "p-interface:test": "zx ./scripts/rust/test.mjs pinocchio/interface",
     "interface:format": "zx ./scripts/rust/format.mjs interface",
     "interface:lint": "zx ./scripts/rust/lint.mjs interface",
     "interface:test": "zx ./scripts/rust/test.mjs interface"

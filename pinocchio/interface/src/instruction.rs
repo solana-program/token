@@ -547,7 +547,7 @@ impl TryFrom<u8> for TokenInstruction {
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             // SAFETY: `value` is guaranteed to be in the range of the enum variants.
-            0..=24 | 38 | 255 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
+            0..=24 | 38 | 45 | 255 => Ok(unsafe { core::mem::transmute::<u8, TokenInstruction>(value) }),
             _ => Err(TokenError::InvalidInstruction.into()),
         }
     }
