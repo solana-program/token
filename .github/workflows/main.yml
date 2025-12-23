@@ -61,8 +61,8 @@ jobs:
       - name: Lint
         run: pnpm programs:lint
 
-  format_and_lint_pinterface:
-    name: Format & Lint P-Interface
+  format_lint_and_test_pinterface:
+    name: Format, Lint & Test P-Interface
     runs-on: ubuntu-latest
     steps:
       - name: Git Checkout
@@ -79,6 +79,9 @@ jobs:
 
       - name: Lint
         run: pnpm p-interface:lint
+
+      - name: Test
+        run: pnpm p-interface:test
 
   format_and_lint_ptoken:
     name: Format & Lint p-token
@@ -99,7 +102,7 @@ jobs:
       - name: Lint
         run: pnpm p-token:lint
 
-  format_and_lint_interface:
+  format_lint_and_test_interface:
     name: Format, Lint & Test Interface
     runs-on: ubuntu-latest
     steps:
@@ -118,7 +121,7 @@ jobs:
       - name: Lint
         run: pnpm interface:lint
 
-      - name: Lint
+      - name: Test
         run: pnpm interface:test
 
   audit_rust:
@@ -214,7 +217,7 @@ jobs:
   build_ptoken:
     name: Build p-token
     runs-on: ubuntu-latest
-    needs: [format_and_lint_pinterface, format_and_lint_ptoken]
+    needs: [format_lint_and_test_pinterface, format_and_lint_ptoken]
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
