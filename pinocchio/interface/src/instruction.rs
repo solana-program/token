@@ -601,7 +601,7 @@ mod tests {
             assert_eq!(TokenInstruction::try_from(variant_u8).unwrap(), variant);
         }
     }
-    
+ 
     #[test]
     fn test_authority_type_from_u8_exhaustive() {
         for variant in AuthorityType::iter() {
