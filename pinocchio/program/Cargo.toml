@@ -45,3 +45,6 @@ spl-token-2022-interface = "2"
 
 [lints]
 workspace = true
+
+[package.metadata.solana]
+program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
