@@ -41,11 +41,6 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
         return Err(TokenError::NonNativeNotSupported.into());
     }
 
-    // SAFETY: `authority_info` is not currently borrowed; in the case
-    // `authority_info` is the same as `source_account_info`, then it cannot be
-    // a multisig.
-    unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
-
     // If we have an amount, we need to validate whether there are enough lamports
     // to unwrap or not; otherwise we just use the full amount.
     let (amount, remaining_amount) = if let Some(amount) = maybe_amount {
@@ -59,6 +54,31 @@ pub fn process_unwrap_lamports(accounts: &[AccountInfo], instruction_data: &[u8]
     } else {
         (source_account.amount(), 0)
     };
+
+    // Validates the authority (delegate or owner).
+
+    if source_account.delegate() == Some(authority_info.key()) {
+        // SAFETY: `authority_info` is not currently borrowed; in the case
+        // `authority_info` is the same as `source_account_info`, then it cannot be
+        // a multisig.
+        unsafe { validate_owner(authority_info.key(), authority_info, remaining)? };
+
+        let delegated_amount = source_account
+            .delegated_amount()
+            .checked_sub(amount)
+            .ok_or(TokenError::InsufficientFunds)?;
+
+        source_account.set_delegated_amount(delegated_amount);
+
+        if delegated_amount == 0 {
+            source_account.clear_delegate();
+        }
+    } else {
+        // SAFETY: `authority_info` is not currently borrowed; in the case
+        // `authority_info` is the same as `source_account_info`, then it cannot be
+        // a multisig.
+        unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
+    }
 
     if unlikely(amount == 0) {
         // Validates the token account owner since we are not writing
