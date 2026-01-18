@@ -718,8 +718,8 @@ fn unwrap_lamports_with_delegate_and_amount() {
         ],
     );
 
-    // And the remaining amount must be 1_500_000_000 and the delegated amount reduced
-    // to 500_000_000.
+    // And the remaining amount must be 1_500_000_000 and the delegated amount
+    // reduced to 500_000_000.
 
     let account = result.get_account(&source_account_key);
     assert!(account.is_some());
