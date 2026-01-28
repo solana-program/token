@@ -167,8 +167,6 @@ async fn revoke_with_delegate() {
 
     let account = context.banks_client.get_account(account).await.unwrap();
 
-    assert!(account.is_some());
-
     let account = account.unwrap();
     let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
 
