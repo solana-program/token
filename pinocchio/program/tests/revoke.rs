@@ -92,3 +92,84 @@ async fn revoke() {
     assert!(account.delegate.is_none());
     assert!(account.delegated_amount == 0);
 }
+
+#[tokio::test]
+async fn revoke_with_delegate() {
+    let mut context = ProgramTest::new("pinocchio_token_program", TOKEN_PROGRAM_ID, None)
+        .start_with_context()
+        .await;
+
+    // Given a mint account.
+
+    let mint_authority = Keypair::new();
+    let freeze_authority = Pubkey::new_unique();
+
+    let mint = mint::initialize(
+        &mut context,
+        mint_authority.pubkey(),
+        Some(freeze_authority),
+        &TOKEN_PROGRAM_ID,
+    )
+    .await
+    .unwrap();
+
+    // And a token account with 100 tokens.
+
+    let owner = Keypair::new();
+
+    let account =
+        account::initialize(&mut context, &mint, &owner.pubkey(), &TOKEN_PROGRAM_ID).await;
+
+    mint::mint(
+        &mut context,
+        &mint,
+        &account,
+        &mint_authority,
+        100,
+        &TOKEN_PROGRAM_ID,
+    )
+    .await
+    .unwrap();
+
+    // And 50 tokens delegated.
+
+    let delegate = Keypair::new();
+
+    account::approve(
+        &mut context,
+        &account,
+        &delegate.pubkey(),
+        &owner,
+        50,
+        &TOKEN_PROGRAM_ID,
+    )
+    .await;
+
+    // When we revoke the delegation with the delegate as authority.
+
+    let revoke_ix = spl_token_interface::instruction::revoke(
+        &spl_token_interface::ID,
+        &account,
+        &delegate.pubkey(),
+        &[],
+    )
+    .unwrap();
+
+    let tx = Transaction::new_signed_with_payer(
+        &[revoke_ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &delegate],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    // Then the account should not have a delegate nor delegated amount.
+
+    let account = context.banks_client.get_account(account).await.unwrap();
+
+    let account = account.unwrap();
+    let account = spl_token_interface::state::Account::unpack(&account.data).unwrap();
+
+    assert!(account.delegate.is_none());
+    assert!(account.delegated_amount == 0);
+}
