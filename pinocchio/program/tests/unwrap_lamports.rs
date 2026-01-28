@@ -886,7 +886,7 @@ fn fail_unwrap_lamports_with_wrong_delegate() {
 }
 
 #[test]
-fn unwrap_lamports_from_multisig() {
+fn unwrap_lamports_with_multisig_owner() {
     let native_mint = Pubkey::new_from_array(native_mint::ID);
     let destination_account_key = Pubkey::new_unique();
     let molusk_svm = mollusk();
