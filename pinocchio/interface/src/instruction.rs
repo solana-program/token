@@ -504,9 +504,16 @@ pub enum TokenInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
+    ///   * Single owner/delegate
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
     ///   2. `[signer]` The source account's owner/delegate.
+    ///
+    ///   * Multisignature owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[]` The source account's multisignature owner/delegate.
+    ///   3. `..+M` `[signer]` M signer accounts.
     ///
     /// Data expected by this instruction:
     ///
