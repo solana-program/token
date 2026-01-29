@@ -1,13 +1,22 @@
 [package]
 name = "spl-token-interface"
 version = "2.0.0"
+authors = { workspace = true }
+edition = { workspace = true }
 description = "Solana Program Library Token Interface"
 documentation = "https://docs.rs/spl-token-interface"
 readme = "README.md"
-authors = { workspace = true }
 repository = { workspace = true }
 license = { workspace = true }
-edition = { workspace = true }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[package.metadata.solana]
+program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+
+[lib]
+crate-type = ["lib"]
 
 [dependencies]
 arrayref = "0.3.9"
@@ -28,14 +37,5 @@ proptest = "1.5"
 strum = "0.24"
 strum_macros = "0.24"
 
-[lib]
-crate-type = ["lib"]
-
-[package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
-
 [lints]
 workspace = true
-
-[package.metadata.solana]
-program-id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
