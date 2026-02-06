@@ -42,4 +42,4 @@ solana-program-error = "3.0.0"
 solana-program-option = "3.0.0"
 solana-program-pack = "3.0.0"
 solana-pubkey = "3.0.0"
-solana-system-interface = { version = "2.0", features=["bincode"] }
+solana-system-interface = { version = "2.0", features = ["bincode"] }
