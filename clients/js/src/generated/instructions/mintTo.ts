@@ -194,11 +194,7 @@ export function parseMintToInstruction<TProgram extends string, TAccountMetas ex
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            mint: getNextAccount(),
-            token: getNextAccount(),
-            mintAuthority: getNextAccount(),
-        },
+        accounts: { mint: getNextAccount(), token: getNextAccount(), mintAuthority: getNextAccount() },
         data: getMintToInstructionDataDecoder().decode(instruction.data),
     };
 }

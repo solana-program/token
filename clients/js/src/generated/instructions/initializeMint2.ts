@@ -120,9 +120,7 @@ export function getInitializeMint2Instruction<
     const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
     // Original accounts.
-    const originalAccounts = {
-        mint: { value: input.mint ?? null, isWritable: true },
-    };
+    const originalAccounts = { mint: { value: input.mint ?? null, isWritable: true } };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
     // Original args.

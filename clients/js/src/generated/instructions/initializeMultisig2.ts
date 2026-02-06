@@ -97,19 +97,14 @@ export function getInitializeMultisig2Instruction<
     const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
     // Original accounts.
-    const originalAccounts = {
-        multisig: { value: input.multisig ?? null, isWritable: true },
-    };
+    const originalAccounts = { multisig: { value: input.multisig ?? null, isWritable: true } };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
     // Original args.
     const args = { ...input };
 
     // Remaining accounts.
-    const remainingAccounts: AccountMeta[] = args.signers.map(address => ({
-        address,
-        role: AccountRole.READONLY,
-    }));
+    const remainingAccounts: AccountMeta[] = args.signers.map(address => ({ address, role: AccountRole.READONLY }));
 
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({

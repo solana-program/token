@@ -175,11 +175,7 @@ export function parseInitializeAccount2Instruction<
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            account: getNextAccount(),
-            mint: getNextAccount(),
-            rent: getNextAccount(),
-        },
+        accounts: { account: getNextAccount(), mint: getNextAccount(), rent: getNextAccount() },
         data: getInitializeAccount2InstructionDataDecoder().decode(instruction.data),
     };
 }

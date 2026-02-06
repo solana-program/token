@@ -191,11 +191,7 @@ export function parseBurnInstruction<TProgram extends string, TAccountMetas exte
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            account: getNextAccount(),
-            mint: getNextAccount(),
-            authority: getNextAccount(),
-        },
+        accounts: { account: getNextAccount(), mint: getNextAccount(), authority: getNextAccount() },
         data: getBurnInstructionDataDecoder().decode(instruction.data),
     };
 }

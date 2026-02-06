@@ -98,29 +98,11 @@ export function getTokenEncoder(): FixedSizeEncoder<TokenArgs> {
         ['mint', getAddressEncoder()],
         ['owner', getAddressEncoder()],
         ['amount', getU64Encoder()],
-        [
-            'delegate',
-            getOptionEncoder(getAddressEncoder(), {
-                prefix: getU32Encoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['delegate', getOptionEncoder(getAddressEncoder(), { prefix: getU32Encoder(), noneValue: 'zeroes' })],
         ['state', getAccountStateEncoder()],
-        [
-            'isNative',
-            getOptionEncoder(getU64Encoder(), {
-                prefix: getU32Encoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['isNative', getOptionEncoder(getU64Encoder(), { prefix: getU32Encoder(), noneValue: 'zeroes' })],
         ['delegatedAmount', getU64Encoder()],
-        [
-            'closeAuthority',
-            getOptionEncoder(getAddressEncoder(), {
-                prefix: getU32Encoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['closeAuthority', getOptionEncoder(getAddressEncoder(), { prefix: getU32Encoder(), noneValue: 'zeroes' })],
     ]);
 }
 
@@ -130,29 +112,11 @@ export function getTokenDecoder(): FixedSizeDecoder<Token> {
         ['mint', getAddressDecoder()],
         ['owner', getAddressDecoder()],
         ['amount', getU64Decoder()],
-        [
-            'delegate',
-            getOptionDecoder(getAddressDecoder(), {
-                prefix: getU32Decoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['delegate', getOptionDecoder(getAddressDecoder(), { prefix: getU32Decoder(), noneValue: 'zeroes' })],
         ['state', getAccountStateDecoder()],
-        [
-            'isNative',
-            getOptionDecoder(getU64Decoder(), {
-                prefix: getU32Decoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['isNative', getOptionDecoder(getU64Decoder(), { prefix: getU32Decoder(), noneValue: 'zeroes' })],
         ['delegatedAmount', getU64Decoder()],
-        [
-            'closeAuthority',
-            getOptionDecoder(getAddressDecoder(), {
-                prefix: getU32Decoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['closeAuthority', getOptionDecoder(getAddressDecoder(), { prefix: getU32Decoder(), noneValue: 'zeroes' })],
     ]);
 }
 

@@ -181,11 +181,7 @@ export function parseCloseAccountInstruction<TProgram extends string, TAccountMe
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            account: getNextAccount(),
-            destination: getNextAccount(),
-            owner: getNextAccount(),
-        },
+        accounts: { account: getNextAccount(), destination: getNextAccount(), owner: getNextAccount() },
         data: getCloseAccountInstructionDataDecoder().decode(instruction.data),
     };
 }

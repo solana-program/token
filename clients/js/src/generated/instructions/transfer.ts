@@ -197,11 +197,7 @@ export function parseTransferInstruction<TProgram extends string, TAccountMetas 
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            source: getNextAccount(),
-            destination: getNextAccount(),
-            authority: getNextAccount(),
-        },
+        accounts: { source: getNextAccount(), destination: getNextAccount(), authority: getNextAccount() },
         data: getTransferInstructionDataDecoder().decode(instruction.data),
     };
 }

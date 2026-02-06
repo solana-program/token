@@ -106,10 +106,7 @@ export function getAccountMetaFactory(programAddress: Address, optionalAccountSt
     return (account: ResolvedAccount): AccountMeta | AccountSignerMeta | undefined => {
         if (!account.value) {
             if (optionalAccountStrategy === 'omitted') return;
-            return Object.freeze({
-                address: programAddress,
-                role: AccountRole.READONLY,
-            });
+            return Object.freeze({ address: programAddress, role: AccountRole.READONLY });
         }
 
         const writableRole = account.isWritable ? AccountRole.WRITABLE : AccountRole.READONLY;

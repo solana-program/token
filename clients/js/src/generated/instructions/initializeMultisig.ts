@@ -122,10 +122,7 @@ export function getInitializeMultisigInstruction<
     }
 
     // Remaining accounts.
-    const remainingAccounts: AccountMeta[] = args.signers.map(address => ({
-        address,
-        role: AccountRole.READONLY,
-    }));
+    const remainingAccounts: AccountMeta[] = args.signers.map(address => ({ address, role: AccountRole.READONLY }));
 
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({

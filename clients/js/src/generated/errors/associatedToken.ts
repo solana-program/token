@@ -36,9 +36,7 @@ export function getAssociatedTokenErrorMessage(code: AssociatedTokenError): stri
 
 export function isAssociatedTokenError<TProgramErrorCode extends AssociatedTokenError>(
     error: unknown,
-    transactionMessage: {
-        instructions: Record<number, { programAddress: Address }>;
-    },
+    transactionMessage: { instructions: Record<number, { programAddress: Address }> },
     code?: TProgramErrorCode,
 ): error is SolanaError<typeof SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM> &
     Readonly<{ context: Readonly<{ code: TProgramErrorCode }> }> {

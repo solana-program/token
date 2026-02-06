@@ -75,9 +75,7 @@ export type RecoverNestedAssociatedTokenInstruction<
         ]
     >;
 
-export type RecoverNestedAssociatedTokenInstructionData = {
-    discriminator: number;
-};
+export type RecoverNestedAssociatedTokenInstructionData = { discriminator: number };
 
 export type RecoverNestedAssociatedTokenInstructionDataArgs = {};
 
@@ -164,26 +162,14 @@ export async function getRecoverNestedAssociatedTokenInstructionAsync<
 
     // Original accounts.
     const originalAccounts = {
-        nestedAssociatedAccountAddress: {
-            value: input.nestedAssociatedAccountAddress ?? null,
-            isWritable: true,
-        },
-        nestedTokenMintAddress: {
-            value: input.nestedTokenMintAddress ?? null,
-            isWritable: false,
-        },
+        nestedAssociatedAccountAddress: { value: input.nestedAssociatedAccountAddress ?? null, isWritable: true },
+        nestedTokenMintAddress: { value: input.nestedTokenMintAddress ?? null, isWritable: false },
         destinationAssociatedAccountAddress: {
             value: input.destinationAssociatedAccountAddress ?? null,
             isWritable: true,
         },
-        ownerAssociatedAccountAddress: {
-            value: input.ownerAssociatedAccountAddress ?? null,
-            isWritable: false,
-        },
-        ownerTokenMintAddress: {
-            value: input.ownerTokenMintAddress ?? null,
-            isWritable: false,
-        },
+        ownerAssociatedAccountAddress: { value: input.ownerAssociatedAccountAddress ?? null, isWritable: false },
+        ownerTokenMintAddress: { value: input.ownerTokenMintAddress ?? null, isWritable: false },
         walletAddress: { value: input.walletAddress ?? null, isWritable: true },
         tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     };
@@ -301,26 +287,14 @@ export function getRecoverNestedAssociatedTokenInstruction<
 
     // Original accounts.
     const originalAccounts = {
-        nestedAssociatedAccountAddress: {
-            value: input.nestedAssociatedAccountAddress ?? null,
-            isWritable: true,
-        },
-        nestedTokenMintAddress: {
-            value: input.nestedTokenMintAddress ?? null,
-            isWritable: false,
-        },
+        nestedAssociatedAccountAddress: { value: input.nestedAssociatedAccountAddress ?? null, isWritable: true },
+        nestedTokenMintAddress: { value: input.nestedTokenMintAddress ?? null, isWritable: false },
         destinationAssociatedAccountAddress: {
             value: input.destinationAssociatedAccountAddress ?? null,
             isWritable: true,
         },
-        ownerAssociatedAccountAddress: {
-            value: input.ownerAssociatedAccountAddress ?? null,
-            isWritable: false,
-        },
-        ownerTokenMintAddress: {
-            value: input.ownerTokenMintAddress ?? null,
-            isWritable: false,
-        },
+        ownerAssociatedAccountAddress: { value: input.ownerAssociatedAccountAddress ?? null, isWritable: false },
+        ownerTokenMintAddress: { value: input.ownerTokenMintAddress ?? null, isWritable: false },
         walletAddress: { value: input.walletAddress ?? null, isWritable: true },
         tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     };

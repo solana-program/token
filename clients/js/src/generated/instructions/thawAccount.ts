@@ -181,11 +181,7 @@ export function parseThawAccountInstruction<TProgram extends string, TAccountMet
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            account: getNextAccount(),
-            mint: getNextAccount(),
-            owner: getNextAccount(),
-        },
+        accounts: { account: getNextAccount(), mint: getNextAccount(), owner: getNextAccount() },
         data: getThawAccountInstructionDataDecoder().decode(instruction.data),
     };
 }

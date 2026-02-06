@@ -63,9 +63,7 @@ export type CreateAssociatedTokenIdempotentInstruction<
         ]
     >;
 
-export type CreateAssociatedTokenIdempotentInstructionData = {
-    discriminator: number;
-};
+export type CreateAssociatedTokenIdempotentInstructionData = { discriminator: number };
 
 export type CreateAssociatedTokenIdempotentInstructionDataArgs = {};
 

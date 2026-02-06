@@ -204,11 +204,7 @@ export function parseMintToCheckedInstruction<TProgram extends string, TAccountM
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            mint: getNextAccount(),
-            token: getNextAccount(),
-            mintAuthority: getNextAccount(),
-        },
+        accounts: { mint: getNextAccount(), token: getNextAccount(), mintAuthority: getNextAccount() },
         data: getMintToCheckedInstructionDataDecoder().decode(instruction.data),
     };
 }

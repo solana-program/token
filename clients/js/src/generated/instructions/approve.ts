@@ -194,11 +194,7 @@ export function parseApproveInstruction<TProgram extends string, TAccountMetas e
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            source: getNextAccount(),
-            delegate: getNextAccount(),
-            owner: getNextAccount(),
-        },
+        accounts: { source: getNextAccount(), delegate: getNextAccount(), owner: getNextAccount() },
         data: getApproveInstructionDataDecoder().decode(instruction.data),
     };
 }

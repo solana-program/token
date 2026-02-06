@@ -181,11 +181,7 @@ export function parseFreezeAccountInstruction<TProgram extends string, TAccountM
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            account: getNextAccount(),
-            mint: getNextAccount(),
-            owner: getNextAccount(),
-        },
+        accounts: { account: getNextAccount(), mint: getNextAccount(), owner: getNextAccount() },
         data: getFreezeAccountInstructionDataDecoder().decode(instruction.data),
     };
 }

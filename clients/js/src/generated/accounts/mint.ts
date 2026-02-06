@@ -78,46 +78,22 @@ export type MintArgs = {
 /** Gets the encoder for {@link MintArgs} account data. */
 export function getMintEncoder(): FixedSizeEncoder<MintArgs> {
     return getStructEncoder([
-        [
-            'mintAuthority',
-            getOptionEncoder(getAddressEncoder(), {
-                prefix: getU32Encoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['mintAuthority', getOptionEncoder(getAddressEncoder(), { prefix: getU32Encoder(), noneValue: 'zeroes' })],
         ['supply', getU64Encoder()],
         ['decimals', getU8Encoder()],
         ['isInitialized', getBooleanEncoder()],
-        [
-            'freezeAuthority',
-            getOptionEncoder(getAddressEncoder(), {
-                prefix: getU32Encoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['freezeAuthority', getOptionEncoder(getAddressEncoder(), { prefix: getU32Encoder(), noneValue: 'zeroes' })],
     ]);
 }
 
 /** Gets the decoder for {@link Mint} account data. */
 export function getMintDecoder(): FixedSizeDecoder<Mint> {
     return getStructDecoder([
-        [
-            'mintAuthority',
-            getOptionDecoder(getAddressDecoder(), {
-                prefix: getU32Decoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['mintAuthority', getOptionDecoder(getAddressDecoder(), { prefix: getU32Decoder(), noneValue: 'zeroes' })],
         ['supply', getU64Decoder()],
         ['decimals', getU8Decoder()],
         ['isInitialized', getBooleanDecoder()],
-        [
-            'freezeAuthority',
-            getOptionDecoder(getAddressDecoder(), {
-                prefix: getU32Decoder(),
-                noneValue: 'zeroes',
-            }),
-        ],
+        ['freezeAuthority', getOptionDecoder(getAddressDecoder(), { prefix: getU32Decoder(), noneValue: 'zeroes' })],
     ]);
 }
 

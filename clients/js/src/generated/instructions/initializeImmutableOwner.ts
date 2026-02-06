@@ -84,9 +84,7 @@ export function getInitializeImmutableOwnerInstruction<
     const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
     // Original accounts.
-    const originalAccounts = {
-        account: { value: input.account ?? null, isWritable: true },
-    };
+    const originalAccounts = { account: { value: input.account ?? null, isWritable: true } };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

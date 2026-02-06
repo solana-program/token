@@ -81,9 +81,7 @@ export function getGetAccountDataSizeInstruction<
     const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
 
     // Original accounts.
-    const originalAccounts = {
-        mint: { value: input.mint ?? null, isWritable: false },
-    };
+    const originalAccounts = { mint: { value: input.mint ?? null, isWritable: false } };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

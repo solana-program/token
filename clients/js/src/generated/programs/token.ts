@@ -202,81 +202,33 @@ export function identifyTokenInstruction(
 }
 
 export type ParsedTokenInstruction<TProgram extends string = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'> =
-    | ({
-          instructionType: TokenInstruction.InitializeMint;
-      } & ParsedInitializeMintInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.InitializeAccount;
-      } & ParsedInitializeAccountInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.InitializeMultisig;
-      } & ParsedInitializeMultisigInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.Transfer;
-      } & ParsedTransferInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.Approve;
-      } & ParsedApproveInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.Revoke;
-      } & ParsedRevokeInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.SetAuthority;
-      } & ParsedSetAuthorityInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.MintTo;
-      } & ParsedMintToInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.Burn;
-      } & ParsedBurnInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.CloseAccount;
-      } & ParsedCloseAccountInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.FreezeAccount;
-      } & ParsedFreezeAccountInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.ThawAccount;
-      } & ParsedThawAccountInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.TransferChecked;
-      } & ParsedTransferCheckedInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.ApproveChecked;
-      } & ParsedApproveCheckedInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.MintToChecked;
-      } & ParsedMintToCheckedInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.BurnChecked;
-      } & ParsedBurnCheckedInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.InitializeAccount2;
-      } & ParsedInitializeAccount2Instruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.SyncNative;
-      } & ParsedSyncNativeInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.InitializeAccount3;
-      } & ParsedInitializeAccount3Instruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.InitializeMultisig2;
-      } & ParsedInitializeMultisig2Instruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.InitializeMint2;
-      } & ParsedInitializeMint2Instruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.GetAccountDataSize;
-      } & ParsedGetAccountDataSizeInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeMint } & ParsedInitializeMintInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeAccount } & ParsedInitializeAccountInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeMultisig } & ParsedInitializeMultisigInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.Transfer } & ParsedTransferInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.Approve } & ParsedApproveInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.Revoke } & ParsedRevokeInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.SetAuthority } & ParsedSetAuthorityInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.MintTo } & ParsedMintToInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.Burn } & ParsedBurnInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.CloseAccount } & ParsedCloseAccountInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.FreezeAccount } & ParsedFreezeAccountInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.ThawAccount } & ParsedThawAccountInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.TransferChecked } & ParsedTransferCheckedInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.ApproveChecked } & ParsedApproveCheckedInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.MintToChecked } & ParsedMintToCheckedInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.BurnChecked } & ParsedBurnCheckedInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeAccount2 } & ParsedInitializeAccount2Instruction<TProgram>)
+    | ({ instructionType: TokenInstruction.SyncNative } & ParsedSyncNativeInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeAccount3 } & ParsedInitializeAccount3Instruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeMultisig2 } & ParsedInitializeMultisig2Instruction<TProgram>)
+    | ({ instructionType: TokenInstruction.InitializeMint2 } & ParsedInitializeMint2Instruction<TProgram>)
+    | ({ instructionType: TokenInstruction.GetAccountDataSize } & ParsedGetAccountDataSizeInstruction<TProgram>)
     | ({
           instructionType: TokenInstruction.InitializeImmutableOwner;
       } & ParsedInitializeImmutableOwnerInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.AmountToUiAmount;
-      } & ParsedAmountToUiAmountInstruction<TProgram>)
-    | ({
-          instructionType: TokenInstruction.UiAmountToAmount;
-      } & ParsedUiAmountToAmountInstruction<TProgram>);
+    | ({ instructionType: TokenInstruction.AmountToUiAmount } & ParsedAmountToUiAmountInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.UiAmountToAmount } & ParsedUiAmountToAmountInstruction<TProgram>);
 
 export function parseTokenInstruction<TProgram extends string>(
     instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>,
@@ -285,10 +237,7 @@ export function parseTokenInstruction<TProgram extends string>(
     switch (instructionType) {
         case TokenInstruction.InitializeMint: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.InitializeMint,
-                ...parseInitializeMintInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.InitializeMint, ...parseInitializeMintInstruction(instruction) };
         }
         case TokenInstruction.InitializeAccount: {
             assertIsInstructionWithAccounts(instruction);
@@ -306,66 +255,39 @@ export function parseTokenInstruction<TProgram extends string>(
         }
         case TokenInstruction.Transfer: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.Transfer,
-                ...parseTransferInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.Transfer, ...parseTransferInstruction(instruction) };
         }
         case TokenInstruction.Approve: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.Approve,
-                ...parseApproveInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.Approve, ...parseApproveInstruction(instruction) };
         }
         case TokenInstruction.Revoke: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.Revoke,
-                ...parseRevokeInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.Revoke, ...parseRevokeInstruction(instruction) };
         }
         case TokenInstruction.SetAuthority: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.SetAuthority,
-                ...parseSetAuthorityInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.SetAuthority, ...parseSetAuthorityInstruction(instruction) };
         }
         case TokenInstruction.MintTo: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.MintTo,
-                ...parseMintToInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.MintTo, ...parseMintToInstruction(instruction) };
         }
         case TokenInstruction.Burn: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.Burn,
-                ...parseBurnInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.Burn, ...parseBurnInstruction(instruction) };
         }
         case TokenInstruction.CloseAccount: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.CloseAccount,
-                ...parseCloseAccountInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.CloseAccount, ...parseCloseAccountInstruction(instruction) };
         }
         case TokenInstruction.FreezeAccount: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.FreezeAccount,
-                ...parseFreezeAccountInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.FreezeAccount, ...parseFreezeAccountInstruction(instruction) };
         }
         case TokenInstruction.ThawAccount: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.ThawAccount,
-                ...parseThawAccountInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.ThawAccount, ...parseThawAccountInstruction(instruction) };
         }
         case TokenInstruction.TransferChecked: {
             assertIsInstructionWithAccounts(instruction);
@@ -376,24 +298,15 @@ export function parseTokenInstruction<TProgram extends string>(
         }
         case TokenInstruction.ApproveChecked: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.ApproveChecked,
-                ...parseApproveCheckedInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.ApproveChecked, ...parseApproveCheckedInstruction(instruction) };
         }
         case TokenInstruction.MintToChecked: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.MintToChecked,
-                ...parseMintToCheckedInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.MintToChecked, ...parseMintToCheckedInstruction(instruction) };
         }
         case TokenInstruction.BurnChecked: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.BurnChecked,
-                ...parseBurnCheckedInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.BurnChecked, ...parseBurnCheckedInstruction(instruction) };
         }
         case TokenInstruction.InitializeAccount2: {
             assertIsInstructionWithAccounts(instruction);
@@ -404,10 +317,7 @@ export function parseTokenInstruction<TProgram extends string>(
         }
         case TokenInstruction.SyncNative: {
             assertIsInstructionWithAccounts(instruction);
-            return {
-                instructionType: TokenInstruction.SyncNative,
-                ...parseSyncNativeInstruction(instruction),
-            };
+            return { instructionType: TokenInstruction.SyncNative, ...parseSyncNativeInstruction(instruction) };
         }
         case TokenInstruction.InitializeAccount3: {
             assertIsInstructionWithAccounts(instruction);

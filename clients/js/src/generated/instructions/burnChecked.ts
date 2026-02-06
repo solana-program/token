@@ -204,11 +204,7 @@ export function parseBurnCheckedInstruction<TProgram extends string, TAccountMet
     };
     return {
         programAddress: instruction.programAddress,
-        accounts: {
-            account: getNextAccount(),
-            mint: getNextAccount(),
-            authority: getNextAccount(),
-        },
+        accounts: { account: getNextAccount(), mint: getNextAccount(), authority: getNextAccount() },
         data: getBurnCheckedInstructionDataDecoder().decode(instruction.data),
     };
 }
