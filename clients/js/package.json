@@ -1,6 +1,6 @@
 {
     "name": "@solana-program/token",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "description": "JavaScript client for the Token program",
     "sideEffects": false,
     "module": "./dist/src/index.mjs",
