@@ -38,11 +38,10 @@
         "interface:test": "zx ./scripts/rust/test.mjs interface"
     },
     "devDependencies": {
-        "@codama/renderers-js": "^1.7",
-        "@codama/renderers-rust": "~1.0",
+        "@codama/renderers-js": "^2.0.2",
         "@iarna/toml": "^2.2.5",
         "@solana/prettier-config-solana": "0.0.6",
-        "codama": "^1.5",
+        "codama": "^1.5.0",
         "typescript": "^5.9.3",
         "zx": "^7.2.3"
     },
