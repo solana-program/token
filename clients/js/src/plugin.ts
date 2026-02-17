@@ -1,12 +1,15 @@
 import { ClientWithPayer, pipe } from '@solana/kit';
+import { addSelfPlanAndSendFunctions, SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
+
+import { CreateMintInstructionPlanInput, getCreateMintInstructionPlan } from './createMint';
 import {
-    tokenProgram as generatedTokenProgram,
     TokenPlugin as GeneratedTokenPlugin,
     TokenPluginInstructions as GeneratedTokenPluginInstructions,
     TokenPluginRequirements as GeneratedTokenPluginRequirements,
+    tokenProgram as generatedTokenProgram,
 } from './generated';
-import { CreateMintInstructionPlanInput, getCreateMintInstructionPlan } from './createMint';
-import { addSelfPlanAndSendFunctions, SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
+import { getMintToATAInstructionPlan, MintToATAInstructionPlanInput } from './mintToATA';
+import { getTransferToATAInstructionPlan, TransferToATAInstructionPlanInput } from './transferToATA';
 
 export type TokenPluginRequirements = GeneratedTokenPluginRequirements & ClientWithPayer;
 
@@ -16,6 +19,12 @@ export type TokenPluginInstructions = GeneratedTokenPluginInstructions & {
     createMint: (
         input: MakeOptional<CreateMintInstructionPlanInput, 'payer'>,
     ) => ReturnType<typeof getCreateMintInstructionPlan> & SelfPlanAndSendFunctions;
+    mintToATA: (
+        input: MakeOptional<MintToATAInstructionPlanInput, 'payer'>,
+    ) => ReturnType<typeof getMintToATAInstructionPlan> & SelfPlanAndSendFunctions;
+    transferToATA: (
+        input: MakeOptional<TransferToATAInstructionPlanInput, 'payer'>,
+    ) => ReturnType<typeof getTransferToATAInstructionPlan> & SelfPlanAndSendFunctions;
 };
 
 export function tokenProgram() {
@@ -30,6 +39,16 @@ export function tokenProgram() {
                         addSelfPlanAndSendFunctions(
                             client,
                             getCreateMintInstructionPlan({ ...input, payer: input.payer ?? client.payer }),
+                        ),
+                    mintToATA: input =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getMintToATAInstructionPlan({ ...input, payer: input.payer ?? client.payer }),
+                        ),
+                    transferToATA: input =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getTransferToATAInstructionPlan({ ...input, payer: input.payer ?? client.payer }),
                         ),
                 },
             },

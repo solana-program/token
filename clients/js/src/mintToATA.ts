@@ -6,7 +6,7 @@ import {
     TOKEN_PROGRAM_ADDRESS,
 } from './generated';
 
-type MintToATAInstructionPlanInput = {
+export type MintToATAInstructionPlanInput = {
     /** Funding account (must be a system account). */
     payer: TransactionSigner;
     /** Associated token account address to mint to.
