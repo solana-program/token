@@ -69,22 +69,31 @@ export function getMintToATAInstructionPlan(
     ]);
 }
 
-type MintToATAInstructionPlanAsyncInput = Omit<MintToATAInstructionPlanInput, 'ata'>;
+export type MintToATAInstructionPlanAsyncInput = Omit<MintToATAInstructionPlanInput, 'ata'> & {
+    /** Associated token account address. When omitted, derived from owner + mint. */
+    ata?: Address;
+    /** Token program address. Defaults to TOKEN_PROGRAM_ADDRESS. */
+    tokenProgram?: Address;
+};
 
 export async function getMintToATAInstructionPlanAsync(
     input: MintToATAInstructionPlanAsyncInput,
     config?: MintToATAInstructionPlanConfig,
 ): Promise<InstructionPlan> {
-    const [ataAddress] = await findAssociatedTokenPda({
-        owner: input.owner,
-        tokenProgram: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
-        mint: input.mint,
-    });
+    const tokenProgram = config?.tokenProgram ?? input.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
+    let ata = input.ata;
+    if (!ata) {
+        [ata] = await findAssociatedTokenPda({
+            owner: input.owner,
+            tokenProgram,
+            mint: input.mint,
+        });
+    }
     return getMintToATAInstructionPlan(
         {
             ...input,
-            ata: ataAddress,
+            ata,
         },
-        config,
+        { ...config, tokenProgram },
     );
 }
