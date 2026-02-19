@@ -27,7 +27,7 @@ import {
 function getInstructionAccounts(plan: SequentialInstructionPlan): Address[][] {
     return plan.plans.map(p => {
         const single = p as SingleInstructionPlan;
-        return (single.instruction.accounts ?? []).map((a: any) => a.address);
+        return (single.instruction.accounts ?? []).map(a => a.address);
     });
 }
 

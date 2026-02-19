@@ -3,6 +3,12 @@ import {
     generateKeyPairSigner,
     type SingleInstructionPlan,
     type SequentialInstructionPlan,
+    type ClientWithTransactionPlanning,
+    type ClientWithTransactionSending,
+    Rpc,
+    SolanaRpcApi,
+    RpcSubscriptions,
+    SolanaRpcSubscriptionsApi,
 } from '@solana/kit';
 import test from 'ava';
 import { TOKEN_PROGRAM_ADDRESS, findAssociatedTokenPda, tokenProgram } from '../src';
@@ -11,7 +17,7 @@ import { TOKEN_PROGRAM_ADDRESS, findAssociatedTokenPda, tokenProgram } from '../
 function getInstructionAccounts(plan: SequentialInstructionPlan): Address[][] {
     return plan.plans.map(p => {
         const single = p as SingleInstructionPlan;
-        return (single.instruction.accounts ?? []).map((a: any) => a.address);
+        return (single.instruction.accounts ?? []).map(a => a.address);
     });
 }
 
@@ -22,12 +28,12 @@ function getInstructionAccounts(plan: SequentialInstructionPlan): Address[][] {
 function createMockClient(payer: Awaited<ReturnType<typeof generateKeyPairSigner>>) {
     return tokenProgram()({
         payer,
-        rpc: {} as any,
-        rpcSubscriptions: {} as any,
-        planTransaction: (() => {}) as any,
-        planTransactions: (() => {}) as any,
-        sendTransaction: (() => {}) as any,
-        sendTransactions: (() => {}) as any,
+        rpc: {} as Rpc<SolanaRpcApi>,
+        rpcSubscriptions: {} as RpcSubscriptions<SolanaRpcSubscriptionsApi>,
+        planTransaction: (async () => {}) as unknown as ClientWithTransactionPlanning['planTransaction'],
+        planTransactions: (async () => {}) as unknown as ClientWithTransactionPlanning['planTransactions'],
+        sendTransaction: (async () => {}) as unknown as ClientWithTransactionSending['sendTransaction'],
+        sendTransactions: (async () => {}) as unknown as ClientWithTransactionSending['sendTransactions'],
     });
 }
 
