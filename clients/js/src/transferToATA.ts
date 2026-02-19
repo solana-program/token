@@ -5,6 +5,7 @@ import {
     getTransferCheckedInstruction,
     TOKEN_PROGRAM_ADDRESS,
 } from './generated';
+import { MakeOptional } from './types';
 
 export type TransferToATAInstructionPlanInput = {
     /** Funding account (must be a system account). */
@@ -30,7 +31,7 @@ export type TransferToATAInstructionPlanInput = {
     multiSigners?: Array<TransactionSigner>;
 };
 
-type TransferToATAInstructionPlanConfig = {
+export type TransferToATAInstructionPlanConfig = {
     systemProgram?: Address;
     tokenProgram?: Address;
     associatedTokenProgram?: Address;
@@ -71,23 +72,16 @@ export function getTransferToATAInstructionPlan(
     ]);
 }
 
-export type TransferToATAInstructionPlanAsyncInput = Omit<
+export type TransferToATAInstructionPlanAsyncInput = MakeOptional<
     TransferToATAInstructionPlanInput,
-    'destination' | 'source'
-> & {
-    /** Source token account. When omitted, derived from authority's address + mint. */
-    source?: Address;
-    /** Destination ATA. When omitted, derived from recipient + mint. */
-    destination?: Address;
-    /** Token program address. Defaults to TOKEN_PROGRAM_ADDRESS. */
-    tokenProgram?: Address;
-};
+    'source' | 'destination'
+>;
 
 export async function getTransferToATAInstructionPlanAsync(
     input: TransferToATAInstructionPlanAsyncInput,
     config?: TransferToATAInstructionPlanConfig,
 ): Promise<InstructionPlan> {
-    const tokenProgram = config?.tokenProgram ?? input.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
+    const tokenProgram = config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
 
     const destinationAta =
         input.destination ??
@@ -117,6 +111,6 @@ export async function getTransferToATAInstructionPlanAsync(
             source,
             destination: destinationAta,
         },
-        { ...config, tokenProgram },
+        config,
     );
 }
