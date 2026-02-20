@@ -1,9 +1,4 @@
-import {
-    generateKeyPairSigner,
-    Address,
-    type SingleInstructionPlan,
-    type SequentialInstructionPlan,
-} from '@solana/kit';
+import { generateKeyPairSigner } from '@solana/kit';
 import test from 'ava';
 import {
     Mint,
@@ -23,14 +18,6 @@ import {
     createTokenWithAmount,
     generateKeyPairSignerWithSol,
 } from './_setup';
-
-// Extract the account addresses from a sequential instruction plan's instructions.
-function getInstructionAccounts(plan: SequentialInstructionPlan): Address[][] {
-    return plan.plans.map(p => {
-        const single = p as SingleInstructionPlan;
-        return (single.instruction.accounts ?? []).map(a => a.address);
-    });
-}
 
 test('it transfers tokens from one account to a new ATA', async t => {
     // Given a mint account, one token account with 100 tokens, and a second owner.
@@ -167,105 +154,46 @@ test('it transfers tokens from one account to an existing ATA', async t => {
     t.like(tokenDataB, <Token>{ amount: 60n });
 });
 
-test('async variant auto-derives source ATA when omitted', async t => {
-    // Given a keypair for the authority and a mint.
-    const authority = await generateKeyPairSigner();
-    const mint = (await generateKeyPairSigner()).address;
-    const recipient = (await generateKeyPairSigner()).address;
+test('derives source and destination ATAs and transfers tokens', async t => {
+    // Given a mint account and ownerA's ATA with 100 tokens.
+    const client = createDefaultSolanaClient();
+    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
+        generateKeyPairSignerWithSol(client),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+    const decimals = 2;
+    const mint = await createMint(client, payer, mintAuthority.address, decimals);
+    const tokenA = await createTokenPdaWithAmount(client, payer, mintAuthority, mint, ownerA.address, 100n, decimals);
 
-    // Compute expected ATAs.
-    const [expectedSource] = await findAssociatedTokenPda({
-        owner: authority.address,
+    // When owner A transfers 50 tokens to owner B without specifying source or destination.
+    const instructionPlan = await getTransferToATAInstructionPlanAsync({
+        payer,
         mint,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-    const [expectedDestination] = await findAssociatedTokenPda({
-        owner: recipient,
-        mint,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-
-    // When building a plan WITHOUT source (should auto-derive).
-    const plan = await getTransferToATAInstructionPlanAsync({
-        payer: authority,
-        mint,
-        authority,
-        recipient,
-        amount: 100n,
-        decimals: 9,
-    });
-
-    // Then the instruction plan should contain the correct derived addresses.
-    const seqPlan = plan as SequentialInstructionPlan;
-    t.is(seqPlan.kind, 'sequential');
-    t.is(seqPlan.plans.length, 2);
-
-    const accounts = getInstructionAccounts(seqPlan);
-
-    // 1st instruction: createAssociatedTokenIdempotent — ata (index 1) should be the destination ATA
-    t.is(accounts[0][1], expectedDestination);
-
-    // 2nd instruction: transferChecked — source (index 0), destination (index 2)
-    t.is(accounts[1][0], expectedSource);
-    t.is(accounts[1][2], expectedDestination);
-});
-
-test('async variant auto-derives source from TransactionSigner authority', async t => {
-    // Given a signer authority (has .address property).
-    const authority = await generateKeyPairSigner();
-    const mint = (await generateKeyPairSigner()).address;
-    const recipient = (await generateKeyPairSigner()).address;
-
-    const [expectedSource] = await findAssociatedTokenPda({
-        owner: authority.address,
-        mint,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-
-    // When building a plan with authority as a TransactionSigner.
-    const plan = await getTransferToATAInstructionPlanAsync({
-        payer: authority,
-        mint,
-        authority,
-        recipient,
+        authority: ownerA,
+        recipient: ownerB.address,
         amount: 50n,
-        decimals: 6,
+        decimals,
     });
 
-    // Then source should be derived from authority.address.
-    const seqPlan = plan as SequentialInstructionPlan;
-    const accounts = getInstructionAccounts(seqPlan);
-    t.is(accounts[1][0], expectedSource);
-});
+    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
+    const transactionPlan = await transactionPlanner(instructionPlan);
+    await client.sendTransactionPlan(transactionPlan);
 
-test('async variant uses explicit source and destination when provided', async t => {
-    // Given explicit source and destination addresses.
-    const authority = await generateKeyPairSigner();
-    const mint = (await generateKeyPairSigner()).address;
-    const recipient = (await generateKeyPairSigner()).address;
-    const explicitSource = (await generateKeyPairSigner()).address;
-    const explicitDestination = (await generateKeyPairSigner()).address;
-
-    // When building with explicit source and destination.
-    const plan = await getTransferToATAInstructionPlanAsync({
-        payer: authority,
+    // Then we expect both ATAs to have the correct balances.
+    const [tokenB] = await findAssociatedTokenPda({
+        owner: ownerB.address,
         mint,
-        authority,
-        recipient,
-        source: explicitSource,
-        destination: explicitDestination,
-        amount: 100n,
-        decimals: 9,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    // Then the plan should use the explicit addresses, not derived ones.
-    const seqPlan = plan as SequentialInstructionPlan;
-    const accounts = getInstructionAccounts(seqPlan);
-
-    // createAssociatedTokenIdempotent — ata at index 1
-    t.is(accounts[0][1], explicitDestination);
-
-    // transferChecked — source at index 0, destination at index 2
-    t.is(accounts[1][0], explicitSource);
-    t.is(accounts[1][2], explicitDestination);
+    const [{ data: mintData }, { data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
+        fetchMint(client.rpc, mint),
+        fetchToken(client.rpc, tokenA),
+        fetchToken(client.rpc, tokenB),
+    ]);
+    t.like(mintData, <Mint>{ supply: 100n });
+    t.like(tokenDataA, <Token>{ amount: 50n });
+    t.like(tokenDataB, <Token>{ amount: 50n });
 });

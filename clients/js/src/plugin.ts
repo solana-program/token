@@ -31,17 +31,17 @@ export type TokenPlugin = Omit<GeneratedTokenPlugin, 'instructions'> & { instruc
 export type TokenPluginInstructions = GeneratedTokenPluginInstructions & {
     /** Create a new token mint. */
     createMint: (
-        input: MakeOptional<CreateMintInstructionPlanInput, 'payer' | 'mintAuthority'>,
+        input: MakeOptional<CreateMintInstructionPlanInput, 'payer'>,
         config?: CreateMintInstructionPlanConfig,
     ) => ReturnType<typeof getCreateMintInstructionPlan> & SelfPlanAndSendFunctions;
     /** Mint tokens to an owner's ATA (created if needed). */
     mintToATA: (
-        input: MakeOptional<MintToATAInstructionPlanAsyncInput, 'payer' | 'mintAuthority'>,
+        input: MakeOptional<MintToATAInstructionPlanAsyncInput, 'payer'>,
         config?: MintToATAInstructionPlanConfig,
     ) => Promise<Awaited<ReturnType<typeof getMintToATAInstructionPlanAsync>>> & SelfPlanAndSendFunctions;
     /** Transfer tokens to a recipient's ATA (created if needed). */
     transferToATA: (
-        input: MakeOptional<TransferToATAInstructionPlanAsyncInput, 'payer' | 'authority'>,
+        input: MakeOptional<TransferToATAInstructionPlanAsyncInput, 'payer'>,
         config?: TransferToATAInstructionPlanConfig,
     ) => Promise<Awaited<ReturnType<typeof getTransferToATAInstructionPlanAsync>>> & SelfPlanAndSendFunctions;
 };
@@ -61,7 +61,6 @@ export function tokenProgram() {
                                 {
                                     ...input,
                                     payer: input.payer ?? client.payer,
-                                    mintAuthority: input.mintAuthority ?? client.payer.address,
                                 },
                                 config,
                             ),
@@ -73,7 +72,6 @@ export function tokenProgram() {
                                 {
                                     ...input,
                                     payer: input.payer ?? client.payer,
-                                    mintAuthority: input.mintAuthority ?? client.payer,
                                 },
                                 config,
                             ),
@@ -85,7 +83,6 @@ export function tokenProgram() {
                                 {
                                     ...input,
                                     payer: input.payer ?? client.payer,
-                                    authority: input.authority ?? client.payer,
                                 },
                                 config,
                             ),

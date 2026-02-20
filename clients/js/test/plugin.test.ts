@@ -1,130 +1,96 @@
-import {
-    Address,
-    generateKeyPairSigner,
-    type SingleInstructionPlan,
-    type SequentialInstructionPlan,
-    type ClientWithTransactionPlanning,
-    type ClientWithTransactionSending,
-    Rpc,
-    SolanaRpcApi,
-    RpcSubscriptions,
-    SolanaRpcSubscriptionsApi,
-} from '@solana/kit';
+import { Account, generateKeyPairSigner } from '@solana/kit';
+import { createDefaultLocalhostRpcClient } from '@solana/kit-plugins';
 import test from 'ava';
-import { TOKEN_PROGRAM_ADDRESS, findAssociatedTokenPda, tokenProgram } from '../src';
+import { AccountState, fetchToken, findAssociatedTokenPda, Token, TOKEN_PROGRAM_ADDRESS, tokenProgram } from '../src';
+import {
+    createMint,
+    createTokenPdaWithAmount,
+    generateKeyPairSignerWithSol,
+    createDefaultSolanaClient,
+} from './_setup';
 
-// Extract the account addresses from a sequential instruction plan's instructions.
-function getInstructionAccounts(plan: SequentialInstructionPlan): Address[][] {
-    return plan.plans.map(p => {
-        const single = p as SingleInstructionPlan;
-        return (single.instruction.accounts ?? []).map(a => a.address);
-    });
-}
+test('plugin mintToATA defaults payer and auto-derives ATA', async t => {
+    // Given a mint account, its mint authority and a token owner.
+    const client = await createDefaultLocalhostRpcClient().use(tokenProgram());
+    const mintAuthority = await generateKeyPairSigner();
+    const owner = await generateKeyPairSigner();
+    const mint = await generateKeyPairSigner();
 
-/**
- * Create a minimal mock client that satisfies TokenPluginRequirements.
- * No real RPC — just enough for the plugin to wire up defaults.
- */
-function createMockClient(payer: Awaited<ReturnType<typeof generateKeyPairSigner>>) {
-    return tokenProgram()({
-        payer,
-        rpc: {} as Rpc<SolanaRpcApi>,
-        rpcSubscriptions: {} as RpcSubscriptions<SolanaRpcSubscriptionsApi>,
-        planTransaction: (async () => {}) as unknown as ClientWithTransactionPlanning['planTransaction'],
-        planTransactions: (async () => {}) as unknown as ClientWithTransactionPlanning['planTransactions'],
-        sendTransaction: (async () => {}) as unknown as ClientWithTransactionSending['sendTransaction'],
-        sendTransactions: (async () => {}) as unknown as ClientWithTransactionSending['sendTransactions'],
-    });
-}
+    // And a mint created via the plugin.
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals: 2, mintAuthority: mintAuthority.address })
+        .sendTransaction();
 
-test('plugin transferToATA defaults authority to payer and auto-derives source + destination', async t => {
-    const payer = await generateKeyPairSigner();
-    const mint = (await generateKeyPairSigner()).address;
-    const recipient = (await generateKeyPairSigner()).address;
+    // When we mint to the owner via the plugin (payer defaulted, ATA derived).
+    await client.token.instructions
+        .mintToATA({
+            mint: mint.address,
+            owner: owner.address,
+            mintAuthority,
+            amount: 1_000n,
+            decimals: 2,
+        })
+        .sendTransaction();
 
-    const [expectedSource] = await findAssociatedTokenPda({
-        owner: payer.address,
-        mint,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-    const [expectedDestination] = await findAssociatedTokenPda({
-        owner: recipient,
-        mint,
+    // Then we expect the derived ATA to exist with the correct balance.
+    const [ata] = await findAssociatedTokenPda({
+        mint: mint.address,
+        owner: owner.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    const client = createMockClient(payer);
-
-    // Call transferToATA with minimal input — payer, authority, source all defaulted/derived.
-    const plan = await client.token.instructions.transferToATA({
-        mint,
-        recipient,
-        amount: 100n,
-        decimals: 9,
+    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+        address: ata,
+        data: {
+            mint: mint.address,
+            owner: owner.address,
+            amount: 1000n,
+            state: AccountState.Initialized,
+        },
     });
-
-    const seqPlan = plan as unknown as SequentialInstructionPlan;
-    t.is(seqPlan.kind, 'sequential');
-    const accounts = getInstructionAccounts(seqPlan);
-
-    // createAssociatedTokenIdempotent — ata (destination) at index 1
-    t.is(accounts[0][1], expectedDestination);
-
-    // transferChecked — source at index 0, destination at index 2
-    t.is(accounts[1][0], expectedSource);
-    t.is(accounts[1][2], expectedDestination);
 });
 
-test('plugin mintToATA defaults mintAuthority to payer and auto-derives ATA', async t => {
-    const payer = await generateKeyPairSigner();
-    const mint = (await generateKeyPairSigner()).address;
-    const owner = (await generateKeyPairSigner()).address;
+test('plugin transferToATA defaults payer and auto-derives source + destination', async t => {
+    // Given a mint account and ownerA's ATA with 100 tokens.
+    const baseClient = createDefaultSolanaClient();
+    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
+        generateKeyPairSignerWithSol(baseClient),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+    const decimals = 2;
+    const mint = await createMint(baseClient, payer, mintAuthority.address, decimals);
+    await createTokenPdaWithAmount(baseClient, payer, mintAuthority, mint, ownerA.address, 100n, decimals);
 
-    const [expectedAta] = await findAssociatedTokenPda({
-        owner,
+    // When ownerA transfers 50 tokens to ownerB via the plugin (payer defaulted, source + destination derived).
+    const client = await createDefaultLocalhostRpcClient().use(tokenProgram());
+    await client.token.instructions
+        .transferToATA({
+            mint,
+            authority: ownerA,
+            recipient: ownerB.address,
+            amount: 50n,
+            decimals,
+        })
+        .sendTransaction();
+
+    // Then we expect both ATAs to have the correct balances.
+    const [sourceAta] = await findAssociatedTokenPda({
+        owner: ownerA.address,
+        mint,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    });
+    const [destAta] = await findAssociatedTokenPda({
+        owner: ownerB.address,
         mint,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    const client = createMockClient(payer);
-
-    // Call mintToATA with minimal input — payer and mintAuthority defaulted, ATA derived.
-    const plan = await client.token.instructions.mintToATA({
-        mint,
-        owner,
-        amount: 1000n,
-        decimals: 6,
+    t.like(await fetchToken(client.rpc, sourceAta), <Account<Token>>{
+        data: { amount: 50n },
     });
-
-    const seqPlan = plan as unknown as SequentialInstructionPlan;
-    t.is(seqPlan.kind, 'sequential');
-    const accounts = getInstructionAccounts(seqPlan);
-
-    // createAssociatedTokenIdempotent — ata at index 1
-    t.is(accounts[0][1], expectedAta);
-
-    // mintToChecked — token at index 1, mintAuthority at index 2
-    t.is(accounts[1][1], expectedAta);
-    t.is(accounts[1][2], payer.address); // mintAuthority defaulted to payer
-});
-
-test('plugin createMint defaults mintAuthority to payer address', async t => {
-    const payer = await generateKeyPairSigner();
-    const newMint = await generateKeyPairSigner();
-
-    const client = createMockClient(payer);
-
-    // Call createMint without mintAuthority — should default to payer.address.
-    const plan = client.token.instructions.createMint({
-        newMint,
-        decimals: 9,
+    t.like(await fetchToken(client.rpc, destAta), <Account<Token>>{
+        data: { amount: 50n },
     });
-
-    const seqPlan = plan as unknown as SequentialInstructionPlan;
-    t.is(seqPlan.kind, 'sequential');
-    t.is(seqPlan.plans.length, 2);
-    const accounts = getInstructionAccounts(seqPlan);
-
-    // createAccount — payer at index 0
-    t.is(accounts[0][0], payer.address);
 });
