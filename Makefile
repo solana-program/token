@@ -99,11 +99,14 @@ stop-test-validator:
 generate-fixtures:
 	mkdir -p ./target/fixtures && RUST_LOG=error EJECT_FUZZ_FIXTURES=../target/fixtures cargo test-sbf --features mollusk-svm/fuzz --manifest-path program/Cargo.toml
 
-conformance-%:
+clean-fixtures:
+	rm -rf ./target/fixtures
+
+execute-fixtures-%:
 	mollusk execute-fixture --ignore-compute-units ./target/deploy/$(subst -,_,$(shell toml get $(call make-path,$*)/Cargo.toml package.name)).so ./target/fixtures $(shell toml get $(call make-path,$*)/Cargo.toml package.metadata.solana.program-id)
 
 generate-clients:
-	pnpm generate:clients $(ARGS)
+	pnpm codama run --all $(ARGS)
 
 # Helpers for publishing
 tag-name = $(lastword $(subst /, ,$(call make-path,$1)))
