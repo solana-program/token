@@ -4,356 +4,52 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
+
+env:
+  JS_PACKAGES: "['clients-js']"
+  SBPF_PROGRAM_PACKAGES: "['pinocchio-program', 'program']"
+  RUST_PACKAGES: "['interface', 'pinocchio-interface', 'pinocchio-program', 'program']"
+  WASM_PACKAGES: "['interface', 'pinocchio-interface', 'pinocchio-program', 'program']"
+  REGRESSION_PACKAGES: "['pinocchio-program']"
 
 jobs:
-  format_and_lint_client_js:
-    name: Format & Lint Client JS
+  set_env:
+    name: Set variables to be used in strategy definitions in reusable workflow
     runs-on: ubuntu-latest
+    outputs:
+      JS_PACKAGES: ${{ steps.compute.outputs.JS_PACKAGES }}
+      SBPF_PROGRAM_PACKAGES: ${{ steps.compute.outputs.SBPF_PROGRAM_PACKAGES }}
+      RUST_PACKAGES: ${{ steps.compute.outputs.RUST_PACKAGES }}
+      WASM_PACKAGES: ${{ steps.compute.outputs.WASM_PACKAGES }}
+      REGRESSION_PACKAGES: ${{ steps.compute.outputs.REGRESSION_PACKAGES }}
+      RUST_TOOLCHAIN_NIGHTLY: ${{ steps.compute.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-
-      - name: Format Client JS
-        run: pnpm clients:js:format
-
-      - name: Lint Client JS
-        run: pnpm clients:js:lint
-
-  format_and_lint_client_rust:
-    if: false # Disabled until we have a Rust client
-    name: Format & Lint Client Rust
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          clippy: true
-          rustfmt: true
-
-      - name: Format Client Rust
-        run: pnpm clients:rust:format
-
-      - name: Lint Client Rust
-        run: pnpm clients:rust:lint
-
-  format_and_lint_program:
-    name: Format & Lint Program
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          clippy: true
-          rustfmt: true
-
-      - name: Format
-        run: pnpm programs:format
-
-      - name: Lint
-        run: pnpm programs:lint
-
-  format_and_lint_pinterface:
-    name: Format & Lint P-Interface
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          clippy: true
-          rustfmt: true
-
-      - name: Format
-        run: pnpm p-interface:format
-
-      - name: Lint
-        run: pnpm p-interface:lint
-
-  format_and_lint_ptoken:
-    name: Format & Lint p-token
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          clippy: true
-          rustfmt: true
-
-      - name: Format
-        run: pnpm p-token:format
-
-      - name: Lint
-        run: pnpm p-token:lint
-
-  format_and_lint_interface:
-    name: Format, Lint & Test Interface
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          clippy: true
-          rustfmt: true
-
-      - name: Format
-        run: pnpm interface:format
-
-      - name: Lint
-        run: pnpm interface:lint
-
-      - name: Lint
-        run: pnpm interface:test
-
-  audit_rust:
-    name: Audit Rust
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-audit
-
-      - name: Install cargo-audit
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-audit
-
-      - name: Run cargo-audit
-        run: pnpm rust:audit
-
-  spellcheck_rust:
-    name: Spellcheck Rust
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-spellcheck
-
-      - name: Install cargo-spellcheck
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-spellcheck
-
-      - name: Run cargo-spellcheck
-        run: pnpm rust:spellcheck
-
-  generate_clients:
-    name: Check Client Generation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          rustfmt: true
-
-      - name: Generate Clients
-        run: pnpm generate:clients
-
-      - name: Check Working Directory
+      - name: Compute variables
+        id: compute
+        shell: bash
         run: |
-          git status --porcelain
-          test -z "$(git status --porcelain)"
+          echo "JS_PACKAGES=${{ env.JS_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "SBPF_PROGRAM_PACKAGES=${{ env.SBPF_PROGRAM_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "RUST_PACKAGES=${{ env.RUST_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "WASM_PACKAGES=${{ env.WASM_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "REGRESSION_PACKAGES=${{ env.REGRESSION_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "RUST_TOOLCHAIN_NIGHTLY=$(make rust-toolchain-nightly)" >> "$GITHUB_OUTPUT"
+          echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
 
-  build_program:
-    name: Build Program
-    runs-on: ubuntu-latest
-    needs: format_and_lint_program
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-build-program
-          solana: true
-
-      - name: Build
-        run: pnpm programs:build
-
-      - name: Upload Program Builds
-        uses: actions/upload-artifact@v4
-        with:
-          name: program-builds
-          path: ./target/deploy/*.so
-          if-no-files-found: error
-
-      - name: Save Program Builds For Client Jobs
-        uses: actions/cache/save@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-builds-${{ github.sha }}
-
-  build_ptoken:
-    name: Build p-token
-    runs-on: ubuntu-latest
-    needs: [format_and_lint_pinterface, format_and_lint_ptoken]
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-build-program
-          solana: true
-
-      - name: Build
-        run: pnpm p-token:build
-
-      - name: Upload p-token Builds
-        uses: actions/upload-artifact@v4
-        with:
-          name: p-token-builds
-          path: ./target/deploy/*.so
-          if-no-files-found: error
-
-      - name: Save p-token Build For Client Jobs
-        uses: actions/cache/save@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-ptoken-build-${{ github.sha }}
-
-  test_client_js:
-    name: Test Client JS
-    runs-on: ubuntu-latest
-    needs: [format_and_lint_client_js, build_program]
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          solana: true
-
-      - name: Restore Program Builds
-        uses: actions/cache/restore@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-builds-${{ github.sha }}
-
-      - name: Test Client JS
-        run: pnpm clients:js:test
-
-  test_client_rust:
-    if: false # Disabled until we have a Rust client
-    name: Test Client Rust
-    runs-on: ubuntu-latest
-    needs: format_and_lint_client_rust
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-rust-client
-          solana: true
-
-      - name: Test Client Rust
-        run: pnpm clients:rust:test
-
-  test_program:
-    name: Test Program
-    runs-on: ubuntu-latest
-    needs: build_program
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-test-program
-
-      - name: Restore Program Builds
-        uses: actions/cache/restore@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-builds-${{ github.sha }}
-
-      - name: Test
-        run: pnpm programs:test
-
-  test_ptoken:
-    name: Test p-token
-    runs-on: ubuntu-latest
-    needs: build_ptoken
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-test-ptoken
-          solana: true
-          purge: true
-
-      - name: Restore Program Builds
-        uses: actions/cache/restore@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-ptoken-build-${{ github.sha }}
-
-      - name: Test
-        run: pnpm p-token:test
-
-  conformance_ptoken:
-    name: Conformance Test for p-token
-    runs-on: ubuntu-latest
-    needs: build_ptoken
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-fixtures-ptoken
-          solana: true
-
-      - name: Restore Program Builds
-        uses: actions/cache/restore@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-ptoken-build-${{ github.sha }}
-
-      - name: Install mollusk-svm-cli
-        uses: taiki-e/cache-cargo-install-action@v2
-        with:
-          tool: mollusk-svm-cli
-
-      - name: Generate SPL Token Fixtures
-        run: pnpm fixtures:generate
-
-      - name: Run Fixtures
-        run: pnpm fixtures:run pinocchio_token_program
+  main:
+    needs: set_env
+    uses: solana-program/actions/.github/workflows/main.yml@main
+    with:
+      js-packages: ${{ needs.set_env.outputs.JS_PACKAGES }}
+      sbpf-program-packages: ${{ needs.set_env.outputs.SBPF_PROGRAM_PACKAGES }}
+      rust-packages: ${{ needs.set_env.outputs.RUST_PACKAGES }}
+      wasm-packages: ${{ needs.set_env.outputs.WASM_PACKAGES }}
+      regression-packages: ${{ needs.set_env.outputs.REGRESSION_PACKAGES }}
+      rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}

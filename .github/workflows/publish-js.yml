@@ -1,4 +1,4 @@
-name: Publish Rust Crate
+name: Publish JS
 
 on:
   workflow_dispatch:
@@ -6,15 +6,12 @@ on:
       package-path:
         description: Path to directory with package to release
         required: true
-        default: 'interface'
+        default: 'clients/js'
         type: choice
         options:
-          - interface
-          - pinocchio/interface
-          - pinocchio/program
-          - program
+          - clients/js
       level:
-        description: Level
+        description: Version level
         required: true
         default: patch
         type: choice
@@ -22,20 +19,15 @@ on:
           - patch
           - minor
           - major
-          - rc
-          - beta
-          - alpha
-          - release
-          - version
-      version:
-        description: Version (used with level "version")
-        required: false
-        type: string
-      dry-run:
-        description: Dry run
+          - prerelease
+          - prepatch
+          - preminor
+          - premajor
+      tag:
+        description: NPM Tag (and preid for pre-releases)
         required: true
-        default: true
-        type: boolean
+        type: string
+        default: latest
       create-release:
         description: Create a GitHub release
         required: true
@@ -47,7 +39,6 @@ jobs:
     name: Set variables to be used in strategy definitions
     runs-on: ubuntu-latest
     outputs:
-      RUST_TOOLCHAIN_NIGHTLY: ${{ steps.compute.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
       TARGET: ${{ steps.compute.outputs.TARGET }}
     steps:
@@ -58,23 +49,19 @@ jobs:
         id: compute
         shell: bash
         run: |
-          echo "RUST_TOOLCHAIN_NIGHTLY=$(make rust-toolchain-nightly)" >> "$GITHUB_OUTPUT"
           echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
           TARGET=$(echo ${{ inputs.package-path }} | sed 's#/#-#')
           echo "TARGET=$TARGET" >> "$GITHUB_OUTPUT"
 
   main:
     needs: set_env
-    uses: solana-program/actions/.github/workflows/publish-rust.yml@main
+    uses: solana-program/actions/.github/workflows/publish-js.yml@main
     with:
       sbpf-program-packages: "program pinocchio-program"
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}
-      clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
-      rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       target: ${{ needs.set_env.outputs.TARGET }}
       package-path: ${{ inputs.package-path }}
       level: ${{ inputs.level }}
-      version: ${{ inputs.version }}
+      tag: ${{ inputs.tag }}
       create-release: ${{ inputs.create-release }}
-      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
