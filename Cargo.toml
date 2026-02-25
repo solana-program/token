@@ -16,13 +16,13 @@ check-cfg = [
 ]
 
 [workspace.metadata.cli]
-solana = "3.0.0"
+solana = "3.1.8"
 
 # Specify Rust toolchains for rustfmt, clippy, and build.
 # Any unprovided toolchains default to stable.
 [workspace.metadata.toolchains]
-format = "nightly-2025-02-16"
-lint = "nightly-2025-02-16"
+format = "nightly-2026-01-22"
+lint = "nightly-2026-01-22"
 
 [workspace.metadata.spellcheck]
 config = "scripts/spellcheck.toml"
