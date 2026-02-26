@@ -12,7 +12,14 @@ A `pinocchio`-based Token program.
 - Same instruction and account layout as SPL Token
 - Minimal CU usage
 
-
 ## License
 
 The code is licensed under the [Apache License Version 2.0](LICENSE)
+
+## Regression program
+
+The binary `fuzz/program-mb.so` was pulled from the network on 25-Feb-2026, and
+was built against tag
+[`program@3.5.0`](https://github.com/solana-program/token/releases/tag/program%40v3.5.0),
+commit
+[`4d5ff3015ae5ad3316f2d2efdde6ab9f7a50716c`](https://github.com/solana-program/token/tree/4d5ff3015ae5ad3316f2d2efdde6ab9f7a50716c).
