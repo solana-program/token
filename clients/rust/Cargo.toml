@@ -8,7 +8,6 @@ readme = "README.md"
 license-file = "../../LICENSE"
 
 [features]
-test-sbf = []
 serde = ["dep:serde", "dep:serde_with"]
 
 [dependencies]

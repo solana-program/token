@@ -9,7 +9,6 @@ edition = { workspace = true}
 
 [features]
 no-entrypoint = []
-test-sbf = []
 
 [dependencies]
 arrayref = "0.3.9"
