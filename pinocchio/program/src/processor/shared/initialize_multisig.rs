@@ -66,8 +66,9 @@ pub fn process_initialize_multisig(
         return Err(TokenError::InvalidNumberOfRequiredSigners.into());
     }
 
-    for (i, signer_info) in remaining.iter().enumerate() {
-        multisig.signers[i] = *signer_info.key();
+    #[expect(clippy::needless_range_loop)] // CU use is better with index-based loop
+    for i in 0..remaining.len() {
+        multisig.signers[i] = *remaining[i].key();
     }
 
     multisig.set_initialized(true);
