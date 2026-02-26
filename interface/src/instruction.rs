@@ -349,10 +349,11 @@ pub enum TokenInstruction<'a> {
         /// Expected number of base 10 digits to the right of the decimal place.
         decimals: u8,
     },
-    /// Like [`InitializeAccount`], but the owner pubkey is passed via
-    /// instruction data rather than the accounts list. This variant may be
-    /// preferable when using Cross Program Invocation from an instruction
-    /// that does not need the owner's `AccountInfo` otherwise.
+    /// Like [`TokenInstruction::InitializeAccount`], but the owner pubkey is
+    /// passed via instruction data rather than the accounts list. This
+    /// variant may be preferable when using Cross Program Invocation from
+    /// an instruction that does not need the owner's `AccountInfo`
+    /// otherwise.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -374,8 +375,8 @@ pub enum TokenInstruction<'a> {
     ///   0. `[writable]`  The native token account to sync with its underlying
     ///      lamports.
     SyncNative,
-    /// Like [`InitializeAccount2`], but does not require the Rent sysvar to be
-    /// provided
+    /// Like [`TokenInstruction::InitializeAccount2`], but does not require the
+    /// Rent sysvar to be provided
     ///
     /// Accounts expected by this instruction:
     ///
@@ -385,8 +386,8 @@ pub enum TokenInstruction<'a> {
         /// The new account's owner/multisignature.
         owner: Pubkey,
     },
-    /// Like [`InitializeMultisig`], but does not require the Rent sysvar to be
-    /// provided
+    /// Like [`TokenInstruction::InitializeMultisig`], but does not require the
+    /// Rent sysvar to be provided
     ///
     /// Accounts expected by this instruction:
     ///
@@ -398,8 +399,8 @@ pub enum TokenInstruction<'a> {
         /// account.
         m: u8,
     },
-    /// Like [`InitializeMint`], but does not require the Rent sysvar to be
-    /// provided
+    /// Like [`TokenInstruction::InitializeMint`], but does not require the Rent
+    /// sysvar to be provided
     ///
     /// Accounts expected by this instruction:
     ///
