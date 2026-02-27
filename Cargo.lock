@@ -3266,6 +3266,7 @@ dependencies = [
  "num-traits",
  "pinocchio",
  "pinocchio-log",
+ "pinocchio-pubkey",
  "pinocchio-token-interface",
  "solana-account",
  "solana-instruction",
