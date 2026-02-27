@@ -23,3 +23,7 @@ was built against tag
 [`program@3.5.0`](https://github.com/solana-program/token/releases/tag/program%40v3.5.0),
 commit
 [`4d5ff3015ae5ad3316f2d2efdde6ab9f7a50716c`](https://github.com/solana-program/token/tree/4d5ff3015ae5ad3316f2d2efdde6ab9f7a50716c).
+
+One fixture was removed due to a change in the `sync-native` behavior to allow
+for the `amount` to decrease, due to potential changes in the `Rent` sysvar.
+This fixture is still available at `fuzz/blob-old/`.
