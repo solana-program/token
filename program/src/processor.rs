@@ -759,16 +759,17 @@ impl Processor {
         let native_account_info = next_account_info(account_info_iter)?;
         Self::check_account_owner(program_id, native_account_info)?;
 
+        let rent = Rent::get()?;
+        let rent_exempt_reserve = rent.minimum_balance(native_account_info.data_len());
+
         let mut native_account = Account::unpack(&native_account_info.data.borrow())?;
 
-        if let COption::Some(rent_exempt_reserve) = native_account.is_native {
+        if native_account.is_native.is_some() {
             let new_amount = native_account_info
                 .lamports()
                 .checked_sub(rent_exempt_reserve)
                 .ok_or(TokenError::Overflow)?;
-            if new_amount < native_account.amount {
-                return Err(TokenError::InvalidState.into());
-            }
+            native_account.is_native = COption::Some(rent_exempt_reserve);
             native_account.amount = new_amount;
         } else {
             return Err(TokenError::NonNativeNotSupported.into());
