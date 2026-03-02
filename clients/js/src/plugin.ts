@@ -38,12 +38,12 @@ export type TokenPluginInstructions = GeneratedTokenPluginInstructions & {
     mintToATA: (
         input: MakeOptional<MintToATAInstructionPlanAsyncInput, 'payer'>,
         config?: MintToATAInstructionPlanConfig,
-    ) => Promise<Awaited<ReturnType<typeof getMintToATAInstructionPlanAsync>>> & SelfPlanAndSendFunctions;
+    ) => ReturnType<typeof getMintToATAInstructionPlanAsync> & SelfPlanAndSendFunctions;
     /** Transfer tokens to a recipient's ATA (created if needed). */
     transferToATA: (
         input: MakeOptional<TransferToATAInstructionPlanAsyncInput, 'payer'>,
         config?: TransferToATAInstructionPlanConfig,
-    ) => Promise<Awaited<ReturnType<typeof getTransferToATAInstructionPlanAsync>>> & SelfPlanAndSendFunctions;
+    ) => ReturnType<typeof getTransferToATAInstructionPlanAsync> & SelfPlanAndSendFunctions;
 };
 
 export function tokenProgram() {

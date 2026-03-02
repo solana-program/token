@@ -83,15 +83,14 @@ export async function getTransferToATAInstructionPlanAsync(
 ): Promise<InstructionPlan> {
     const tokenProgram = config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
 
-    const destinationAta =
-        input.destination ??
-        (
-            await findAssociatedTokenPda({
-                owner: input.recipient,
-                tokenProgram,
-                mint: input.mint,
-            })
-        )[0];
+    let destination = input.destination;
+    if (!destination) {
+        [destination] = await findAssociatedTokenPda({
+            owner: input.recipient,
+            tokenProgram,
+            mint: input.mint,
+        });
+    }
 
     let source = input.source;
     if (!source) {
@@ -109,7 +108,7 @@ export async function getTransferToATAInstructionPlanAsync(
         {
             ...input,
             source,
-            destination: destinationAta,
+            destination,
         },
         config,
     );
