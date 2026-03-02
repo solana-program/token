@@ -73,6 +73,11 @@ pub use {
 /// Number of bytes in a `u64`.
 const U64_BYTES: usize = core::mem::size_of::<u64>();
 
+/// Token-2022 program id, to allow for its multisigs to be used in p-token
+mod spl_token_2022 {
+    pinocchio_pubkey::declare_id!("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+}
+
 /// Maximum number of digits in a formatted `u64`.
 ///
 /// The maximum number of digits is equal to the maximum number
@@ -111,7 +116,8 @@ unsafe fn validate_owner(
 
     if unlikely(
         owner_account_info.data_len() == Multisig::LEN
-            && owner_account_info.is_owned_by(&TOKEN_PROGRAM_ID),
+            && (owner_account_info.is_owned_by(&TOKEN_PROGRAM_ID)
+                || owner_account_info.is_owned_by(&spl_token_2022::ID)),
     ) {
         // SAFETY: the caller guarantees that there are no mutable borrows of
         // `owner_account_info` account data and the `load` validates that the

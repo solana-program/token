@@ -17,6 +17,7 @@ logging = []
 [dependencies]
 pinocchio = { workspace = true }
 pinocchio-log = { version = "0.5.1", default-features = false }
+pinocchio-pubkey = "0.3"
 pinocchio-token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
