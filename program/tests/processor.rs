@@ -5986,15 +5986,20 @@ fn test_sync_native() {
     // reduce sol
     native_account.lamports -= 1;
 
-    // fail sync
-    assert_eq!(
-        Err(TokenError::InvalidState.into()),
-        do_process_instruction(
-            sync_native(&program_id, &native_account_key,).unwrap(),
-            vec![&mut native_account],
-            &[Check::err(TokenError::InvalidState.into())],
-        )
-    );
+    // succeed sync with reduced value
+    do_process_instruction(
+        sync_native(&program_id, &native_account_key).unwrap(),
+        vec![&mut native_account],
+        &[
+            Check::success(),
+            Check::account(&native_account_key)
+                .data_slice(64, &(new_lamports - 1).to_le_bytes())
+                .build(),
+        ],
+    )
+    .unwrap();
+    let account = Account::unpack_unchecked(&native_account.data).unwrap();
+    assert_eq!(account.amount, new_lamports - 1);
 }
 
 #[test]
