@@ -5,6 +5,7 @@ import {
     getTransferCheckedInstruction,
     TOKEN_PROGRAM_ADDRESS,
 } from './generated';
+import { MakeOptional } from './types';
 
 export type TransferToATAInstructionPlanInput = {
     /** Funding account (must be a system account). */
@@ -30,7 +31,7 @@ export type TransferToATAInstructionPlanInput = {
     multiSigners?: Array<TransactionSigner>;
 };
 
-type TransferToATAInstructionPlanConfig = {
+export type TransferToATAInstructionPlanConfig = {
     systemProgram?: Address;
     tokenProgram?: Address;
     associatedTokenProgram?: Address;
@@ -71,21 +72,43 @@ export function getTransferToATAInstructionPlan(
     ]);
 }
 
-type TransferToATAInstructionPlanAsyncInput = Omit<TransferToATAInstructionPlanInput, 'destination'>;
+export type TransferToATAInstructionPlanAsyncInput = MakeOptional<
+    TransferToATAInstructionPlanInput,
+    'source' | 'destination'
+>;
 
 export async function getTransferToATAInstructionPlanAsync(
     input: TransferToATAInstructionPlanAsyncInput,
     config?: TransferToATAInstructionPlanConfig,
 ): Promise<InstructionPlan> {
-    const [ataAddress] = await findAssociatedTokenPda({
-        owner: input.recipient,
-        tokenProgram: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
-        mint: input.mint,
-    });
+    const tokenProgram = config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
+
+    let destination = input.destination;
+    if (!destination) {
+        [destination] = await findAssociatedTokenPda({
+            owner: input.recipient,
+            tokenProgram,
+            mint: input.mint,
+        });
+    }
+
+    let source = input.source;
+    if (!source) {
+        const authorityAddress: Address =
+            typeof input.authority === 'string' ? input.authority : input.authority.address;
+        const [sourceAta] = await findAssociatedTokenPda({
+            owner: authorityAddress,
+            tokenProgram,
+            mint: input.mint,
+        });
+        source = sourceAta;
+    }
+
     return getTransferToATAInstructionPlan(
         {
             ...input,
-            destination: ataAddress,
+            source,
+            destination,
         },
         config,
     );

@@ -1,30 +1,49 @@
 import { ClientWithPayer, pipe } from '@solana/kit';
 import { addSelfPlanAndSendFunctions, SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
 
-import { CreateMintInstructionPlanInput, getCreateMintInstructionPlan } from './createMint';
+import {
+    CreateMintInstructionPlanConfig,
+    CreateMintInstructionPlanInput,
+    getCreateMintInstructionPlan,
+} from './createMint';
 import {
     TokenPlugin as GeneratedTokenPlugin,
     TokenPluginInstructions as GeneratedTokenPluginInstructions,
     TokenPluginRequirements as GeneratedTokenPluginRequirements,
     tokenProgram as generatedTokenProgram,
 } from './generated';
-import { getMintToATAInstructionPlan, MintToATAInstructionPlanInput } from './mintToATA';
-import { getTransferToATAInstructionPlan, TransferToATAInstructionPlanInput } from './transferToATA';
+import {
+    getMintToATAInstructionPlanAsync,
+    MintToATAInstructionPlanAsyncInput,
+    MintToATAInstructionPlanConfig,
+} from './mintToATA';
+import {
+    getTransferToATAInstructionPlanAsync,
+    TransferToATAInstructionPlanAsyncInput,
+    TransferToATAInstructionPlanConfig,
+} from './transferToATA';
+import { MakeOptional } from './types';
 
 export type TokenPluginRequirements = GeneratedTokenPluginRequirements & ClientWithPayer;
 
 export type TokenPlugin = Omit<GeneratedTokenPlugin, 'instructions'> & { instructions: TokenPluginInstructions };
 
 export type TokenPluginInstructions = GeneratedTokenPluginInstructions & {
+    /** Create a new token mint. */
     createMint: (
         input: MakeOptional<CreateMintInstructionPlanInput, 'payer'>,
+        config?: CreateMintInstructionPlanConfig,
     ) => ReturnType<typeof getCreateMintInstructionPlan> & SelfPlanAndSendFunctions;
+    /** Mint tokens to an owner's ATA (created if needed). */
     mintToATA: (
-        input: MakeOptional<MintToATAInstructionPlanInput, 'payer'>,
-    ) => ReturnType<typeof getMintToATAInstructionPlan> & SelfPlanAndSendFunctions;
+        input: MakeOptional<MintToATAInstructionPlanAsyncInput, 'payer'>,
+        config?: MintToATAInstructionPlanConfig,
+    ) => ReturnType<typeof getMintToATAInstructionPlanAsync> & SelfPlanAndSendFunctions;
+    /** Transfer tokens to a recipient's ATA (created if needed). */
     transferToATA: (
-        input: MakeOptional<TransferToATAInstructionPlanInput, 'payer'>,
-    ) => ReturnType<typeof getTransferToATAInstructionPlan> & SelfPlanAndSendFunctions;
+        input: MakeOptional<TransferToATAInstructionPlanAsyncInput, 'payer'>,
+        config?: TransferToATAInstructionPlanConfig,
+    ) => ReturnType<typeof getTransferToATAInstructionPlanAsync> & SelfPlanAndSendFunctions;
 };
 
 export function tokenProgram() {
@@ -35,25 +54,41 @@ export function tokenProgram() {
                 ...c.token,
                 instructions: {
                     ...c.token.instructions,
-                    createMint: input =>
+                    createMint: (input, config) =>
                         addSelfPlanAndSendFunctions(
                             client,
-                            getCreateMintInstructionPlan({ ...input, payer: input.payer ?? client.payer }),
+                            getCreateMintInstructionPlan(
+                                {
+                                    ...input,
+                                    payer: input.payer ?? client.payer,
+                                },
+                                config,
+                            ),
                         ),
-                    mintToATA: input =>
+                    mintToATA: (input, config) =>
                         addSelfPlanAndSendFunctions(
                             client,
-                            getMintToATAInstructionPlan({ ...input, payer: input.payer ?? client.payer }),
+                            getMintToATAInstructionPlanAsync(
+                                {
+                                    ...input,
+                                    payer: input.payer ?? client.payer,
+                                },
+                                config,
+                            ),
                         ),
-                    transferToATA: input =>
+                    transferToATA: (input, config) =>
                         addSelfPlanAndSendFunctions(
                             client,
-                            getTransferToATAInstructionPlan({ ...input, payer: input.payer ?? client.payer }),
+                            getTransferToATAInstructionPlanAsync(
+                                {
+                                    ...input,
+                                    payer: input.payer ?? client.payer,
+                                },
+                                config,
+                            ),
                         ),
                 },
             },
         }));
     };
 }
-
-type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

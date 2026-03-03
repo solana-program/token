@@ -110,6 +110,49 @@ test('it derives a new associated token account with an initial balance', async 
     });
 });
 
+test('it uses an explicit ATA when provided to the async variant', async t => {
+    // Given a mint account, its mint authority, a token owner and a pre-derived ATA.
+    const client = createDefaultSolanaClient();
+    const [payer, mintAuthority, owner] = await Promise.all([
+        generateKeyPairSignerWithSol(client),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+    const decimals = 2;
+    const mint = await createMint(client, payer, mintAuthority.address, decimals);
+    const [ata] = await findAssociatedTokenPda({
+        mint,
+        owner: owner.address,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    });
+
+    // When we mint via the async variant with an explicit ATA.
+    const instructionPlan = await getMintToATAInstructionPlanAsync({
+        payer,
+        ata,
+        mint,
+        owner: owner.address,
+        mintAuthority,
+        amount: 1_000n,
+        decimals,
+    });
+
+    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
+    const transactionPlan = await transactionPlanner(instructionPlan);
+    await client.sendTransactionPlan(transactionPlan);
+
+    // Then the explicit ATA should hold the minted tokens.
+    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+        address: ata,
+        data: {
+            mint,
+            owner: owner.address,
+            amount: 1000n,
+            state: AccountState.Initialized,
+        },
+    });
+});
+
 test('it also mints to an existing associated token account', async t => {
     // Given a mint account, its mint authority, a token owner and the ATA.
     const client = createDefaultSolanaClient();

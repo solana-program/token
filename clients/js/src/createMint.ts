@@ -27,7 +27,7 @@ export type CreateMintInstructionPlanInput = {
     mintAccountLamports?: number;
 };
 
-type CreateMintInstructionPlanConfig = {
+export type CreateMintInstructionPlanConfig = {
     systemProgram?: Address;
     tokenProgram?: Address;
 };

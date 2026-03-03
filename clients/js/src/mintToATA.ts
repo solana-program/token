@@ -5,6 +5,7 @@ import {
     getMintToCheckedInstruction,
     TOKEN_PROGRAM_ADDRESS,
 } from './generated';
+import { MakeOptional } from './types';
 
 export type MintToATAInstructionPlanInput = {
     /** Funding account (must be a system account). */
@@ -28,7 +29,7 @@ export type MintToATAInstructionPlanInput = {
     multiSigners?: Array<TransactionSigner>;
 };
 
-type MintToATAInstructionPlanConfig = {
+export type MintToATAInstructionPlanConfig = {
     systemProgram?: Address;
     tokenProgram?: Address;
     associatedTokenProgram?: Address;
@@ -69,21 +70,25 @@ export function getMintToATAInstructionPlan(
     ]);
 }
 
-type MintToATAInstructionPlanAsyncInput = Omit<MintToATAInstructionPlanInput, 'ata'>;
+export type MintToATAInstructionPlanAsyncInput = MakeOptional<MintToATAInstructionPlanInput, 'ata'>;
 
 export async function getMintToATAInstructionPlanAsync(
     input: MintToATAInstructionPlanAsyncInput,
     config?: MintToATAInstructionPlanConfig,
 ): Promise<InstructionPlan> {
-    const [ataAddress] = await findAssociatedTokenPda({
-        owner: input.owner,
-        tokenProgram: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
-        mint: input.mint,
-    });
+    const tokenProgram = config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
+    let ata = input.ata;
+    if (!ata) {
+        [ata] = await findAssociatedTokenPda({
+            owner: input.owner,
+            tokenProgram,
+            mint: input.mint,
+        });
+    }
     return getMintToATAInstructionPlan(
         {
             ...input,
-            ata: ataAddress,
+            ata,
         },
         config,
     );
