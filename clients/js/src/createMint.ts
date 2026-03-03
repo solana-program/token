@@ -1,10 +1,13 @@
 import { getCreateAccountInstruction } from '@solana-program/system';
-import { Address, InstructionPlan, OptionOrNullable, sequentialInstructionPlan, TransactionSigner } from '@solana/kit';
+import {
+    Address,
+    getMinimumBalanceForRentExemption,
+    InstructionPlan,
+    OptionOrNullable,
+    sequentialInstructionPlan,
+    TransactionSigner,
+} from '@solana/kit';
 import { getInitializeMint2Instruction, getMintSize, TOKEN_PROGRAM_ADDRESS } from './generated';
-
-// RPC `getMinimumBalanceForRentExemption` for 82 bytes, which is token mint size
-// Hardcoded to avoid requiring an RPC request each time
-const MINIMUM_BALANCE_FOR_MINT = 1461600;
 
 export type CreateMintInstructionPlanInput = {
     /** Funding account (must be a system account). */
@@ -19,7 +22,7 @@ export type CreateMintInstructionPlanInput = {
     freezeAuthority?: OptionOrNullable<Address>;
     /**
      * Optional override for the amount of Lamports to fund the mint account with.
-     * @default 1461600
+     * @default enough to make the account rent-exempt (currently 1,461,600 Lamports)
      *  */
     mintAccountLamports?: number;
 };
@@ -38,7 +41,7 @@ export function getCreateMintInstructionPlan(
             {
                 payer: input.payer,
                 newAccount: input.newMint,
-                lamports: input.mintAccountLamports ?? MINIMUM_BALANCE_FOR_MINT,
+                lamports: input.mintAccountLamports ?? getMinimumBalanceForRentExemption(BigInt(getMintSize())),
                 space: getMintSize(),
                 programAddress: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
             },
