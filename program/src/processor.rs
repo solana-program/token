@@ -759,8 +759,13 @@ impl Processor {
         let native_account_info = next_account_info(account_info_iter)?;
         Self::check_account_owner(program_id, native_account_info)?;
 
-        let rent = Rent::get()?;
-        let rent_exempt_reserve = rent.minimum_balance(native_account_info.data_len());
+        let rent_exempt_reserve = if let Ok(rent_sysvar_info) = next_account_info(account_info_iter)
+        {
+            let rent = Rent::from_account_info(rent_sysvar_info)?;
+            rent.minimum_balance(native_account_info.data_len())
+        } else {
+            Rent::get()?.minimum_balance(native_account_info.data_len())
+        };
 
         let mut native_account = Account::unpack(&native_account_info.data.borrow())?;
 
