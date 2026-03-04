@@ -3284,7 +3284,7 @@ dependencies = [
  "solana-transaction",
  "solana-transaction-error",
  "spl-token-2022-interface",
- "spl-token-interface 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-token-interface 2.0.0",
 ]
 
 [[package]]

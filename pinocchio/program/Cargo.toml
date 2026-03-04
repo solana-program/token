@@ -41,7 +41,7 @@ solana-signer = "3.0.0"
 solana-transaction = "3.0.0"
 solana-transaction-error = "3.0.0"
 solana-system-interface = { workspace = true }
-spl-token-interface = "2"
+spl-token-interface = { workspace = true }
 spl-token-2022-interface = "2"
 
 [lints]

@@ -14,12 +14,20 @@ use {
 
 #[inline(always)]
 pub fn process_sync_native(accounts: &[AccountInfo]) -> ProgramResult {
-    let native_account_info = accounts.first().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    let [native_account_info, remaining @ ..] = accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
 
     check_account_owner(native_account_info)?;
 
-    let rent = Rent::get()?;
-    let rent_exempt_reserve = rent.minimum_balance(native_account_info.data_len());
+    let rent_exempt_reserve = if let Some(rent_sysvar_info) = remaining.first() {
+        // SAFETY: single immutable borrow to `rent_sysvar_info`; account ID and length
+        // are checked by `from_account_info_unchecked`.
+        let rent = unsafe { Rent::from_account_info_unchecked(rent_sysvar_info)? };
+        rent.minimum_balance(native_account_info.data_len())
+    } else {
+        Rent::get()?.minimum_balance(native_account_info.data_len())
+    };
 
     // SAFETY: single mutable borrow to `native_account_info` account data and
     // `load_mut` validates that the account is initialized.

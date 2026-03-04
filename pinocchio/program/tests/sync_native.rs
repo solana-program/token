@@ -2,7 +2,7 @@ mod setup;
 
 use {
     crate::setup::TOKEN_PROGRAM_ID,
-    mollusk_svm::{result::Check, Mollusk},
+    mollusk_svm::{result::Check, sysvar::Sysvars, Mollusk},
     pinocchio_token_interface::{
         native_mint,
         state::{
@@ -75,15 +75,20 @@ async fn sync_native() {
         create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
     source_account.lamports += 2_000_000_000;
 
-    let instruction =
-        spl_token_interface::instruction::sync_native(&TOKEN_PROGRAM_ID, &source_account_key)
-            .unwrap();
+    let instruction = spl_token_interface::instruction::sync_native_with_rent_sysvar(
+        &TOKEN_PROGRAM_ID,
+        &source_account_key,
+    )
+    .unwrap();
 
     // Executes the sync_native instruction.
 
     let result = mollusk().process_and_validate_instruction_chain(
         &[(&instruction, &[Check::success()])],
-        &[(source_account_key, source_account)],
+        &[
+            (source_account_key, source_account),
+            Sysvars::default().keyed_account_for_rent_sysvar(),
+        ],
     );
 
     result.resulting_accounts.iter().for_each(|(key, account)| {
