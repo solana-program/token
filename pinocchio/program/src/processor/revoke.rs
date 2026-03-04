@@ -1,6 +1,8 @@
 use {
     super::validate_owner,
-    pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult},
+    pinocchio::{
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, ProgramResult,
+    },
     pinocchio_token_interface::{
         error::TokenError,
         state::{account::Account, load_mut},
@@ -24,7 +26,7 @@ pub fn process_revoke(accounts: &[AccountInfo]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    if source_account.is_frozen()? {
+    if unlikely(source_account.is_frozen()?) {
         return Err(TokenError::AccountFrozen.into());
     }
 

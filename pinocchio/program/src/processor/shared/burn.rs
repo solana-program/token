@@ -1,7 +1,10 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
     pinocchio::{
-        account_info::AccountInfo, hint::likely, program_error::ProgramError, pubkey::pubkey_eq,
+        account_info::AccountInfo,
+        hint::{likely, unlikely},
+        program_error::ProgramError,
+        pubkey::pubkey_eq,
         ProgramResult,
     },
     pinocchio_token_interface::{
@@ -31,10 +34,11 @@ pub fn process_burn(
     // passed in, one of them will fail the `load_mut` check.
     let mint = unsafe { load_mut::<Mint>(mint_info.borrow_mut_data_unchecked())? };
 
-    if source_account.is_frozen()? {
+    if unlikely(source_account.is_frozen()?) {
         return Err(TokenError::AccountFrozen.into());
     }
-    if source_account.is_native() {
+
+    if unlikely(source_account.is_native()) {
         return Err(TokenError::NativeNotSupported.into());
     }
 
@@ -45,12 +49,12 @@ pub fn process_burn(
         .checked_sub(amount)
         .ok_or(TokenError::InsufficientFunds)?;
 
-    if !pubkey_eq(mint_info.key(), &source_account.mint) {
+    if unlikely(!pubkey_eq(mint_info.key(), &source_account.mint)) {
         return Err(TokenError::MintMismatch.into());
     }
 
     if let Some(expected_decimals) = expected_decimals {
-        if expected_decimals != mint.decimals {
+        if unlikely(expected_decimals != mint.decimals) {
             return Err(TokenError::MintDecimalsMismatch.into());
         }
     }
@@ -80,7 +84,7 @@ pub fn process_burn(
 
     // Updates the source account and mint supply.
 
-    if amount == 0 {
+    if unlikely(amount == 0) {
         check_account_owner(source_account_info)?;
         check_account_owner(mint_info)?;
     } else {

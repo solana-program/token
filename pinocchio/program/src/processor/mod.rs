@@ -204,7 +204,7 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 #[inline(always)]
 const fn unpack_amount(instruction_data: &[u8]) -> Result<u64, TokenError> {
     // expected u64 (8)
-    if instruction_data.len() >= U64_BYTES {
+    if likely(instruction_data.len() >= U64_BYTES) {
         // SAFETY: The minimum size of the instruction data is `U64_BYTES` bytes.
         Ok(unsafe { u64::from_le_bytes(*(instruction_data.as_ptr() as *const [u8; U64_BYTES])) })
     } else {
@@ -216,7 +216,7 @@ const fn unpack_amount(instruction_data: &[u8]) -> Result<u64, TokenError> {
 #[inline(always)]
 const fn unpack_amount_and_decimals(instruction_data: &[u8]) -> Result<(u64, u8), TokenError> {
     // expected u64 (8) + u8 (1)
-    if instruction_data.len() >= 9 {
+    if likely(instruction_data.len() >= 9) {
         let (amount, decimals) = instruction_data.split_at(U64_BYTES);
         Ok((
             // SAFETY: The size of `amount` is `U64_BYTES` bytes.
