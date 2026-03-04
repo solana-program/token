@@ -1,7 +1,8 @@
 use {
     crate::processor::{check_account_owner, validate_owner},
     pinocchio::{
-        account_info::AccountInfo, program_error::ProgramError, pubkey::pubkey_eq, ProgramResult,
+        account_info::AccountInfo, hint::unlikely, program_error::ProgramError, pubkey::pubkey_eq,
+        ProgramResult,
     },
     pinocchio_token_interface::{
         error::TokenError,
@@ -27,15 +28,15 @@ pub fn process_mint_to(
     let destination_account =
         unsafe { load_mut::<Account>(destination_account_info.borrow_mut_data_unchecked())? };
 
-    if destination_account.is_frozen()? {
+    if unlikely(destination_account.is_frozen()?) {
         return Err(TokenError::AccountFrozen.into());
     }
 
-    if destination_account.is_native() {
+    if unlikely(destination_account.is_native()) {
         return Err(TokenError::NativeNotSupported.into());
     }
 
-    if !pubkey_eq(mint_info.key(), &destination_account.mint) {
+    if unlikely(!pubkey_eq(mint_info.key(), &destination_account.mint)) {
         return Err(TokenError::MintMismatch.into());
     }
 
