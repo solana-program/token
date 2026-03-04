@@ -1373,6 +1373,20 @@ pub fn sync_native(
     })
 }
 
+/// Creates a `SyncNative` instruction with the Rent sysvar account
+/// added to the accounts list.
+pub fn sync_native_with_rent_sysvar(
+    token_program_id: &Pubkey,
+    account_pubkey: &Pubkey,
+) -> Result<Instruction, ProgramError> {
+    let mut instruction = sync_native(token_program_id, account_pubkey)?;
+    instruction
+        .accounts
+        .push(AccountMeta::new_readonly(sysvar::rent::id(), false));
+
+    Ok(instruction)
+}
+
 /// Creates a `GetAccountDataSize` instruction
 pub fn get_account_data_size(
     token_program_id: &Pubkey,

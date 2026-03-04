@@ -11,11 +11,10 @@ use {
         },
     },
     solana_account::Account,
-    solana_instruction::AccountMeta,
     solana_program_pack::Pack,
     solana_program_test::tokio,
     solana_pubkey::Pubkey,
-    solana_rent::{sysvar, Rent},
+    solana_rent::Rent,
     solana_sdk_ids::bpf_loader_upgradeable,
 };
 
@@ -76,13 +75,11 @@ async fn sync_native() {
         create_token_account(&native_mint, &authority_key, true, 0, &TOKEN_PROGRAM_ID);
     source_account.lamports += 2_000_000_000;
 
-    let mut instruction =
-        spl_token_interface::instruction::sync_native(&TOKEN_PROGRAM_ID, &source_account_key)
-            .unwrap();
-    // Add the optional rent sysvar account.
-    instruction
-        .accounts
-        .push(AccountMeta::new_readonly(sysvar::id(), false));
+    let instruction = spl_token_interface::instruction::sync_native_with_rent_sysvar(
+        &TOKEN_PROGRAM_ID,
+        &source_account_key,
+    )
+    .unwrap();
 
     // Executes the sync_native instruction.
 
