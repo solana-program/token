@@ -372,8 +372,14 @@ pub enum TokenInstruction<'a> {
     ///
     /// Accounts expected by this instruction:
     ///
+    ///   * Using runtime Rent sysvar
     ///   0. `[writable]`  The native token account to sync with its underlying
     ///      lamports.
+    ///
+    ///   * Using Rent sysvar account
+    ///   0. `[writable]`  The native token account to sync with its underlying
+    ///      lamports.
+    ///   1. `[]` Rent sysvar.
     SyncNative,
     /// Like [`TokenInstruction::InitializeAccount2`], but does not require the
     /// Rent sysvar to be provided
