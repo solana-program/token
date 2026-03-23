@@ -24,8 +24,8 @@ tag-message = "Publish {{crate_name}} v{{version}}"
 consolidate-commits = false
 
 [workspace.dependencies]
-mollusk-svm = "0.6.3"
-mollusk-svm-fuzz-fixture = "0.6.3"
+mollusk-svm = "0.11.0"
+mollusk-svm-fuzz-fixture = "0.11.0"
 num-traits = "0.2"
 pinocchio = "0.9.3"
 solana-instruction = "3.0.0"
