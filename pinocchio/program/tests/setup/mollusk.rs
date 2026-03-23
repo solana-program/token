@@ -5,7 +5,6 @@ use {
     solana_account::Account,
     solana_pubkey::Pubkey,
     solana_rent::Rent,
-    solana_sdk_ids::bpf_loader_upgradeable,
 };
 
 pub fn create_mint_account(
@@ -38,10 +37,6 @@ pub fn create_mint_account(
 /// Creates a Mollusk instance with the default feature set.
 pub fn mollusk() -> Mollusk {
     let mut mollusk = Mollusk::default();
-    mollusk.add_program(
-        &TOKEN_PROGRAM_ID,
-        "pinocchio_token_program",
-        &bpf_loader_upgradeable::id(),
-    );
+    mollusk.add_program(&TOKEN_PROGRAM_ID, "pinocchio_token_program");
     mollusk
 }

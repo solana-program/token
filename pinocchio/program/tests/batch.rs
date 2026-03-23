@@ -19,7 +19,6 @@ use {
     solana_program_test::{tokio, ProgramTest},
     solana_pubkey::Pubkey,
     solana_rent::Rent,
-    solana_sdk_ids::bpf_loader_upgradeable,
     solana_signer::Signer,
     solana_system_interface::instruction::create_account,
     solana_transaction::Transaction,
@@ -314,11 +313,7 @@ fn mollusk() -> Mollusk {
         feature_set,
         ..Default::default()
     };
-    mollusk.add_program(
-        &TOKEN_PROGRAM_ID,
-        "pinocchio_token_program",
-        &bpf_loader_upgradeable::id(),
-    );
+    mollusk.add_program(&TOKEN_PROGRAM_ID, "pinocchio_token_program");
     mollusk
 }
 
