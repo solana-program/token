@@ -43,6 +43,8 @@ unsafe impl Transmutable for Multisig {
     const LEN: usize = core::mem::size_of::<Multisig>();
 }
 
+impl super::sealed::Sealed for Multisig {}
+
 impl Initializable for Multisig {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {

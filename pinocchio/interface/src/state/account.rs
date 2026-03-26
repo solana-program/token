@@ -159,6 +159,8 @@ unsafe impl Transmutable for Account {
     const LEN: usize = core::mem::size_of::<Account>();
 }
 
+impl super::sealed::Sealed for Account {}
+
 impl Initializable for Account {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {

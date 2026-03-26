@@ -89,6 +89,8 @@ unsafe impl Transmutable for Mint {
     const LEN: usize = core::mem::size_of::<Mint>();
 }
 
+impl super::sealed::Sealed for Mint {}
+
 impl Initializable for Mint {
     #[inline(always)]
     fn is_initialized(&self) -> Result<bool, ProgramError> {

@@ -18,7 +18,7 @@ pub type COption<T> = ([u8; 4], T);
 /// It is up to the type implementing this trait to guarantee that the cast is
 /// safe, i.e., the fields of the type are well aligned and there are no padding
 /// bytes.
-pub unsafe trait Transmutable {
+pub unsafe trait Transmutable: sealed::Sealed {
     /// The length of the type.
     ///
     /// This must be equal to the size of each individual field in the type.
@@ -57,6 +57,13 @@ pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, 
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
 pub unsafe fn load_unchecked<T: Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
+    const {
+        assert!(
+            core::mem::align_of::<T>() == 1,
+            "<T> must have minimum alignment of 1"
+        );
+    };
+
     if unlikely(bytes.len() != T::LEN) {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -93,8 +100,21 @@ pub unsafe fn load_mut<T: Initializable + Transmutable>(
 pub unsafe fn load_mut_unchecked<T: Transmutable>(
     bytes: &mut [u8],
 ) -> Result<&mut T, ProgramError> {
+    const {
+        assert!(
+            core::mem::align_of::<T>() == 1,
+            "<T> must have minimum alignment of 1"
+        );
+    };
+
     if unlikely(bytes.len() != T::LEN) {
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(&mut *(bytes.as_mut_ptr() as *mut T))
+}
+
+/// Private module to seal the `Transmutable` trait.
+mod sealed {
+    /// Sealed trait to prevent external implementation of `Transmutable`.
+    pub trait Sealed {}
 }
