@@ -2200,7 +2200,10 @@
             "defaultValue": {
               "kind": "noneValueNode"
             },
-            "docs": ["Optional amount of lamports to transfer."]
+            "docs": [
+              "Optional amount of lamports to transfer.",
+              "If not provided, the instruction will unwrap all lamports in excess of rent exemption."
+            ]
           }
         ],
         "discriminators": [
@@ -2285,7 +2288,7 @@
             "kind": "instructionRemainingAccountsNode",
             "value": {
               "kind": "argumentValueNode",
-              "name": "account"
+              "name": "accounts"
             },
             "isOptional": true,
             "isSigner": true
