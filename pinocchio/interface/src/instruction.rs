@@ -499,9 +499,15 @@ pub enum TokenInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[writable]` Source Account owned by the token program
-    ///   1. `[writable]` Destination account
-    ///   2. `[signer]` Authority
+    ///   * Single owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[signer]` The source account's owner/delegate.
+    ///
+    ///   * Multisignature owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[]` The source account's multisignature owner/delegate.
     ///   3. `..+M` `[signer]` M signer accounts.
     WithdrawExcessLamports = 38,
 
