@@ -2247,33 +2247,39 @@
             "defaultValueStrategy": "omitted"
           },
           {
-              "kind": "instructionArgumentNode",
-              "name": "data",
-              "type": {
-                "kind": "arrayTypeNode",
-                "item": {
-                  "kind": "structTypeNode",
-                  "fields": [
-                    { "kind": "structFieldTypeNode", "name": "numberOfAccounts", "type": {
+            "kind": "instructionArgumentNode",
+            "name": "data",
+            "type": {
+              "kind": "arrayTypeNode",
+              "item": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "numberOfAccounts",
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "instructionData",
+                    "type": {
+                      "kind": "sizePrefixTypeNode", 
+                      "prefix": {
                         "kind": "numberTypeNode",
                         "format": "u8",
                         "endian": "le"
-                      }
-                    },
-                    { "kind": "structFieldTypeNode", "name": "instructionData", "type": {
-                        "kind": "sizePrefixTypeNode", 
-                        "prefix": {
-                          "kind": "numberTypeNode",
-                          "format": "u8",
-                          "endian": "le"
-                        },
-                        "type": { "kind": "bytesTypeNode" } }
-                    }
-                  ]
-                },
-                "count": { "kind": "remainderCountNode" }
+                      },
+                      "type": { "kind": "bytesTypeNode" } }
+                  }
+                ]
               },
-              "docs": ["Instruction data for batch instructions."]
+              "count": { "kind": "remainderCountNode" }
+            },
+            "docs": ["Instruction data for batch instructions."]
           }
         ],
         "discriminators": [
