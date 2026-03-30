@@ -45,6 +45,7 @@ import {
     getAmountToUiAmountInstruction,
     getApproveCheckedInstruction,
     getApproveInstruction,
+    getBatchInstruction,
     getBurnCheckedInstruction,
     getBurnInstruction,
     getCloseAccountInstruction,
@@ -67,9 +68,12 @@ import {
     getTransferCheckedInstruction,
     getTransferInstruction,
     getUiAmountToAmountInstruction,
+    getUnwrapLamportsInstruction,
+    getWithdrawExcessLamportsInstruction,
     parseAmountToUiAmountInstruction,
     parseApproveCheckedInstruction,
     parseApproveInstruction,
+    parseBatchInstruction,
     parseBurnCheckedInstruction,
     parseBurnInstruction,
     parseCloseAccountInstruction,
@@ -92,9 +96,12 @@ import {
     parseTransferCheckedInstruction,
     parseTransferInstruction,
     parseUiAmountToAmountInstruction,
+    parseUnwrapLamportsInstruction,
+    parseWithdrawExcessLamportsInstruction,
     type AmountToUiAmountInput,
     type ApproveCheckedInput,
     type ApproveInput,
+    type BatchInput,
     type BurnCheckedInput,
     type BurnInput,
     type CloseAccountInput,
@@ -113,6 +120,7 @@ import {
     type ParsedAmountToUiAmountInstruction,
     type ParsedApproveCheckedInstruction,
     type ParsedApproveInstruction,
+    type ParsedBatchInstruction,
     type ParsedBurnCheckedInstruction,
     type ParsedBurnInstruction,
     type ParsedCloseAccountInstruction,
@@ -135,6 +143,8 @@ import {
     type ParsedTransferCheckedInstruction,
     type ParsedTransferInstruction,
     type ParsedUiAmountToAmountInstruction,
+    type ParsedUnwrapLamportsInstruction,
+    type ParsedWithdrawExcessLamportsInstruction,
     type RevokeInput,
     type SetAuthorityInput,
     type SyncNativeInput,
@@ -142,6 +152,8 @@ import {
     type TransferCheckedInput,
     type TransferInput,
     type UiAmountToAmountInput,
+    type UnwrapLamportsInput,
+    type WithdrawExcessLamportsInput,
 } from '../instructions';
 
 export const TOKEN_PROGRAM_ADDRESS =
@@ -196,6 +208,9 @@ export enum TokenInstruction {
     InitializeImmutableOwner,
     AmountToUiAmount,
     UiAmountToAmount,
+    WithdrawExcessLamports,
+    UnwrapLamports,
+    Batch,
 }
 
 export function identifyTokenInstruction(
@@ -277,6 +292,15 @@ export function identifyTokenInstruction(
     if (containsBytes(data, getU8Encoder().encode(24), 0)) {
         return TokenInstruction.UiAmountToAmount;
     }
+    if (containsBytes(data, getU8Encoder().encode(38), 0)) {
+        return TokenInstruction.WithdrawExcessLamports;
+    }
+    if (containsBytes(data, getU8Encoder().encode(45), 0)) {
+        return TokenInstruction.UnwrapLamports;
+    }
+    if (containsBytes(data, getU8Encoder().encode(255), 0)) {
+        return TokenInstruction.Batch;
+    }
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, {
         instructionData: data,
         programName: 'token',
@@ -310,7 +334,10 @@ export type ParsedTokenInstruction<TProgram extends string = 'TokenkegQfeZyiNwAJ
           instructionType: TokenInstruction.InitializeImmutableOwner;
       } & ParsedInitializeImmutableOwnerInstruction<TProgram>)
     | ({ instructionType: TokenInstruction.AmountToUiAmount } & ParsedAmountToUiAmountInstruction<TProgram>)
-    | ({ instructionType: TokenInstruction.UiAmountToAmount } & ParsedUiAmountToAmountInstruction<TProgram>);
+    | ({ instructionType: TokenInstruction.UiAmountToAmount } & ParsedUiAmountToAmountInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.WithdrawExcessLamports } & ParsedWithdrawExcessLamportsInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.UnwrapLamports } & ParsedUnwrapLamportsInstruction<TProgram>)
+    | ({ instructionType: TokenInstruction.Batch } & ParsedBatchInstruction<TProgram>);
 
 export function parseTokenInstruction<TProgram extends string>(
     instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>,
@@ -450,6 +477,20 @@ export function parseTokenInstruction<TProgram extends string>(
                 ...parseUiAmountToAmountInstruction(instruction),
             };
         }
+        case TokenInstruction.WithdrawExcessLamports: {
+            assertIsInstructionWithAccounts(instruction);
+            return {
+                instructionType: TokenInstruction.WithdrawExcessLamports,
+                ...parseWithdrawExcessLamportsInstruction(instruction),
+            };
+        }
+        case TokenInstruction.UnwrapLamports: {
+            assertIsInstructionWithAccounts(instruction);
+            return { instructionType: TokenInstruction.UnwrapLamports, ...parseUnwrapLamportsInstruction(instruction) };
+        }
+        case TokenInstruction.Batch: {
+            return { instructionType: TokenInstruction.Batch, ...parseBatchInstruction(instruction) };
+        }
         default:
             throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, {
                 instructionType: instructionType as string,
@@ -526,6 +567,13 @@ export type TokenPluginInstructions = {
     uiAmountToAmount: (
         input: UiAmountToAmountInput,
     ) => ReturnType<typeof getUiAmountToAmountInstruction> & SelfPlanAndSendFunctions;
+    withdrawExcessLamports: (
+        input: WithdrawExcessLamportsInput,
+    ) => ReturnType<typeof getWithdrawExcessLamportsInstruction> & SelfPlanAndSendFunctions;
+    unwrapLamports: (
+        input: UnwrapLamportsInput,
+    ) => ReturnType<typeof getUnwrapLamportsInstruction> & SelfPlanAndSendFunctions;
+    batch: (input: BatchInput) => ReturnType<typeof getBatchInstruction> & SelfPlanAndSendFunctions;
 };
 
 export type TokenPluginRequirements = ClientWithRpc<GetAccountInfoApi & GetMultipleAccountsApi> &
@@ -577,6 +625,10 @@ export function tokenProgram() {
                         addSelfPlanAndSendFunctions(client, getAmountToUiAmountInstruction(input)),
                     uiAmountToAmount: input =>
                         addSelfPlanAndSendFunctions(client, getUiAmountToAmountInstruction(input)),
+                    withdrawExcessLamports: input =>
+                        addSelfPlanAndSendFunctions(client, getWithdrawExcessLamportsInstruction(input)),
+                    unwrapLamports: input => addSelfPlanAndSendFunctions(client, getUnwrapLamportsInstruction(input)),
+                    batch: input => addSelfPlanAndSendFunctions(client, getBatchInstruction(input)),
                 },
             },
         };

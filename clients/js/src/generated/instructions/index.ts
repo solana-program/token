@@ -9,6 +9,7 @@
 export * from './amountToUiAmount';
 export * from './approve';
 export * from './approveChecked';
+export * from './batch';
 export * from './burn';
 export * from './burnChecked';
 export * from './closeAccount';
@@ -34,3 +35,5 @@ export * from './thawAccount';
 export * from './transfer';
 export * from './transferChecked';
 export * from './uiAmountToAmount';
+export * from './unwrapLamports';
+export * from './withdrawExcessLamports';
