@@ -1639,6 +1639,18 @@
             "docs": [
               "The native token account to sync with its underlying lamports."
             ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "rent",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": ["Rent sysvar."],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "SysvarRent111111111111111111111111111111111"
+            }
           }
         ],
         "arguments": [
@@ -1670,7 +1682,7 @@
           "`system_instruction::transfer` to move lamports to a wrapped token",
           "account, and needs to have its token `amount` field updated."
         ],
-        "optionalAccountStrategy": "programId"
+        "optionalAccountStrategy": "omitted"
       },
       {
         "kind": "instructionNode",
@@ -2056,6 +2068,233 @@
           "",
           "Return data can be fetched using `sol_get_return_data` and deserializing",
           "the return data as a little-endian `u64`."
+        ],
+        "optionalAccountStrategy": "programId"
+      },
+      {
+        "kind": "instructionNode",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "source",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": ["The source account."]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destination",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": ["The destination account."]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": "either",
+            "isOptional": false,
+            "docs": ["The source account owner or its multisignature account."]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "docs": [],
+            "defaultValue": { "kind": "numberValueNode", "number": 38 },
+            "defaultValueStrategy": "omitted"
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "withdrawExcessLamports",
+        "docs": [
+          "Rescue SOL sent to any TokenProgram-owned account",
+          "by sending them to any other account, leaving behind only",
+          "lamports for rent exemption."
+        ],
+        "optionalAccountStrategy": "programId"
+      },
+      {
+        "kind": "instructionNode",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "source",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": ["The source account."]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destination",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": ["The destination account."]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": "either",
+            "isOptional": false,
+            "docs": ["The source account owner or its multisignature account."]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "docs": [],
+            "defaultValue": { "kind": "numberValueNode", "number": 45 },
+            "defaultValueStrategy": "omitted"
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "amount",
+            "type": {
+              "kind": "optionTypeNode",
+              "item": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "fixed": false
+            },
+            "defaultValue": {
+              "kind": "noneValueNode"
+            },
+            "docs": ["Optional amount of lamports to transfer."]
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "multiSigners"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "UnwrapLamports",
+        "docs": [
+          "Transfer lamports from a native SOL account to a destination account."
+        ],
+        "optionalAccountStrategy": "programId"
+      },
+      {
+        "kind": "instructionNode",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "docs": [],
+            "defaultValue": { "kind": "numberValueNode", "number": 255 },
+            "defaultValueStrategy": "omitted"
+          },
+          {
+              "kind": "instructionArgumentNode",
+              "name": "data",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    { "kind": "structFieldTypeNode", "name": "numberOfAccounts", "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    },
+                    { "kind": "structFieldTypeNode", "name": "instructionData", "type": {
+                        "kind": "sizePrefixTypeNode", 
+                        "prefix": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        },
+                        "type": { "kind": "bytesTypeNode" } }
+                    }
+                  ]
+                },
+                "count": { "kind": "remainderCountNode" }
+              },
+              "docs": ["Instruction data for batch instructions."]
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "account"
+            },
+            "isOptional": true,
+            "isSigner": true
+          }
+        ],
+        "name": "Batch",
+        "docs": [
+          "Executes a batch of instructions. The instructions to be executed are",
+          "specified in sequence on the instruction data."
         ],
         "optionalAccountStrategy": "programId"
       }
