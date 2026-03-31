@@ -7,7 +7,7 @@ cd "${src_root}"
 ARGS=(
   -r
   -q
-  --bpf-program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./target/deploy/spl_token.so
+  --bpf-program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./target/deploy/pinocchio_token_program.so
 )
 PORT=8899
 PID=$(lsof -t -i:$PORT)

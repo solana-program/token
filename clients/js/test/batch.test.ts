@@ -3,11 +3,13 @@ import { AccountRole, generateKeyPairSigner, none, some } from '@solana/kit';
 import { createLocalClient } from '@solana/kit-client-rpc';
 import test from 'ava';
 import {
+    AccountState,
     getBatchInstruction,
     getInitializeAccount3Instruction,
     getInitializeMint2Instruction,
     getMintSize,
     getMintToInstruction,
+    getTokenSize,
     parseBatchInstruction,
     TOKEN_PROGRAM_ADDRESS,
     TokenInstruction,
@@ -24,7 +26,7 @@ test('it batches multiple token instructions together', async t => {
         generateKeyPairSigner(),
     ]);
     const mintSize = getMintSize();
-    const tokenSize = getMintSize();
+    const tokenSize = getTokenSize();
 
     // When we send a transaction with multiple token instructions batched together.
     await client.sendTransaction([
@@ -76,7 +78,7 @@ test('it batches multiple token instructions together', async t => {
         mint: mint.address,
         owner: tokenOwner.address,
         amount: 123_45n,
-        isInitialized: true,
+        state: AccountState.Initialized,
     });
 });
 
