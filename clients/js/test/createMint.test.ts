@@ -1,5 +1,5 @@
 import { Account, generateKeyPairSigner, none, some } from '@solana/kit';
-import { createDefaultLocalhostRpcClient } from '@solana/kit-plugins';
+import { createLocalClient } from '@solana/kit-client-rpc';
 import test from 'ava';
 import { fetchMint, getCreateMintInstructionPlan, Mint, tokenProgram } from '../src';
 import { createDefaultSolanaClient, createDefaultTransactionPlanner, generateKeyPairSignerWithSol } from './_setup';
@@ -72,7 +72,7 @@ test('it creates a new mint account with a freeze authority', async t => {
 
 test('it creates and initializes a new mint account using the token program plugin', async t => {
     // Given a client with the token program plugin, and a mint account.
-    const client = await createDefaultLocalhostRpcClient().use(tokenProgram());
+    const client = await createLocalClient().use(tokenProgram());
     const mint = await generateKeyPairSigner();
 
     // When we send the "create mint" instruction plan.

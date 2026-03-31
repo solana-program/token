@@ -1,17 +1,17 @@
 import { Account, generateKeyPairSigner } from '@solana/kit';
-import { createDefaultLocalhostRpcClient } from '@solana/kit-plugins';
+import { createLocalClient } from '@solana/kit-client-rpc';
 import test from 'ava';
 import { AccountState, fetchToken, findAssociatedTokenPda, Token, TOKEN_PROGRAM_ADDRESS, tokenProgram } from '../src';
 import {
+    createDefaultSolanaClient,
     createMint,
     createTokenPdaWithAmount,
     generateKeyPairSignerWithSol,
-    createDefaultSolanaClient,
 } from './_setup';
 
 test('plugin mintToATA defaults payer and auto-derives ATA', async t => {
     // Given a mint account, its mint authority and a token owner.
-    const client = await createDefaultLocalhostRpcClient().use(tokenProgram());
+    const client = await createLocalClient().use(tokenProgram());
     const mintAuthority = await generateKeyPairSigner();
     const owner = await generateKeyPairSigner();
     const mint = await generateKeyPairSigner();
@@ -64,7 +64,7 @@ test('plugin transferToATA defaults payer and auto-derives source + destination'
     await createTokenPdaWithAmount(baseClient, payer, mintAuthority, mint, ownerA.address, 100n, decimals);
 
     // When ownerA transfers 50 tokens to ownerB via the plugin (payer defaulted, source + destination derived).
-    const client = await createDefaultLocalhostRpcClient().use(tokenProgram());
+    const client = await createLocalClient().use(tokenProgram());
     await client.token.instructions
         .transferToATA({
             mint,

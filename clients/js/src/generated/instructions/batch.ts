@@ -96,7 +96,7 @@ export function getBatchInstructionDataCodec(): Codec<BatchInstructionDataArgs, 
 
 export type BatchInput = {
     data: BatchInstructionDataArgs['data'];
-    accounts?: Array<TransactionSigner>;
+    accounts?: Array<TransactionSigner | Address>;
 };
 
 export function getBatchInstruction<TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS>(
@@ -110,11 +110,11 @@ export function getBatchInstruction<TProgramAddress extends Address = typeof TOK
     const args = { ...input };
 
     // Remaining accounts.
-    const remainingAccounts: AccountMeta[] = (args.accounts ?? []).map(signer => ({
-        address: signer.address,
-        role: AccountRole.READONLY_SIGNER,
-        signer,
-    }));
+    const remainingAccounts: AccountMeta[] = (args.accounts ?? []).map(addressOrSigner =>
+        typeof addressOrSigner === 'string'
+            ? { address: addressOrSigner, role: AccountRole.READONLY }
+            : { address: addressOrSigner.address, role: AccountRole.READONLY, signer: addressOrSigner },
+    );
 
     return Object.freeze({
         accounts: remainingAccounts,

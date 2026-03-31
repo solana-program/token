@@ -2297,7 +2297,7 @@
               "name": "accounts"
             },
             "isOptional": true,
-            "isSigner": true
+            "isSigner": "either"
           }
         ],
         "name": "Batch",
