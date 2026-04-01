@@ -7,7 +7,6 @@
  */
 
 import {
-    AccountRole,
     addDecoderSizePrefix,
     addEncoderSizePrefix,
     combineCodec,
@@ -29,7 +28,6 @@ import {
     type InstructionWithAccounts,
     type InstructionWithData,
     type ReadonlyUint8Array,
-    type TransactionSigner,
 } from '@solana/kit';
 import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
@@ -96,7 +94,6 @@ export function getBatchInstructionDataCodec(): Codec<BatchInstructionDataArgs, 
 
 export type BatchInput = {
     data: BatchInstructionDataArgs['data'];
-    accounts?: Array<TransactionSigner | Address>;
 };
 
 export function getBatchInstruction<TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS>(
@@ -109,15 +106,7 @@ export function getBatchInstruction<TProgramAddress extends Address = typeof TOK
     // Original args.
     const args = { ...input };
 
-    // Remaining accounts.
-    const remainingAccounts: AccountMeta[] = (args.accounts ?? []).map(addressOrSigner =>
-        typeof addressOrSigner === 'string'
-            ? { address: addressOrSigner, role: AccountRole.READONLY }
-            : { address: addressOrSigner.address, role: AccountRole.READONLY, signer: addressOrSigner },
-    );
-
     return Object.freeze({
-        accounts: remainingAccounts,
         data: getBatchInstructionDataEncoder().encode(args as BatchInstructionDataArgs),
         programAddress,
     } as BatchInstruction<TProgramAddress>);

@@ -2224,7 +2224,7 @@
             "isSigner": true
           }
         ],
-        "name": "UnwrapLamports",
+        "name": "unwrapLamports",
         "docs": [
           "Transfer lamports from a native SOL account to a destination account."
         ],
@@ -2267,13 +2267,14 @@
                     "kind": "structFieldTypeNode",
                     "name": "instructionData",
                     "type": {
-                      "kind": "sizePrefixTypeNode", 
+                      "kind": "sizePrefixTypeNode",
                       "prefix": {
                         "kind": "numberTypeNode",
                         "format": "u8",
                         "endian": "le"
                       },
-                      "type": { "kind": "bytesTypeNode" } }
+                      "type": { "kind": "bytesTypeNode" }
+                    }
                   }
                 ]
               },
@@ -2289,18 +2290,7 @@
             "offset": 0
           }
         ],
-        "remainingAccounts": [
-          {
-            "kind": "instructionRemainingAccountsNode",
-            "value": {
-              "kind": "argumentValueNode",
-              "name": "accounts"
-            },
-            "isOptional": true,
-            "isSigner": "either"
-          }
-        ],
-        "name": "Batch",
+        "name": "batch",
         "docs": [
           "Executes a batch of instructions. The instructions to be executed are",
           "specified in sequence on the instruction data."
