@@ -274,10 +274,14 @@ pub fn process_instruction(accounts: &[AccountInfo], instruction_data: &[u8]) ->
 /// - `1`: `InitializeAccount`
 /// - `3`: `Transfer`
 /// - `7`: `MintTo`
+/// - `8`: `Burn`
 /// - `9`: `CloseAccount`
-/// - `16`: `InitializeAccount2`
+/// - `12`: `TransferChecked`
+/// - `15`: `BurnChecked`
+/// - `17`: `SyncNative`
 /// - `18`: `InitializeAccount3`
 /// - `20`: `InitializeMint2`
+/// - `22`: `InitializeImmutableOwner`
 #[inline(always)]
 pub(crate) fn inner_process_instruction(
     accounts: &[AccountInfo],
