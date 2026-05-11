@@ -27,6 +27,9 @@ pub enum TokenError {
     /// Invalid number of required signers.
     InvalidNumberOfRequiredSigners,
     /// State is uninitialized.
+    ///
+    /// This error is not currently returned by the program and is reserved
+    /// for compatibility.
     UninitializedState,
 
     // 10

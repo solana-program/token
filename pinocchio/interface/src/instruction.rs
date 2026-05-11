@@ -134,6 +134,9 @@ pub enum TokenInstruction {
 
     /// Sets a new authority of a mint or account.
     ///
+    /// Note that when setting a new account owner authority on a native
+    /// token account, the current close authority (if any) will be removed.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single authority
@@ -550,7 +553,15 @@ pub enum TokenInstruction {
     ///
     /// Both the number of accounts and instruction data length are used to
     /// identify the slice of accounts and instruction data for each
-    /// instruction.
+    /// instruction. Since the instruction data length is specified as a `u8`,
+    /// the maximum instruction data length is 255 bytes, which is sufficient
+    /// for all current instructions in the program.
+    ///
+    /// When one or more batched instructions write return data, the batch
+    /// instruction returns the data written by the last instruction that does
+    /// so. That instruction does not have to be the final instruction in the
+    /// batch: later instructions that do not write return data leave the last
+    /// written return data unchanged.
     ///
     /// Note that it is not sound to have a `batch` instruction that contains
     /// other `batch` instruction; an error will be raised when this is
