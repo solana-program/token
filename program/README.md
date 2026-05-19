@@ -1,3 +1,8 @@
+> ⚠️ DEPRECATED
+> 
+> This crate has been deprecated and is no longer actively maintained.
+> Please use to [spl-token-interface](https://crates.io/crates/spl-token-interface) instead.
+
 # Token program
 
 A token program on the Solana blockchain, usable for fungible and non-fungible tokens.

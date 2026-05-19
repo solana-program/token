@@ -1,7 +1,13 @@
+#![deprecated(since = "9.0.1", note = "Please use `spl-token-interface` instead")]
 #![allow(clippy::arithmetic_side_effects)]
 #![deny(missing_docs)]
 
 //! An ERC20-like Token program for the Solana blockchain
+//!
+//! ⚠️ DEPRECATED
+//!
+//! This crate has been deprecated and is no longer actively maintained.
+//! Please use to [spl-token-interface](https://crates.io/crates/spl-token-interface) instead.
 
 pub mod error;
 pub mod instruction;
