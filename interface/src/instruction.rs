@@ -1628,11 +1628,15 @@ pub fn batch(
     token_program_id: &Pubkey,
     instructions: Vec<Instruction>,
 ) -> Result<Instruction, ProgramError> {
+    check_program_account(token_program_id)?;
+
     let mut data: Vec<u8> = TokenInstruction::Batch.pack();
     let mut accounts: Vec<AccountMeta> = vec![];
 
     for instruction in instructions {
-        check_program_account(&instruction.program_id)?;
+        if token_program_id != &instruction.program_id {
+            return Err(ProgramError::IncorrectProgramId);
+        }
 
         data.push(instruction.accounts.len() as u8);
 
