@@ -1,4 +1,7 @@
-#![deprecated(since = "9.0.1", note = "Please use `spl-token-interface` instead")]
+#![deprecated(
+    since = "9.0.1",
+    note = "Please use `spl-token-interface` for state and instruction types, and p-token for the program implementation"
+)]
 #![allow(clippy::arithmetic_side_effects)]
 #![deny(missing_docs)]
 
@@ -7,7 +10,10 @@
 //! ⚠️ DEPRECATED
 //!
 //! This crate has been deprecated and is no longer actively maintained.
-//! Please use to [spl-token-interface](https://crates.io/crates/spl-token-interface) instead.
+//!
+//! Please use [spl-token-interface](https://crates.io/crates/spl-token-interface) for
+//! state and instruction types, and [p-token](https://github.com/solana-program/token/tree/main/pinocchio/program)
+//! for the program implementation.
 
 pub mod error;
 pub mod instruction;
