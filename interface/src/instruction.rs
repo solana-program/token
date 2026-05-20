@@ -18,7 +18,7 @@ pub const MAX_SIGNERS: usize = 11;
 const U64_BYTES: usize = 8;
 
 /// Instructions supported by the token program.
-#[repr(C)]
+#[repr(C, u8)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum TokenInstruction<'a> {
     /// Initializes a new mint and optionally deposits all the newly minted
@@ -474,6 +474,78 @@ pub enum TokenInstruction<'a> {
         /// The `ui_amount` of tokens to reformat.
         ui_amount: &'a str,
     },
+    /// This instruction is to be used to rescue SOL sent to any `TokenProgram`
+    /// owned account by sending them to any other account, leaving behind only
+    /// lamports for rent exemption.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   * Single owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[signer]` The source account's owner/delegate.
+    ///
+    ///   * Multisignature owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[]` The source account's multisignature owner/delegate.
+    ///   3. `..+M` `[signer]` M signer accounts.
+    WithdrawExcessLamports = 38,
+    /// Transfer lamports from a native SOL account to a destination account.
+    ///
+    /// This is useful to unwrap lamports from a wrapped SOL account.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   * Single owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[signer]` The source account's owner/delegate.
+    ///
+    ///   * Multisignature owner/delegate
+    ///   0. `[writable]` The source account.
+    ///   1. `[writable]` The destination account.
+    ///   2. `[]` The source account's multisignature owner/delegate.
+    ///   3. `..+M` `[signer]` M signer accounts.
+    ///
+    /// Data expected by this instruction:
+    ///
+    ///   - `Option<u64>` The amount of lamports to transfer. When an amount is
+    ///     not specified, the entire balance of the source account will be
+    ///     transferred.
+    UnwrapLamports {
+        /// The amount of lamports to transfer.
+        amount: COption<u64>,
+    } = 45,
+    /// Executes a batch of instructions. The instructions to be executed are
+    /// specified in sequence on the instruction data. Each instruction
+    /// provides:
+    ///   - `u8`: number of accounts
+    ///   - `u8`: instruction data length (includes the discriminator)
+    ///   - `u8`: instruction discriminator
+    ///   - `[u8]`: instruction data
+    ///
+    /// Accounts follow a similar pattern, where accounts for each instruction
+    /// are specified in sequence. Therefore, the number of accounts
+    /// expected by this instruction is variable, i.e., it depends on the
+    /// instructions provided.
+    ///
+    /// Both the number of accounts and instruction data length are used to
+    /// identify the slice of accounts and instruction data for each
+    /// instruction. Since the instruction data length is specified as a `u8`,
+    /// the maximum instruction data length is 255 bytes, which is sufficient
+    /// for all current instructions in the program.
+    ///
+    /// When one or more batched instructions write return data, the batch
+    /// instruction returns the data written by the last instruction that does
+    /// so. That instruction does not have to be the final instruction in the
+    /// batch: later instructions that do not write return data leave the last
+    /// written return data unchanged.
+    ///
+    /// Note that it is not sound to have a `batch` instruction that contains
+    /// other `batch` instruction; an error will be raised when this is
+    /// detected.
+    Batch = 255,
     // Any new variants also need to be added to program-2022 `TokenInstruction`, so that the
     // latter remains a superset of this instruction set. New variants also need to be added to
     // token/js/src/instructions/types.ts to maintain @solana/spl-token compatibility
@@ -580,6 +652,12 @@ impl<'a> TokenInstruction<'a> {
                 let ui_amount = std::str::from_utf8(rest).map_err(|_| InvalidInstruction)?;
                 Self::UiAmountToAmount { ui_amount }
             }
+            38 => Self::WithdrawExcessLamports,
+            45 => {
+                let (amount, _rest) = Self::unpack_u64_option(rest)?;
+                Self::UnwrapLamports { amount }
+            }
+            255 => Self::Batch,
             _ => return Err(TokenError::InvalidInstruction.into()),
         })
     }
@@ -691,6 +769,16 @@ impl<'a> TokenInstruction<'a> {
                 buf.push(24);
                 buf.extend_from_slice(ui_amount.as_bytes());
             }
+            &Self::WithdrawExcessLamports => {
+                buf.push(38);
+            }
+            Self::UnwrapLamports { ref amount } => {
+                buf.push(45);
+                Self::pack_u64_option(amount, &mut buf);
+            }
+            &Self::Batch => {
+                buf.push(255);
+            }
         };
         buf
     }
@@ -734,6 +822,30 @@ impl<'a> TokenInstruction<'a> {
             .map(u64::from_le_bytes)
             .ok_or(TokenError::InvalidInstruction)?;
         Ok((value, &input[U64_BYTES..]))
+    }
+
+    fn unpack_u64_option(input: &[u8]) -> Result<(COption<u64>, &[u8]), ProgramError> {
+        match input.split_first() {
+            Option::Some((&0, rest)) => Ok((COption::None, rest)),
+            Option::Some((&1, rest)) if rest.len() >= 8 => {
+                let (amount, rest) = rest
+                    .split_first_chunk::<8>()
+                    .ok_or(TokenError::InvalidInstruction)?;
+                let v = u64::from_le_bytes(*amount);
+                Ok((COption::Some(v), rest))
+            }
+            _ => Err(TokenError::InvalidInstruction.into()),
+        }
+    }
+
+    fn pack_u64_option(value: &COption<u64>, buf: &mut Vec<u8>) {
+        match *value {
+            COption::Some(ref amount) => {
+                buf.push(1);
+                buf.extend_from_slice(&amount.to_le_bytes());
+            }
+            COption::None => buf.push(0),
+        }
     }
 
     fn unpack_amount_decimals(input: &[u8]) -> Result<(u64, u8, &[u8]), ProgramError> {
@@ -1450,6 +1562,101 @@ pub fn ui_amount_to_amount(
     })
 }
 
+/// Creates a `WithdrawExcessLamports` instruction
+pub fn withdraw_excess_lamports(
+    token_program_id: &Pubkey,
+    account_pubkey: &Pubkey,
+    destination_pubkey: &Pubkey,
+    authority_pubkey: &Pubkey,
+    signer_pubkeys: &[&Pubkey],
+) -> Result<Instruction, ProgramError> {
+    check_program_account(token_program_id)?;
+    let data = TokenInstruction::WithdrawExcessLamports.pack();
+
+    let mut accounts = Vec::with_capacity(3 + signer_pubkeys.len());
+    accounts.push(AccountMeta::new(*account_pubkey, false));
+    accounts.push(AccountMeta::new(*destination_pubkey, false));
+    accounts.push(AccountMeta::new_readonly(
+        *authority_pubkey,
+        signer_pubkeys.is_empty(),
+    ));
+    for signer_pubkey in signer_pubkeys.iter() {
+        accounts.push(AccountMeta::new_readonly(**signer_pubkey, true));
+    }
+
+    Ok(Instruction {
+        program_id: *token_program_id,
+        accounts,
+        data,
+    })
+}
+
+/// Creates a `UnwrapLamports` instruction
+pub fn unwrap_lamports(
+    token_program_id: &Pubkey,
+    account_pubkey: &Pubkey,
+    destination_pubkey: &Pubkey,
+    authority_pubkey: &Pubkey,
+    signer_pubkeys: &[&Pubkey],
+    amount: Option<u64>,
+) -> Result<Instruction, ProgramError> {
+    check_program_account(token_program_id)?;
+
+    let amount = amount.into();
+    let data = TokenInstruction::UnwrapLamports { amount }.pack();
+
+    let mut accounts = Vec::with_capacity(3 + signer_pubkeys.len());
+    accounts.push(AccountMeta::new(*account_pubkey, false));
+    accounts.push(AccountMeta::new(*destination_pubkey, false));
+    accounts.push(AccountMeta::new_readonly(
+        *authority_pubkey,
+        signer_pubkeys.is_empty(),
+    ));
+    for signer_pubkey in signer_pubkeys.iter() {
+        accounts.push(AccountMeta::new_readonly(**signer_pubkey, true));
+    }
+
+    Ok(Instruction {
+        program_id: *token_program_id,
+        accounts,
+        data,
+    })
+}
+
+/// Creates a `Batch` instruction
+pub fn batch(
+    token_program_id: &Pubkey,
+    instructions: &[Instruction],
+) -> Result<Instruction, ProgramError> {
+    check_program_account(token_program_id)?;
+
+    let mut data: Vec<u8> = TokenInstruction::Batch.pack();
+    let mut accounts: Vec<AccountMeta> = vec![];
+
+    for instruction in instructions {
+        if token_program_id != &instruction.program_id {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+
+        data.push(instruction.accounts.len() as u8);
+
+        if instruction.data.len() > u8::MAX as usize {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+
+        data.push(instruction.data.len() as u8);
+
+        data.extend_from_slice(&instruction.data);
+        accounts.extend_from_slice(&instruction.accounts);
+    }
+
+    Ok(Instruction {
+        program_id: *token_program_id,
+        data,
+        accounts,
+    })
+}
+
 /// Utility function that checks index is between `MIN_SIGNERS` and
 /// `MAX_SIGNERS`
 pub fn is_valid_signer_index(index: usize) -> bool {
@@ -1696,6 +1903,38 @@ mod test {
         let check = TokenInstruction::UiAmountToAmount { ui_amount: "0.42" };
         let packed = check.pack();
         let expect = vec![24u8, 48, 46, 52, 50];
+        assert_eq!(packed, expect);
+        let unpacked = TokenInstruction::unpack(&expect).unwrap();
+        assert_eq!(unpacked, check);
+
+        let check = TokenInstruction::WithdrawExcessLamports;
+        let packed = check.pack();
+        let expect = vec![38u8];
+        assert_eq!(packed, expect);
+        let unpacked = TokenInstruction::unpack(&expect).unwrap();
+        assert_eq!(unpacked, check);
+
+        let check = TokenInstruction::UnwrapLamports {
+            amount: COption::Some(42),
+        };
+        let packed = check.pack();
+        let expect = vec![45u8, 1, 42, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(packed, expect);
+        let unpacked = TokenInstruction::unpack(&expect).unwrap();
+        assert_eq!(unpacked, check);
+
+        let check = TokenInstruction::UnwrapLamports {
+            amount: COption::None,
+        };
+        let packed = check.pack();
+        let expect = vec![45u8, 0];
+        assert_eq!(packed, expect);
+        let unpacked = TokenInstruction::unpack(&expect).unwrap();
+        assert_eq!(unpacked, check);
+
+        let check = TokenInstruction::Batch;
+        let packed = check.pack();
+        let expect = vec![255u8];
         assert_eq!(packed, expect);
         let unpacked = TokenInstruction::unpack(&expect).unwrap();
         assert_eq!(unpacked, check);
