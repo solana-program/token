@@ -7,7 +7,7 @@
 
 //! An ERC20-like Token program for the Solana blockchain
 //!
-//! ⚠️ DEPRECATED
+//! `⚠️ DEPRECATED`
 //!
 //! This crate has been deprecated and is no longer actively maintained.
 //!
