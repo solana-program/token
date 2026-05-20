@@ -1626,7 +1626,7 @@ pub fn unwrap_lamports(
 /// Creates a `Batch` instruction
 pub fn batch(
     token_program_id: &Pubkey,
-    instructions: Vec<Instruction>,
+    instructions: &[Instruction],
 ) -> Result<Instruction, ProgramError> {
     check_program_account(token_program_id)?;
 
