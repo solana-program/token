@@ -90,6 +90,9 @@ pub enum TokenInstruction {
     /// amounts of SOL and Tokens will be transferred to the destination
     /// account.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner/delegate
@@ -110,6 +113,9 @@ pub enum TokenInstruction {
 
     /// Approves a delegate.  A delegate is given the authority over tokens on
     /// behalf of the source account's owner.
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -133,6 +139,9 @@ pub enum TokenInstruction {
     ///
     /// Note that a delegate can revoke its own delegation.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner
@@ -149,6 +158,9 @@ pub enum TokenInstruction {
     ///
     /// Note that when setting a new account owner authority on a native
     /// token account, the current close authority (if any) will be removed.
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -169,6 +181,9 @@ pub enum TokenInstruction {
 
     /// Mints new tokens to an account.  The native mint does not support
     /// minting.
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -191,6 +206,9 @@ pub enum TokenInstruction {
     /// Burns tokens by removing them from an account.  `Burn` does not support
     /// accounts associated with the native mint, use `CloseAccount` instead.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner/delegate
@@ -212,6 +230,9 @@ pub enum TokenInstruction {
     /// Close an account by transferring all its SOL to the destination account.
     /// Non-native accounts may only be closed if its token amount is zero.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner
@@ -229,6 +250,9 @@ pub enum TokenInstruction {
     /// Freeze an Initialized account using the Mint's `freeze_authority` (if
     /// set).
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner
@@ -244,6 +268,9 @@ pub enum TokenInstruction {
     FreezeAccount,
 
     /// Thaw a Frozen account using the Mint's `freeze_authority` (if set).
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -267,6 +294,9 @@ pub enum TokenInstruction {
     /// This instruction differs from Transfer in that the token mint and
     /// decimals value is checked by the caller.  This may be useful when
     /// creating transactions offline or within a hardware wallet.
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -297,6 +327,9 @@ pub enum TokenInstruction {
     /// decimals value is checked by the caller.  This may be useful when
     /// creating transactions offline or within a hardware wallet.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner
@@ -326,6 +359,9 @@ pub enum TokenInstruction {
     /// decimals value is checked by the caller.  This may be useful when
     /// creating transactions offline or within a hardware wallet.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single authority
@@ -353,6 +389,9 @@ pub enum TokenInstruction {
     /// This instruction differs from Burn in that the decimals value is checked
     /// by the caller. This may be useful when creating transactions offline or
     /// within a hardware wallet.
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -513,6 +552,9 @@ pub enum TokenInstruction {
     /// owned account by sending them to any other account, leaving behind only
     /// lamports for rent exemption.
     ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner/delegate
@@ -530,6 +572,9 @@ pub enum TokenInstruction {
     /// Transfer lamports from a native SOL account to a destination account.
     ///
     /// This is useful to unwrap lamports from a wrapped SOL account.
+    ///
+    /// This instruction accepts multisignature accounts owned by either
+    /// the Token or Token-2022 programs.
     ///
     /// Accounts expected by this instruction:
     ///
