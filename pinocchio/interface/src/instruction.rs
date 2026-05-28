@@ -131,6 +131,8 @@ pub enum TokenInstruction {
 
     /// Revokes the delegate's authority.
     ///
+    /// Note that a delegate can revoke its own delegation.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Single owner
