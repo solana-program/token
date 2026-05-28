@@ -544,6 +544,9 @@ pub enum TokenInstruction {
     /// Return data can be fetched using `sol_get_return_data` and deserializing
     /// the return data as a little-endian `u64`.
     ///
+    /// Note that the length of `ui_amount` is limited to `257` digits
+    /// (characters), including digits after the decimal point.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   0. `[]` The mint to calculate for.
