@@ -61,6 +61,11 @@ pub enum TokenInstruction {
     /// signers provided in the accounts list, so it is the caller's
     /// responsibility to ensure a valid M value is provided.
     ///
+    /// Duplicate signer accounts are not rejected. The caller must ensure each
+    /// signer is unique and appears only once in the accounts list, otherwise
+    /// a repeated signer can count more than once and effectively lower the
+    /// configured M threshold.
+    ///
     /// The [`TokenInstruction::InitializeMultisig`] instruction requires no
     /// signers and MUST be included within the same Transaction as the
     /// system program's `CreateAccount` instruction that creates the
