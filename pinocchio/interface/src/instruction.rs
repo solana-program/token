@@ -512,7 +512,9 @@ pub enum TokenInstruction {
     /// before [`TokenInstruction::InitializeAccount`].
     ///
     /// No-ops in this version of the program, but is included for compatibility
-    /// with the Associated Token Account program.
+    /// with the Associated Token Account program. Note that when the instruction
+    /// is executed as part of a [`TokenInstruction::Batch`], the account must
+    /// be owned by the Token program.
     ///
     /// Accounts expected by this instruction:
     ///
