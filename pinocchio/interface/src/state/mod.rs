@@ -9,6 +9,15 @@ pub mod mint;
 pub mod multisig;
 
 /// Type alias for fields represented as `COption`.
+///
+/// Note that only the first byte of the 4-byte array is used to
+/// represent the `Option` discriminant, while the remaining 3 bytes
+/// are padding to ensure alignment. The program does not modify
+/// these padding bytes and leaves them as `0`.
+///
+/// Reading a `COption` value with nonzero trailing padding bytes
+/// does not result in an error, since they are ignored in this
+/// implementation.
 pub type COption<T> = ([u8; 4], T);
 
 /// Marker trait for types that can be cast from a raw pointer.

@@ -4,6 +4,10 @@ use {
 };
 
 /// Internal representation of a mint data.
+///
+/// Note that when loading a `Mint` from bytes, this implementation does not
+/// check the validity of `COption` fields, since the trailing 3 bytes are ignored.
+/// As a result, it is possible to load a `Mint` with invalid `COption` values.
 #[repr(C)]
 pub struct Mint {
     /// Optional authority used to mint new tokens. The mint authority may only

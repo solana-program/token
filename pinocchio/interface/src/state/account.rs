@@ -15,6 +15,10 @@ pub const INCINERATOR_ID: Pubkey =
 const SYSTEM_PROGRAM_ID: Pubkey = pinocchio_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Internal representation of a token account data.
+///
+/// Note that when loading an `Account` from bytes, this implementation does not
+/// check the validity of `COption` fields, since the trailing 3 bytes are ignored.
+/// As a result, it is possible to load an `Account` with invalid `COption` values.
 #[repr(C)]
 pub struct Account {
     /// The mint associated with this account
