@@ -437,9 +437,9 @@ pub enum TokenInstruction {
     /// account, and needs to have its token `amount` field updated.
     ///
     /// The rent-exempt reserve is recomputed by the instruction using the Rent
-    /// sysvar, retrieved either through the syscall or passed as an extra account.
-    /// As a result, the token `amount` field value can increase or decrease
-    /// according to the rent-exempt reserve requirement.
+    /// sysvar, retrieved either through the syscall or passed as an extra
+    /// account. As a result, the token `amount` field value can increase or
+    /// decrease according to the rent-exempt reserve requirement.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -512,9 +512,9 @@ pub enum TokenInstruction {
     /// before [`TokenInstruction::InitializeAccount`].
     ///
     /// No-ops in this version of the program, but is included for compatibility
-    /// with the Associated Token Account program. Note that when the instruction
-    /// is executed as part of a [`TokenInstruction::Batch`], the account must
-    /// be owned by the Token program.
+    /// with the Associated Token Account program. Note that when the
+    /// instruction is executed as part of a [`TokenInstruction::Batch`],
+    /// the account must be owned by the Token program.
     ///
     /// Accounts expected by this instruction:
     ///
