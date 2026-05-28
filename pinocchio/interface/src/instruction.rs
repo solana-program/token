@@ -436,6 +436,11 @@ pub enum TokenInstruction {
     /// `system_instruction::transfer` to move lamports to a wrapped token
     /// account, and needs to have its token `amount` field updated.
     ///
+    /// The rent-exempt reserve is recomputed by the instruction using the Rent
+    /// sysvar, retrieved either through the syscall or passed as an extra account.
+    /// As a result, the token `amount` field value can increase or decrease
+    /// according to the rent-exempt reserve requirement.
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   * Using runtime Rent sysvar
