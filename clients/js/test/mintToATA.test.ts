@@ -1,5 +1,5 @@
 import { Account, generateKeyPairSigner, none } from '@solana/kit';
-import test from 'ava';
+import { expect, it } from 'vitest';
 import {
     AccountState,
     TOKEN_PROGRAM_ADDRESS,
@@ -16,7 +16,7 @@ import {
     generateKeyPairSignerWithSol,
 } from './_setup';
 
-test('it creates a new associated token account with an initial balance', async t => {
+it('creates a new associated token account with an initial balance', async () => {
     // Given a mint account, its mint authority, a token owner and the ATA.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -48,7 +48,7 @@ test('it creates a new associated token account with an initial balance', async 
     await client.sendTransactionPlan(transactionPlan);
 
     // Then we expect the token account to exist and have the following data.
-    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
             mint,
@@ -63,7 +63,7 @@ test('it creates a new associated token account with an initial balance', async 
     });
 });
 
-test('it derives a new associated token account with an initial balance', async t => {
+it('derives a new associated token account with an initial balance', async () => {
     // Given a mint account, its mint authority, a token owner and the ATA.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -95,7 +95,7 @@ test('it derives a new associated token account with an initial balance', async 
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
             mint,
@@ -110,7 +110,7 @@ test('it derives a new associated token account with an initial balance', async 
     });
 });
 
-test('it uses an explicit ATA when provided to the async variant', async t => {
+it('uses an explicit ATA when provided to the async variant', async () => {
     // Given a mint account, its mint authority, a token owner and a pre-derived ATA.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -142,7 +142,7 @@ test('it uses an explicit ATA when provided to the async variant', async t => {
     await client.sendTransactionPlan(transactionPlan);
 
     // Then the explicit ATA should hold the minted tokens.
-    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
             mint,
@@ -153,7 +153,7 @@ test('it uses an explicit ATA when provided to the async variant', async t => {
     });
 });
 
-test('it also mints to an existing associated token account', async t => {
+it('also mints to an existing associated token account', async () => {
     // Given a mint account, its mint authority, a token owner and the ATA.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -199,7 +199,7 @@ test('it also mints to an existing associated token account', async t => {
     await client.sendTransactionPlan(transactionPlan2);
 
     // Then we expect the token account to exist and have the following data.
-    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
             mint,

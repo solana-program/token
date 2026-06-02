@@ -1,5 +1,5 @@
 import { appendTransactionMessageInstruction, generateKeyPairSigner, pipe } from '@solana/kit';
-import test from 'ava';
+import { expect, it } from 'vitest';
 import { fetchMint, fetchToken, getApproveInstruction, getBurnCheckedInstruction } from '../src';
 import {
     createDefaultSolanaClient,
@@ -10,7 +10,7 @@ import {
     signAndSendTransaction,
 } from './_setup';
 
-test('it burns tokens with correct decimals', async t => {
+it('burns tokens with correct decimals', async () => {
     // Given a mint with 9 decimals and a token account with 200 tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -36,14 +36,14 @@ test('it burns tokens with correct decimals', async t => {
     );
 
     const { data: mintData } = await fetchMint(client.rpc, mint);
-    t.is(mintData.supply, 175n);
+    expect(mintData.supply).toBe(175n);
 
     // Then we expect the token account to have 175 tokens remaining.
     const { data: tokenData } = await fetchToken(client.rpc, token);
-    t.is(tokenData.amount, 175n);
+    expect(tokenData.amount).toBe(175n);
 });
 
-test('it burns tokens using a delegate', async t => {
+it('burns tokens using a delegate', async () => {
     // Given a token account with 100 tokens and a delegate approved for 60 tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner, delegate] = await Promise.all([
@@ -84,11 +84,11 @@ test('it burns tokens using a delegate', async t => {
 
     // Then the token account should have 70 tokens remaining.
     const { data: tokenData } = await fetchToken(client.rpc, token);
-    t.is(tokenData.amount, 70n);
-    t.is(tokenData.delegatedAmount, 30n); // Remaining delegated amount
+    expect(tokenData.amount).toBe(70n);
+    expect(tokenData.delegatedAmount).toBe(30n); // Remaining delegated amount
 });
 
-test('it fails when decimals mismatch', async t => {
+it('fails when decimals mismatch', async () => {
     // Given a mint with 9 decimals and a token account with tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -112,10 +112,10 @@ test('it fails when decimals mismatch', async t => {
     );
 
     // Then it should fail with MintDecimalsMismatch error.
-    await t.throwsAsync(signAndSendTransaction(client, transactionMessage));
+    await expect(signAndSendTransaction(client, transactionMessage)).rejects.toThrow();
 });
 
-test('it fails when burning more than account balance', async t => {
+it('fails when burning more than account balance', async () => {
     // Given a token account with only 50 tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -139,10 +139,10 @@ test('it fails when burning more than account balance', async t => {
     );
 
     // Then it should fail with InsufficientFunds error.
-    await t.throwsAsync(signAndSendTransaction(client, transactionMessage));
+    await expect(signAndSendTransaction(client, transactionMessage)).rejects.toThrow();
 });
 
-test('it fails when authority is not a signer', async t => {
+it('fails when authority is not a signer', async () => {
     // Given a token account with tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner, wrongAuthority] = await Promise.all([
@@ -167,10 +167,10 @@ test('it fails when authority is not a signer', async t => {
     );
 
     // Then it should fail (owner mismatch or missing signature).
-    await t.throwsAsync(signAndSendTransaction(client, transactionMessage));
+    await expect(signAndSendTransaction(client, transactionMessage)).rejects.toThrow();
 });
 
-test('it fails when delegate has insufficient delegated amount', async t => {
+it('fails when delegate has insufficient delegated amount', async () => {
     // Given a token account with 100 tokens and a delegate approved for only 20 tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner, delegate] = await Promise.all([
@@ -208,10 +208,10 @@ test('it fails when delegate has insufficient delegated amount', async t => {
     );
 
     // Then it should fail with InsufficientFunds error.
-    await t.throwsAsync(signAndSendTransaction(client, transactionMessage));
+    await expect(signAndSendTransaction(client, transactionMessage)).rejects.toThrow();
 });
 
-test('it burns zero tokens successfully', async t => {
+it('burns zero tokens successfully', async () => {
     // Given a token account with tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -238,5 +238,5 @@ test('it burns zero tokens successfully', async t => {
 
     // Then the balance should remain unchanged.
     const { data: tokenData } = await fetchToken(client.rpc, token);
-    t.is(tokenData.amount, 100n);
+    expect(tokenData.amount).toBe(100n);
 });
