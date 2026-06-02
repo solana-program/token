@@ -1,6 +1,6 @@
 import { Account, generateKeyPairSigner } from '@solana/kit';
 import { createLocalClient } from '@solana/kit-client-rpc';
-import test from 'ava';
+import { expect, it } from 'vitest';
 import { AccountState, fetchToken, findAssociatedTokenPda, Token, TOKEN_PROGRAM_ADDRESS, tokenProgram } from '../src';
 import {
     createDefaultSolanaClient,
@@ -9,7 +9,7 @@ import {
     generateKeyPairSignerWithSol,
 } from './_setup';
 
-test('plugin mintToATA defaults payer and auto-derives ATA', async t => {
+it('plugin mintToATA defaults payer and auto-derives ATA', async () => {
     // Given a mint account, its mint authority and a token owner.
     const client = await createLocalClient().use(tokenProgram());
     const mintAuthority = await generateKeyPairSigner();
@@ -39,7 +39,7 @@ test('plugin mintToATA defaults payer and auto-derives ATA', async t => {
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
             mint: mint.address,
@@ -50,7 +50,7 @@ test('plugin mintToATA defaults payer and auto-derives ATA', async t => {
     });
 });
 
-test('plugin transferToATA defaults payer and auto-derives source + destination', async t => {
+it('plugin transferToATA defaults payer and auto-derives source + destination', async () => {
     // Given a mint account and ownerA's ATA with 100 tokens.
     const baseClient = createDefaultSolanaClient();
     const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
@@ -87,10 +87,10 @@ test('plugin transferToATA defaults payer and auto-derives source + destination'
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    t.like(await fetchToken(client.rpc, sourceAta), <Account<Token>>{
+    expect(await fetchToken(client.rpc, sourceAta)).toMatchObject(<Account<Token>>{
         data: { amount: 50n },
     });
-    t.like(await fetchToken(client.rpc, destAta), <Account<Token>>{
+    expect(await fetchToken(client.rpc, destAta)).toMatchObject(<Account<Token>>{
         data: { amount: 50n },
     });
 });

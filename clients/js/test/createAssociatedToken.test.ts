@@ -1,5 +1,5 @@
 import { Account, appendTransactionMessageInstruction, generateKeyPairSigner, none, pipe } from '@solana/kit';
-import test from 'ava';
+import { expect, it } from 'vitest';
 import {
     AccountState,
     TOKEN_PROGRAM_ADDRESS,
@@ -16,7 +16,7 @@ import {
     signAndSendTransaction,
 } from './_setup';
 
-test('it creates a new associated token account', async t => {
+it('creates a new associated token account', async () => {
     // Given a mint account, its mint authority and a token owner.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -45,7 +45,7 @@ test('it creates a new associated token account', async t => {
         owner: owner.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
-    t.like(await fetchToken(client.rpc, ata), <Account<Token>>{
+    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
             mint,

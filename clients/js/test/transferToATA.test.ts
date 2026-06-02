@@ -1,5 +1,5 @@
 import { generateKeyPairSigner } from '@solana/kit';
-import test from 'ava';
+import { expect, it } from 'vitest';
 import {
     Mint,
     TOKEN_PROGRAM_ADDRESS,
@@ -19,7 +19,7 @@ import {
     generateKeyPairSignerWithSol,
 } from './_setup';
 
-test('it transfers tokens from one account to a new ATA', async t => {
+it('transfers tokens from one account to a new ATA', async () => {
     // Given a mint account, one token account with 100 tokens, and a second owner.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
@@ -60,12 +60,12 @@ test('it transfers tokens from one account to a new ATA', async t => {
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
-    t.like(mintData, <Mint>{ supply: 100n });
-    t.like(tokenDataA, <Token>{ amount: 50n });
-    t.like(tokenDataB, <Token>{ amount: 50n });
+    expect(mintData).toMatchObject(<Mint>{ supply: 100n });
+    expect(tokenDataA).toMatchObject(<Token>{ amount: 50n });
+    expect(tokenDataB).toMatchObject(<Token>{ amount: 50n });
 });
 
-test('derives a new ATA and transfers tokens to it', async t => {
+it('derives a new ATA and transfers tokens to it', async () => {
     // Given a mint account, one token account with 100 tokens, and a second owner.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
@@ -105,12 +105,12 @@ test('derives a new ATA and transfers tokens to it', async t => {
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
-    t.like(mintData, <Mint>{ supply: 100n });
-    t.like(tokenDataA, <Token>{ amount: 50n });
-    t.like(tokenDataB, <Token>{ amount: 50n });
+    expect(mintData).toMatchObject(<Mint>{ supply: 100n });
+    expect(tokenDataA).toMatchObject(<Token>{ amount: 50n });
+    expect(tokenDataB).toMatchObject(<Token>{ amount: 50n });
 });
 
-test('it transfers tokens from one account to an existing ATA', async t => {
+it('transfers tokens from one account to an existing ATA', async () => {
     // Given a mint account and two token accounts.
     // One with 90 tokens and the other with 10 tokens.
     const client = createDefaultSolanaClient();
@@ -149,12 +149,12 @@ test('it transfers tokens from one account to an existing ATA', async t => {
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
-    t.like(mintData, <Mint>{ supply: 100n });
-    t.like(tokenDataA, <Token>{ amount: 40n });
-    t.like(tokenDataB, <Token>{ amount: 60n });
+    expect(mintData).toMatchObject(<Mint>{ supply: 100n });
+    expect(tokenDataA).toMatchObject(<Token>{ amount: 40n });
+    expect(tokenDataB).toMatchObject(<Token>{ amount: 60n });
 });
 
-test('derives source and destination ATAs and transfers tokens', async t => {
+it('derives source and destination ATAs and transfers tokens', async () => {
     // Given a mint account and ownerA's ATA with 100 tokens.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
@@ -193,7 +193,7 @@ test('derives source and destination ATAs and transfers tokens', async t => {
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
-    t.like(mintData, <Mint>{ supply: 100n });
-    t.like(tokenDataA, <Token>{ amount: 50n });
-    t.like(tokenDataB, <Token>{ amount: 50n });
+    expect(mintData).toMatchObject(<Mint>{ supply: 100n });
+    expect(tokenDataA).toMatchObject(<Token>{ amount: 50n });
+    expect(tokenDataB).toMatchObject(<Token>{ amount: 50n });
 });

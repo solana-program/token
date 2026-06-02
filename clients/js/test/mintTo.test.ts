@@ -1,5 +1,5 @@
 import { appendTransactionMessageInstruction, generateKeyPairSigner, pipe } from '@solana/kit';
-import test from 'ava';
+import { expect, it } from 'vitest';
 import { Mint, Token, fetchMint, fetchToken, getMintToInstruction } from '../src';
 import {
     createDefaultSolanaClient,
@@ -10,7 +10,7 @@ import {
     signAndSendTransaction,
 } from './_setup';
 
-test('it mints tokens to a token account', async t => {
+it('mints tokens to a token account', async () => {
     // Given a mint account and a token account.
     const client = createDefaultSolanaClient();
     const [payer, mintAuthority, owner] = await Promise.all([
@@ -39,6 +39,6 @@ test('it mints tokens to a token account', async t => {
         fetchMint(client.rpc, mint),
         fetchToken(client.rpc, token),
     ]);
-    t.like(mintData, <Mint>{ supply: 100n });
-    t.like(tokenData, <Token>{ amount: 100n });
+    expect(mintData).toMatchObject(<Mint>{ supply: 100n });
+    expect(tokenData).toMatchObject(<Token>{ amount: 100n });
 });
