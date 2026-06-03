@@ -40,7 +40,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR = 1;
 
-export function getCreateAssociatedTokenIdempotentDiscriminatorBytes() {
+export function getCreateAssociatedTokenIdempotentDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR);
 }
 

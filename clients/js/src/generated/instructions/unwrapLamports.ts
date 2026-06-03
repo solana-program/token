@@ -43,7 +43,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const UNWRAP_LAMPORTS_DISCRIMINATOR = 45;
 
-export function getUnwrapLamportsDiscriminatorBytes() {
+export function getUnwrapLamportsDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(UNWRAP_LAMPORTS_DISCRIMINATOR);
 }
 

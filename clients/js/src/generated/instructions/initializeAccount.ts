@@ -32,7 +32,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const INITIALIZE_ACCOUNT_DISCRIMINATOR = 1;
 
-export function getInitializeAccountDiscriminatorBytes() {
+export function getInitializeAccountDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(INITIALIZE_ACCOUNT_DISCRIMINATOR);
 }
 

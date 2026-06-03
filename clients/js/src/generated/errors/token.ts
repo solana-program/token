@@ -78,7 +78,7 @@ export type TokenError =
     | typeof TOKEN_ERROR__UNINITIALIZED_STATE;
 
 let tokenErrorMessages: Record<TokenError, string> | undefined;
-if (process.env.NODE_ENV !== 'production') {
+if (process.env['NODE_ENV'] !== 'production') {
     tokenErrorMessages = {
         [TOKEN_ERROR__ACCOUNT_FROZEN]: `Account is frozen`,
         [TOKEN_ERROR__ALREADY_IN_USE]: `Already in use`,
@@ -104,7 +104,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export function getTokenErrorMessage(code: TokenError): string {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env['NODE_ENV'] !== 'production') {
         return (tokenErrorMessages as Record<TokenError, string>)[code];
     }
 

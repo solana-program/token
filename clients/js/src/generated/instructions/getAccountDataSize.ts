@@ -31,7 +31,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const GET_ACCOUNT_DATA_SIZE_DISCRIMINATOR = 21;
 
-export function getGetAccountDataSizeDiscriminatorBytes() {
+export function getGetAccountDataSizeDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(GET_ACCOUNT_DATA_SIZE_DISCRIMINATOR);
 }
 

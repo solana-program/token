@@ -33,7 +33,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const UI_AMOUNT_TO_AMOUNT_DISCRIMINATOR = 24;
 
-export function getUiAmountToAmountDiscriminatorBytes() {
+export function getUiAmountToAmountDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(UI_AMOUNT_TO_AMOUNT_DISCRIMINATOR);
 }
 

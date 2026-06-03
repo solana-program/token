@@ -32,7 +32,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const INITIALIZE_MULTISIG2_DISCRIMINATOR = 19;
 
-export function getInitializeMultisig2DiscriminatorBytes() {
+export function getInitializeMultisig2DiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(INITIALIZE_MULTISIG2_DISCRIMINATOR);
 }
 

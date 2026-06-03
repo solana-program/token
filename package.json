@@ -1,9 +1,9 @@
 {
     "private": true,
     "devDependencies": {
-        "@codama/renderers-js": "^2.0.2",
+        "@codama/renderers-js": "^2.2.0",
         "@solana/prettier-config-solana": "0.0.6",
-        "codama": "^1.5.0"
+        "codama": "^1.6.0"
     },
     "engines": {
         "node": ">=v20.0.0"

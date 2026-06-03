@@ -38,7 +38,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const APPROVE_CHECKED_DISCRIMINATOR = 13;
 
-export function getApproveCheckedDiscriminatorBytes() {
+export function getApproveCheckedDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(APPROVE_CHECKED_DISCRIMINATOR);
 }
 

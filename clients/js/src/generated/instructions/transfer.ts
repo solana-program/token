@@ -38,7 +38,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const TRANSFER_DISCRIMINATOR = 3;
 
-export function getTransferDiscriminatorBytes() {
+export function getTransferDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(TRANSFER_DISCRIMINATOR);
 }
 

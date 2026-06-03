@@ -32,7 +32,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const SYNC_NATIVE_DISCRIMINATOR = 17;
 
-export function getSyncNativeDiscriminatorBytes() {
+export function getSyncNativeDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(SYNC_NATIVE_DISCRIMINATOR);
 }
 

@@ -38,7 +38,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const BURN_CHECKED_DISCRIMINATOR = 15;
 
-export function getBurnCheckedDiscriminatorBytes() {
+export function getBurnCheckedDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(BURN_CHECKED_DISCRIMINATOR);
 }
 
