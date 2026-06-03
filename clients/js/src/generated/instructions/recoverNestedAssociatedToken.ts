@@ -40,7 +40,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const RECOVER_NESTED_ASSOCIATED_TOKEN_DISCRIMINATOR = 2;
 
-export function getRecoverNestedAssociatedTokenDiscriminatorBytes() {
+export function getRecoverNestedAssociatedTokenDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(RECOVER_NESTED_ASSOCIATED_TOKEN_DISCRIMINATOR);
 }
 

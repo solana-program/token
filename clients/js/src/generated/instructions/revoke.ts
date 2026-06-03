@@ -36,7 +36,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const REVOKE_DISCRIMINATOR = 5;
 
-export function getRevokeDiscriminatorBytes() {
+export function getRevokeDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(REVOKE_DISCRIMINATOR);
 }
 

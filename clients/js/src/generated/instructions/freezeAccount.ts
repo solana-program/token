@@ -36,7 +36,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const FREEZE_ACCOUNT_DISCRIMINATOR = 10;
 
-export function getFreezeAccountDiscriminatorBytes() {
+export function getFreezeAccountDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(FREEZE_ACCOUNT_DISCRIMINATOR);
 }
 

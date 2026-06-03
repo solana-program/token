@@ -9,6 +9,7 @@
 import {
     assertIsInstructionWithAccounts,
     containsBytes,
+    extendClient,
     getU8Encoder,
     SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
     SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
@@ -36,6 +37,7 @@ import {
     type ParsedRecoverNestedAssociatedTokenInstruction,
     type RecoverNestedAssociatedTokenAsyncInput,
 } from '../instructions';
+import { findAssociatedTokenPda } from '../pdas';
 
 export const ASSOCIATED_TOKEN_PROGRAM_ADDRESS =
     'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
@@ -110,7 +112,10 @@ export function parseAssociatedTokenInstruction<TProgram extends string>(
     }
 }
 
-export type AssociatedTokenPlugin = { instructions: AssociatedTokenPluginInstructions };
+export type AssociatedTokenPlugin = {
+    instructions: AssociatedTokenPluginInstructions;
+    pdas: AssociatedTokenPluginPdas;
+};
 
 export type AssociatedTokenPluginInstructions = {
     createAssociatedToken: (
@@ -124,14 +129,17 @@ export type AssociatedTokenPluginInstructions = {
     ) => ReturnType<typeof getRecoverNestedAssociatedTokenInstructionAsync> & SelfPlanAndSendFunctions;
 };
 
+export type AssociatedTokenPluginPdas = { associatedToken: typeof findAssociatedTokenPda };
+
 export type AssociatedTokenPluginRequirements = ClientWithPayer &
     ClientWithTransactionPlanning &
     ClientWithTransactionSending;
 
 export function associatedTokenProgram() {
-    return <T extends AssociatedTokenPluginRequirements>(client: T) => {
-        return {
-            ...client,
+    return <T extends AssociatedTokenPluginRequirements>(
+        client: T,
+    ): Omit<T, 'associatedToken'> & { associatedToken: AssociatedTokenPlugin } => {
+        return extendClient(client, {
             associatedToken: <AssociatedTokenPlugin>{
                 instructions: {
                     createAssociatedToken: input =>
@@ -150,8 +158,9 @@ export function associatedTokenProgram() {
                     recoverNestedAssociatedToken: input =>
                         addSelfPlanAndSendFunctions(client, getRecoverNestedAssociatedTokenInstructionAsync(input)),
                 },
+                pdas: { associatedToken: findAssociatedTokenPda },
             },
-        };
+        });
     };
 }
 

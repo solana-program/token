@@ -31,7 +31,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const INITIALIZE_IMMUTABLE_OWNER_DISCRIMINATOR = 22;
 
-export function getInitializeImmutableOwnerDiscriminatorBytes() {
+export function getInitializeImmutableOwnerDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(INITIALIZE_IMMUTABLE_OWNER_DISCRIMINATOR);
 }
 

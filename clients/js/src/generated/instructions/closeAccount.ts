@@ -36,7 +36,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const CLOSE_ACCOUNT_DISCRIMINATOR = 9;
 
-export function getCloseAccountDiscriminatorBytes() {
+export function getCloseAccountDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(CLOSE_ACCOUNT_DISCRIMINATOR);
 }
 

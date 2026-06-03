@@ -36,7 +36,7 @@ import { TOKEN_PROGRAM_ADDRESS } from '../programs';
 
 export const WITHDRAW_EXCESS_LAMPORTS_DISCRIMINATOR = 38;
 
-export function getWithdrawExcessLamportsDiscriminatorBytes() {
+export function getWithdrawExcessLamportsDiscriminatorBytes(): ReadonlyUint8Array {
     return getU8Encoder().encode(WITHDRAW_EXCESS_LAMPORTS_DISCRIMINATOR);
 }
 
