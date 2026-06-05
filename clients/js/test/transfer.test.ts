@@ -1,48 +1,34 @@
-import { appendTransactionMessageInstruction, generateKeyPairSigner, pipe } from '@solana/kit';
+import { generateKeyPairSigner } from '@solana/kit';
 import { expect, it } from 'vitest';
-import { Mint, Token, fetchMint, fetchToken, getTransferInstruction } from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransaction,
-    createMint,
-    createToken,
-    createTokenWithAmount,
-    generateKeyPairSignerWithSol,
-    signAndSendTransaction,
-} from './_setup';
+import { Mint, Token, fetchMint, fetchToken } from '../src';
+import { createTestClient, createToken, createTokenWithAmount } from './_setup';
 
 it('transfers tokens from one account to another', async () => {
     // Given a mint account and two token accounts.
     // One with 100 tokens and the other with 0 tokens.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, ownerA, ownerB, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
-    const mint = await createMint(client, payer, mintAuthority.address);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals: 0, mintAuthority: mintAuthority.address })
+        .sendTransaction();
     const [tokenA, tokenB] = await Promise.all([
-        createTokenWithAmount(client, payer, mintAuthority, mint, ownerA.address, 100n),
-        createToken(client, payer, mint, ownerB.address),
+        createTokenWithAmount(client, mintAuthority, mint.address, ownerA.address, 100n),
+        createToken(client, mint.address, ownerB.address),
     ]);
 
     // When owner A transfers 50 tokens to owner B.
-    const transfer = getTransferInstruction({
-        source: tokenA,
-        destination: tokenB,
-        authority: ownerA,
-        amount: 50n,
-    });
-    await pipe(
-        await createDefaultTransaction(client, payer),
-        tx => appendTransactionMessageInstruction(transfer, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+    await client.token.instructions
+        .transfer({ source: tokenA, destination: tokenB, authority: ownerA, amount: 50n })
+        .sendTransaction();
 
     // Then we expect the mint and token accounts to have the following updated data.
     const [{ data: mintData }, { data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
-        fetchMint(client.rpc, mint),
+        fetchMint(client.rpc, mint.address),
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);

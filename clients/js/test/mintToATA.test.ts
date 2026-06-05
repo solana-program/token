@@ -1,57 +1,36 @@
 import { Account, generateKeyPairSigner, none } from '@solana/kit';
 import { expect, it } from 'vitest';
-import {
-    AccountState,
-    TOKEN_PROGRAM_ADDRESS,
-    Token,
-    getMintToATAInstructionPlan,
-    getMintToATAInstructionPlanAsync,
-    fetchToken,
-    findAssociatedTokenPda,
-} from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransactionPlanner,
-    createMint,
-    generateKeyPairSignerWithSol,
-} from './_setup';
+import { AccountState, TOKEN_PROGRAM_ADDRESS, Token, fetchToken, findAssociatedTokenPda } from '../src';
+import { createTestClient } from './_setup';
 
-it('creates a new associated token account with an initial balance', async () => {
+it('mints to an associated token account at an explicit address', async () => {
     // Given a mint account, its mint authority, a token owner and the ATA.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
     const [ata] = await findAssociatedTokenPda({
-        mint,
+        mint: mint.address,
         owner: owner.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    // When we mint to a token account at this address.
-    const instructionPlan = getMintToATAInstructionPlan({
-        payer,
-        ata,
-        mint,
-        owner: owner.address,
-        mintAuthority,
-        amount: 1_000n,
-        decimals,
-    });
-
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
+    // When we mint to the explicit ATA.
+    await client.token.instructions
+        .mintToATA({ ata, mint: mint.address, owner: owner.address, mintAuthority, amount: 1_000n, decimals })
+        .sendTransaction();
 
     // Then we expect the token account to exist and have the following data.
     expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
-            mint,
+            mint: mint.address,
             owner: owner.address,
             amount: 1000n,
             delegate: none(),
@@ -63,42 +42,34 @@ it('creates a new associated token account with an initial balance', async () =>
     });
 });
 
-it('derives a new associated token account with an initial balance', async () => {
-    // Given a mint account, its mint authority, a token owner and the ATA.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+it('mints to an associated token account that it auto-derives', async () => {
+    // Given a mint account, its mint authority and a token owner.
+    const client = await createTestClient();
+    const [mintAuthority, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
 
-    // When we mint to a token account for the mint.
-    const instructionPlan = await getMintToATAInstructionPlanAsync({
-        payer,
-        mint,
-        owner: owner.address,
-        mintAuthority,
-        amount: 1_000n,
-        decimals,
-    });
+    // When we mint to the owner, with the ATA auto-derived.
+    await client.token.instructions
+        .mintToATA({ mint: mint.address, owner: owner.address, mintAuthority, amount: 1_000n, decimals })
+        .sendTransaction();
 
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
-
-    // Then we expect the token account to exist and have the following data.
+    // Then we expect the derived ATA to exist and have the following data.
     const [ata] = await findAssociatedTokenPda({
-        mint,
+        mint: mint.address,
         owner: owner.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
-
     expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
-            mint,
+            mint: mint.address,
             owner: owner.address,
             amount: 1000n,
             delegate: none(),
@@ -106,103 +77,47 @@ it('derives a new associated token account with an initial balance', async () =>
             isNative: none(),
             delegatedAmount: 0n,
             closeAuthority: none(),
-        },
-    });
-});
-
-it('uses an explicit ATA when provided to the async variant', async () => {
-    // Given a mint account, its mint authority, a token owner and a pre-derived ATA.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
-        generateKeyPairSigner(),
-        generateKeyPairSigner(),
-    ]);
-    const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
-    const [ata] = await findAssociatedTokenPda({
-        mint,
-        owner: owner.address,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-
-    // When we mint via the async variant with an explicit ATA.
-    const instructionPlan = await getMintToATAInstructionPlanAsync({
-        payer,
-        ata,
-        mint,
-        owner: owner.address,
-        mintAuthority,
-        amount: 1_000n,
-        decimals,
-    });
-
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
-
-    // Then the explicit ATA should hold the minted tokens.
-    expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
-        address: ata,
-        data: {
-            mint,
-            owner: owner.address,
-            amount: 1000n,
-            state: AccountState.Initialized,
         },
     });
 });
 
 it('also mints to an existing associated token account', async () => {
     // Given a mint account, its mint authority, a token owner and the ATA.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
     const [ata] = await findAssociatedTokenPda({
-        mint,
+        mint: mint.address,
         owner: owner.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
-    // When we create and initialize a token account at this address.
-    const instructionPlan = getMintToATAInstructionPlan({
-        payer,
-        ata,
-        mint,
-        owner: owner.address,
-        mintAuthority,
-        amount: 1_000n,
-        decimals,
-    });
+    // When we mint to the ATA a first time.
+    await client.token.instructions
+        .mintToATA({ ata, mint: mint.address, owner: owner.address, mintAuthority, amount: 1_000n, decimals })
+        .sendTransaction();
 
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
+    // Expire the blockhash so the next (otherwise identical) transaction has a
+    // distinct signature in LiteSVM, which has no passage of time of its own.
+    client.svm.expireBlockhash();
 
     // And then we mint additional tokens to the same account.
-    const instructionPlan2 = getMintToATAInstructionPlan({
-        payer,
-        ata,
-        mint,
-        owner: owner.address,
-        mintAuthority,
-        amount: 1_000n,
-        decimals,
-    });
-
-    const transactionPlan2 = await transactionPlanner(instructionPlan2);
-    await client.sendTransactionPlan(transactionPlan2);
+    await client.token.instructions
+        .mintToATA({ ata, mint: mint.address, owner: owner.address, mintAuthority, amount: 1_000n, decimals })
+        .sendTransaction();
 
     // Then we expect the token account to exist and have the following data.
     expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
-            mint,
+            mint: mint.address,
             owner: owner.address,
             amount: 2000n,
             delegate: none(),

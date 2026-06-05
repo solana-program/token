@@ -1,260 +1,94 @@
-import { getCreateAccountInstruction } from '@solana-program/system';
-import {
-    Address,
-    TransactionMessage,
-    Commitment,
-    Rpc,
-    RpcSubscriptions,
-    SolanaRpcApi,
-    SolanaRpcSubscriptionsApi,
-    TransactionMessageWithBlockhashLifetime,
-    TransactionMessageWithFeePayer,
-    TransactionPlan,
-    TransactionPlanResult,
-    TransactionPlanner,
-    TransactionSigner,
-    airdropFactory,
-    appendTransactionMessageInstructions,
-    assertIsSendableTransaction,
-    assertIsTransactionWithBlockhashLifetime,
-    createSolanaRpc,
-    createSolanaRpcSubscriptions,
-    createTransactionMessage,
-    createTransactionPlanExecutor,
-    createTransactionPlanner,
-    generateKeyPairSigner,
-    getSignatureFromTransaction,
-    lamports,
-    pipe,
-    sendAndConfirmTransactionFactory,
-    setTransactionMessageFeePayerSigner,
-    setTransactionMessageLifetimeUsingBlockhash,
-    signTransactionMessageWithSigners,
-} from '@solana/kit';
+import path from 'node:path';
+
+import { systemProgram } from '@solana-program/system';
+import { Address, TransactionSigner, createClient, generateKeyPairSigner, lamports } from '@solana/kit';
+import { litesvm } from '@solana/kit-plugin-litesvm';
+import { airdropSigner, generatedSigner } from '@solana/kit-plugin-signer';
+
 import {
     TOKEN_PROGRAM_ADDRESS,
+    associatedTokenProgram,
     findAssociatedTokenPda,
-    getInitializeAccountInstruction,
-    getInitializeMintInstruction,
-    getMintSize,
-    getMintToATAInstructionPlan,
-    getMintToInstruction,
     getTokenSize,
+    tokenProgram,
 } from '../src';
 
-type Client = {
-    rpc: Rpc<SolanaRpcApi>;
-    rpcSubscriptions: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
-    sendTransactionPlan: (transactionPlan: TransactionPlan) => Promise<TransactionPlanResult>;
+const TOKEN_BINARY_PATH = path.resolve(__dirname, '..', '..', '..', 'target', 'deploy', 'pinocchio_token_program.so');
+
+export const createTestClient = () => {
+    return createClient()
+        .use(generatedSigner())
+        .use(litesvm())
+        .use(airdropSigner(lamports(1_000_000_000n)))
+        .use(client => {
+            // Load the token program into the LiteSVM instance from its compiled
+            // `.so` file. This must run after the `litesvm()` plugin so that
+            // `client.svm` is available. The system and associated-token
+            // programs are LiteSVM builtins and need no loading.
+            client.svm.addProgramFromFile(TOKEN_PROGRAM_ADDRESS, TOKEN_BINARY_PATH);
+            return client;
+        })
+        .use(systemProgram())
+        .use(tokenProgram())
+        .use(associatedTokenProgram());
 };
 
-export const createDefaultSolanaClient = (): Client => {
-    const rpc = createSolanaRpc('http://127.0.0.1:8899');
-    const rpcSubscriptions = createSolanaRpcSubscriptions('ws://127.0.0.1:8900');
+export type TestClient = Awaited<ReturnType<typeof createTestClient>>;
 
-    const sendAndConfirm = sendAndConfirmTransactionFactory({
-        rpc,
-        rpcSubscriptions,
-    });
-    const transactionPlanExecutor = createTransactionPlanExecutor({
-        executeTransactionMessage: async (context, transactionMessage) => {
-            const signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
-            context.transaction = signedTransaction;
-            assertIsSendableTransaction(signedTransaction);
-            assertIsTransactionWithBlockhashLifetime(signedTransaction);
-            await sendAndConfirm(signedTransaction, { commitment: 'confirmed' });
-            return signedTransaction;
-        },
-    });
-
-    const sendTransactionPlan = async (transactionPlan: TransactionPlan) => {
-        return transactionPlanExecutor(transactionPlan);
-    };
-
-    return { rpc, rpcSubscriptions, sendTransactionPlan };
-};
-
-export const generateKeyPairSignerWithSol = async (client: Client, putativeLamports: bigint = 1_000_000_000n) => {
-    const signer = await generateKeyPairSigner();
-    await airdropFactory(client)({
-        recipientAddress: signer.address,
-        lamports: lamports(putativeLamports),
-        commitment: 'confirmed',
-    });
-    return signer;
-};
-
-export const createDefaultTransaction = async (client: Client, feePayer: TransactionSigner) => {
-    const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
-    return pipe(
-        createTransactionMessage({ version: 0 }),
-        tx => setTransactionMessageFeePayerSigner(feePayer, tx),
-        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-    );
-};
-
-export const signAndSendTransaction = async (
-    client: Client,
-    transactionMessage: TransactionMessage & TransactionMessageWithFeePayer & TransactionMessageWithBlockhashLifetime,
-    commitment: Commitment = 'confirmed',
-) => {
-    const signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
-    const signature = getSignatureFromTransaction(signedTransaction);
-    assertIsSendableTransaction(signedTransaction);
-    assertIsTransactionWithBlockhashLifetime(signedTransaction);
-    await sendAndConfirmTransactionFactory(client)(signedTransaction, {
-        commitment,
-    });
-    return signature;
-};
-
-export const createDefaultTransactionPlanner = (client: Client, feePayer: TransactionSigner): TransactionPlanner => {
-    return createTransactionPlanner({
-        createTransactionMessage: async () => {
-            const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
-
-            return pipe(
-                createTransactionMessage({ version: 0 }),
-                tx => setTransactionMessageFeePayerSigner(feePayer, tx),
-                tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-            );
-        },
-    });
-};
-
-export const getBalance = async (client: Client, address: Address) =>
-    (await client.rpc.getBalance(address, { commitment: 'confirmed' }).send()).value;
-
-export const createMint = async (
-    client: Client,
-    payer: TransactionSigner,
-    mintAuthority: Address,
-    decimals: number = 0,
-): Promise<Address> => {
-    const space = BigInt(getMintSize());
-    const [transactionMessage, rent, mint] = await Promise.all([
-        createDefaultTransaction(client, payer),
-        client.rpc.getMinimumBalanceForRentExemption(space).send(),
-        generateKeyPairSigner(),
-    ]);
-    const instructions = [
-        getCreateAccountInstruction({
-            payer,
-            newAccount: mint,
-            lamports: rent,
-            space,
-            programAddress: TOKEN_PROGRAM_ADDRESS,
-        }),
-        getInitializeMintInstruction({
-            mint: mint.address,
-            decimals,
-            mintAuthority,
-        }),
-    ];
-    await pipe(
-        transactionMessage,
-        tx => appendTransactionMessageInstructions(instructions, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
-
-    return mint.address;
-};
-
-export const createToken = async (
-    client: Client,
-    payer: TransactionSigner,
-    mint: Address,
-    owner: Address,
-): Promise<Address> => {
+export const createToken = async (client: TestClient, mint: Address, owner: Address): Promise<Address> => {
     const space = BigInt(getTokenSize());
-    const [transactionMessage, rent, token] = await Promise.all([
-        createDefaultTransaction(client, payer),
+    const [rent, token] = await Promise.all([
         client.rpc.getMinimumBalanceForRentExemption(space).send(),
         generateKeyPairSigner(),
     ]);
-    const instructions = [
-        getCreateAccountInstruction({
-            payer,
+    await client.sendTransaction([
+        client.system.instructions.createAccount({
             newAccount: token,
             lamports: rent,
             space,
             programAddress: TOKEN_PROGRAM_ADDRESS,
         }),
-        getInitializeAccountInstruction({ account: token.address, mint, owner }),
-    ];
-    await pipe(
-        transactionMessage,
-        tx => appendTransactionMessageInstructions(instructions, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+        client.token.instructions.initializeAccount({ account: token.address, mint, owner }),
+    ]);
 
     return token.address;
 };
 
 export const createTokenWithAmount = async (
-    client: Client,
-    payer: TransactionSigner,
+    client: TestClient,
     mintAuthority: TransactionSigner,
     mint: Address,
     owner: Address,
     amount: bigint,
 ): Promise<Address> => {
     const space = BigInt(getTokenSize());
-    const [transactionMessage, rent, token] = await Promise.all([
-        createDefaultTransaction(client, payer),
+    const [rent, token] = await Promise.all([
         client.rpc.getMinimumBalanceForRentExemption(space).send(),
         generateKeyPairSigner(),
     ]);
-    const instructions = [
-        getCreateAccountInstruction({
-            payer,
+    await client.sendTransaction([
+        client.system.instructions.createAccount({
             newAccount: token,
             lamports: rent,
             space,
             programAddress: TOKEN_PROGRAM_ADDRESS,
         }),
-        getInitializeAccountInstruction({ account: token.address, mint, owner }),
-        getMintToInstruction({ mint, token: token.address, mintAuthority, amount }),
-    ];
-    await pipe(
-        transactionMessage,
-        tx => appendTransactionMessageInstructions(instructions, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+        client.token.instructions.initializeAccount({ account: token.address, mint, owner }),
+        client.token.instructions.mintTo({ mint, token: token.address, mintAuthority, amount }),
+    ]);
 
     return token.address;
 };
 
 export const createTokenPdaWithAmount = async (
-    client: Client,
-    payer: TransactionSigner,
+    client: TestClient,
     mintAuthority: TransactionSigner,
     mint: Address,
     owner: Address,
     amount: bigint,
     decimals: number,
 ): Promise<Address> => {
-    const [token] = await findAssociatedTokenPda({
-        owner,
-        mint,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-
-    const transactionPlan = await createDefaultTransactionPlanner(
-        client,
-        payer,
-    )(
-        getMintToATAInstructionPlan({
-            payer,
-            ata: token,
-            owner,
-            mint,
-            mintAuthority,
-            amount,
-            decimals,
-        }),
-    );
-
-    await client.sendTransactionPlan(transactionPlan);
+    await client.token.instructions.mintToATA({ owner, mint, mintAuthority, amount, decimals }).sendTransaction();
+    const [token] = await findAssociatedTokenPda({ owner, mint, tokenProgram: TOKEN_PROGRAM_ADDRESS });
     return token;
 };

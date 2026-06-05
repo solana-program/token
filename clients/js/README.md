@@ -4,22 +4,21 @@ A generated JavaScript library for the Token program.
 
 ## Getting started
 
-To build and test your JavaScript client from the root of the repository, you may use the following command.
+The JS client tests use [LiteSVM](https://github.com/LiteSVM/litesvm) in-process, so no local validator is needed. To build and test your JavaScript client from the root of the repository, you may use the following command.
 
 ```sh
-pnpm clients:js:test
+make test-js-clients-js
 ```
 
-This will start a new local validator, if one is not already running, and run the tests for your JavaScript client.
+This installs dependencies, builds the client, and runs the test suite.
 
 ## Available client scripts.
 
 Alternatively, you can go into the client directory and run the tests directly.
 
 ```sh
-# Build your programs and start the validator.
-pnpm programs:build
-pnpm validator:restart
+# Build the program `.so` that LiteSVM loads.
+make build-sbf-pinocchio-program
 
 # Go into the client directory and run the tests.
 cd clients/js

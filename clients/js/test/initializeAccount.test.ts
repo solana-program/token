@@ -1,63 +1,45 @@
-import { getCreateAccountInstruction } from '@solana-program/system';
-import { Account, appendTransactionMessageInstructions, generateKeyPairSigner, none, pipe } from '@solana/kit';
+import { Account, generateKeyPairSigner, none } from '@solana/kit';
 import { expect, it } from 'vitest';
-import {
-    AccountState,
-    TOKEN_PROGRAM_ADDRESS,
-    Token,
-    fetchToken,
-    getInitializeAccountInstruction,
-    getTokenSize,
-} from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransaction,
-    createMint,
-    generateKeyPairSignerWithSol,
-    signAndSendTransaction,
-} from './_setup';
+import { AccountState, TOKEN_PROGRAM_ADDRESS, Token, fetchToken, getTokenSize } from '../src';
+import { createTestClient } from './_setup';
 
 it('creates and initializes a new token account', async () => {
     // Given a mint account, its mint authority and two generated keypairs
     // for the token to be created and its owner.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, token, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, token, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
-    const mint = await createMint(client, payer, mintAuthority.address);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals: 0, mintAuthority: mintAuthority.address })
+        .sendTransaction();
 
     // When we create and initialize a token account at this address.
     const space = BigInt(getTokenSize());
     const rent = await client.rpc.getMinimumBalanceForRentExemption(space).send();
-    const instructions = [
-        getCreateAccountInstruction({
-            payer,
+    await client.sendTransaction([
+        client.system.instructions.createAccount({
             newAccount: token,
             lamports: rent,
             space,
             programAddress: TOKEN_PROGRAM_ADDRESS,
         }),
-        getInitializeAccountInstruction({
+        client.token.instructions.initializeAccount({
             account: token.address,
-            mint,
+            mint: mint.address,
             owner: owner.address,
         }),
-    ];
-    await pipe(
-        await createDefaultTransaction(client, payer),
-        tx => appendTransactionMessageInstructions(instructions, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+    ]);
 
     // Then we expect the token account to exist and have the following data.
     const tokenAccount = await fetchToken(client.rpc, token.address);
     expect(tokenAccount).toMatchObject(<Account<Token>>{
         address: token.address,
         data: {
-            mint,
+            mint: mint.address,
             owner: owner.address,
             amount: 0n,
             delegate: none(),
