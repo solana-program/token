@@ -1,42 +1,34 @@
-import { appendTransactionMessageInstruction, generateKeyPairSigner, pipe } from '@solana/kit';
+import { generateKeyPairSigner } from '@solana/kit';
 import { expect, it } from 'vitest';
-import { Mint, Token, fetchMint, fetchToken, getMintToInstruction } from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransaction,
-    createMint,
-    createToken,
-    generateKeyPairSignerWithSol,
-    signAndSendTransaction,
-} from './_setup';
+import { Mint, Token, fetchMint, fetchToken } from '../src';
+import { createTestClient, createToken } from './_setup';
 
 it('mints tokens to a token account', async () => {
     // Given a mint account and a token account.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
-    const mint = await createMint(client, payer, mintAuthority.address);
-    const token = await createToken(client, payer, mint, owner.address);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals: 0, mintAuthority: mintAuthority.address })
+        .sendTransaction();
+    const token = await createToken(client, mint.address, owner.address);
 
     // When the mint authority mints tokens to the token account.
-    const mintTo = getMintToInstruction({
-        mint,
-        token,
-        mintAuthority,
-        amount: 100n,
-    });
-    await pipe(
-        await createDefaultTransaction(client, payer),
-        tx => appendTransactionMessageInstruction(mintTo, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+    await client.token.instructions
+        .mintTo({
+            mint: mint.address,
+            token,
+            mintAuthority,
+            amount: 100n,
+        })
+        .sendTransaction();
 
     // Then we expect the mint and token accounts to have the following updated data.
     const [{ data: mintData }, { data: tokenData }] = await Promise.all([
-        fetchMint(client.rpc, mint),
+        fetchMint(client.rpc, mint.address),
         fetchToken(client.rpc, token),
     ]);
     expect(mintData).toMatchObject(<Mint>{ supply: 100n });

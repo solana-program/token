@@ -1,18 +1,15 @@
-import { systemProgram } from '@solana-program/system';
 import {
     AccountRole,
     decompileTransactionMessage,
     generateKeyPairSigner,
-    getBase64Encoder,
     getCompiledTransactionMessageDecoder,
-    getTransactionDecoder,
     Instruction,
     InstructionWithData,
     none,
     ReadonlyUint8Array,
     some,
+    Transaction,
 } from '@solana/kit';
-import { createLocalClient } from '@solana/kit-client-rpc';
 import { expect, it } from 'vitest';
 import {
     AccountState,
@@ -25,12 +22,13 @@ import {
     parseBatchInstruction,
     TOKEN_PROGRAM_ADDRESS,
     TokenInstruction,
-    tokenProgram,
 } from '../src';
+
+import { createTestClient } from './_setup';
 
 it('batches multiple token instructions together', async () => {
     // Given a local validator client with some generated keypairs.
-    const client = await createLocalClient().use(systemProgram()).use(tokenProgram());
+    const client = await createTestClient();
     const [mint, token, mintAuthority, tokenOwner] = await Promise.all([
         generateKeyPairSigner(),
         generateKeyPairSigner(),
@@ -96,7 +94,7 @@ it('batches multiple token instructions together', async () => {
 
 it('fails to batch nested batch instructions', async () => {
     // Given a local validator client with some generated keypairs.
-    const client = await createLocalClient().use(systemProgram()).use(tokenProgram());
+    const client = await createTestClient();
     const [mint, token, mintAuthority, tokenOwner] = await Promise.all([
         generateKeyPairSigner(),
         generateKeyPairSigner(),
@@ -211,7 +209,7 @@ it('parses batch instructions including its inner instructions', async () => {
 
 it('parses batch instructions from a fetched transaction', async () => {
     // Given a client with some generated keypairs.
-    const client = await createLocalClient().use(systemProgram()).use(tokenProgram());
+    const client = await createTestClient();
     const [mint, token, mintAuthority, tokenOwner] = await Promise.all([
         generateKeyPairSigner(),
         generateKeyPairSigner(),
@@ -255,13 +253,10 @@ it('parses batch instructions from a fetched transaction', async () => {
         ]),
     ]);
 
-    // And given we access the batch instruction from the fetched transaction.
-    const transactionResult = await client.rpc
-        .getTransaction(result.context.signature, { encoding: 'base64', maxSupportedTransactionVersion: 0 })
-        .send();
-    expect(transactionResult).toBeTruthy();
-    const transactionBytes = getBase64Encoder().encode(transactionResult!.transaction[0]);
-    const transaction = getTransactionDecoder().decode(transactionBytes);
+    // And given we access the batch instruction from the executed transaction,
+    // which the transaction plan executor stores on the result context.
+    const transaction = result.context.transaction as Transaction;
+    expect(transaction).toBeTruthy();
     const compiledMessage = getCompiledTransactionMessageDecoder().decode(transaction.messageBytes);
     const message = decompileTransactionMessage(compiledMessage);
     const batchInstruction = message.instructions.find(

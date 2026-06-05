@@ -1,42 +1,29 @@
-import { getCreateAccountInstruction } from '@solana-program/system';
-import { Account, appendTransactionMessageInstructions, generateKeyPairSigner, none, pipe, some } from '@solana/kit';
+import { Account, generateKeyPairSigner, none, some } from '@solana/kit';
 import { expect, it } from 'vitest';
-import { Mint, TOKEN_PROGRAM_ADDRESS, fetchMint, getInitializeMintInstruction, getMintSize } from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransaction,
-    generateKeyPairSignerWithSol,
-    signAndSendTransaction,
-} from './_setup';
+import { Mint, TOKEN_PROGRAM_ADDRESS, fetchMint, getMintSize } from '../src';
+import { createTestClient } from './_setup';
 
 it('creates and initializes a new mint account', async () => {
     // Given an authority and a mint account.
-    const client = createDefaultSolanaClient();
-    const authority = await generateKeyPairSignerWithSol(client);
-    const mint = await generateKeyPairSigner();
+    const client = await createTestClient();
+    const [authority, mint] = await Promise.all([generateKeyPairSigner(), generateKeyPairSigner()]);
 
     // When we create and initialize a mint account at this address.
     const space = BigInt(getMintSize());
     const rent = await client.rpc.getMinimumBalanceForRentExemption(space).send();
-    const instructions = [
-        getCreateAccountInstruction({
-            payer: authority,
+    await client.sendTransaction([
+        client.system.instructions.createAccount({
             newAccount: mint,
             lamports: rent,
             space,
             programAddress: TOKEN_PROGRAM_ADDRESS,
         }),
-        getInitializeMintInstruction({
+        client.token.instructions.initializeMint({
             mint: mint.address,
             decimals: 2,
             mintAuthority: authority.address,
         }),
-    ];
-    await pipe(
-        await createDefaultTransaction(client, authority),
-        tx => appendTransactionMessageInstructions(instructions, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+    ]);
 
     // Then we expect the mint account to exist and have the following data.
     const mintAccount = await fetchMint(client.rpc, mint.address);
@@ -54,9 +41,8 @@ it('creates and initializes a new mint account', async () => {
 
 it('creates a new mint account with a freeze authority', async () => {
     // Given an authority and a mint account.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, freezeAuthority, mint] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, freezeAuthority, mint] = await Promise.all([
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
@@ -65,26 +51,20 @@ it('creates a new mint account with a freeze authority', async () => {
     // When we create and initialize a mint account at this address.
     const space = BigInt(getMintSize());
     const rent = await client.rpc.getMinimumBalanceForRentExemption(space).send();
-    const instructions = [
-        getCreateAccountInstruction({
-            payer,
+    await client.sendTransaction([
+        client.system.instructions.createAccount({
             newAccount: mint,
             lamports: rent,
             space,
             programAddress: TOKEN_PROGRAM_ADDRESS,
         }),
-        getInitializeMintInstruction({
+        client.token.instructions.initializeMint({
             mint: mint.address,
             decimals: 0,
             mintAuthority: mintAuthority.address,
             freezeAuthority: freezeAuthority.address,
         }),
-    ];
-    await pipe(
-        await createDefaultTransaction(client, payer),
-        tx => appendTransactionMessageInstructions(instructions, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+    ]);
 
     // Then we expect the mint account to exist and have the following data.
     const mintAccount = await fetchMint(client.rpc, mint.address);

@@ -1,54 +1,38 @@
-import { Account, appendTransactionMessageInstruction, generateKeyPairSigner, none, pipe } from '@solana/kit';
+import { Account, generateKeyPairSigner, none } from '@solana/kit';
 import { expect, it } from 'vitest';
-import {
-    AccountState,
-    TOKEN_PROGRAM_ADDRESS,
-    Token,
-    fetchToken,
-    findAssociatedTokenPda,
-    getCreateAssociatedTokenIdempotentInstructionAsync,
-} from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransaction,
-    createMint,
-    generateKeyPairSignerWithSol,
-    signAndSendTransaction,
-} from './_setup';
+import { AccountState, TOKEN_PROGRAM_ADDRESS, Token, fetchToken, findAssociatedTokenPda } from '../src';
+import { createTestClient } from './_setup';
 
 it('creates a new associated token account', async () => {
     // Given a mint account, its mint authority and a token owner.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, owner] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
-    const mint = await createMint(client, payer, mintAuthority.address);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals: 0, mintAuthority: mintAuthority.address })
+        .sendTransaction();
 
     // When we create and initialize a token account at this address.
-    const createAta = await getCreateAssociatedTokenIdempotentInstructionAsync({
-        payer,
-        mint,
-        owner: owner.address,
-    });
-
-    await pipe(
-        await createDefaultTransaction(client, payer),
-        tx => appendTransactionMessageInstruction(createAta, tx),
-        tx => signAndSendTransaction(client, tx),
-    );
+    await client.associatedToken.instructions
+        .createAssociatedTokenIdempotent({
+            mint: mint.address,
+            owner: owner.address,
+        })
+        .sendTransaction();
 
     // Then we expect the token account to exist and have the following data.
     const [ata] = await findAssociatedTokenPda({
-        mint,
+        mint: mint.address,
         owner: owner.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
     expect(await fetchToken(client.rpc, ata)).toMatchObject(<Account<Token>>{
         address: ata,
         data: {
-            mint,
+            mint: mint.address,
             owner: owner.address,
             amount: 0n,
             delegate: none(),

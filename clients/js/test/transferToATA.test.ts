@@ -1,62 +1,44 @@
 import { generateKeyPairSigner } from '@solana/kit';
 import { expect, it } from 'vitest';
-import {
-    Mint,
-    TOKEN_PROGRAM_ADDRESS,
-    Token,
-    fetchMint,
-    fetchToken,
-    findAssociatedTokenPda,
-    getTransferToATAInstructionPlan,
-    getTransferToATAInstructionPlanAsync,
-} from '../src';
-import {
-    createDefaultSolanaClient,
-    createDefaultTransactionPlanner,
-    createMint,
-    createTokenPdaWithAmount,
-    createTokenWithAmount,
-    generateKeyPairSignerWithSol,
-} from './_setup';
+import { Mint, TOKEN_PROGRAM_ADDRESS, Token, fetchMint, fetchToken, findAssociatedTokenPda } from '../src';
+import { createTestClient, createTokenPdaWithAmount, createTokenWithAmount } from './_setup';
 
-it('transfers tokens from one account to a new ATA', async () => {
+it('transfers tokens from an explicit source to an explicit destination ATA', async () => {
     // Given a mint account, one token account with 100 tokens, and a second owner.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, ownerA, ownerB, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
-    const tokenA = await createTokenWithAmount(client, payer, mintAuthority, mint, ownerA.address, 100n);
-
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
+    const tokenA = await createTokenWithAmount(client, mintAuthority, mint.address, ownerA.address, 100n);
     const [tokenB] = await findAssociatedTokenPda({
         owner: ownerB.address,
-        mint,
+        mint: mint.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
 
     // When owner A transfers 50 tokens to owner B.
-    const instructionPlan = getTransferToATAInstructionPlan({
-        payer,
-        mint,
-        source: tokenA,
-        authority: ownerA,
-        destination: tokenB,
-        recipient: ownerB.address,
-        amount: 50n,
-        decimals,
-    });
-
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
+    await client.token.instructions
+        .transferToATA({
+            mint: mint.address,
+            source: tokenA,
+            authority: ownerA,
+            destination: tokenB,
+            recipient: ownerB.address,
+            amount: 50n,
+            decimals,
+        })
+        .sendTransaction();
 
     // Then we expect the mint and token accounts to have the following updated data.
     const [{ data: mintData }, { data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
-        fetchMint(client.rpc, mint),
+        fetchMint(client.rpc, mint.address),
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
@@ -65,43 +47,41 @@ it('transfers tokens from one account to a new ATA', async () => {
     expect(tokenDataB).toMatchObject(<Token>{ amount: 50n });
 });
 
-it('derives a new ATA and transfers tokens to it', async () => {
+it('derives a new destination ATA and transfers tokens to it', async () => {
     // Given a mint account, one token account with 100 tokens, and a second owner.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, ownerA, ownerB, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
-    const tokenA = await createTokenWithAmount(client, payer, mintAuthority, mint, ownerA.address, 100n);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
+    const tokenA = await createTokenWithAmount(client, mintAuthority, mint.address, ownerA.address, 100n);
 
-    // When owner A transfers 50 tokens to owner B.
-    const instructionPlan = await getTransferToATAInstructionPlanAsync({
-        payer,
-        mint,
-        source: tokenA,
-        authority: ownerA,
-        recipient: ownerB.address,
-        amount: 50n,
-        decimals,
-    });
-
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
+    // When owner A transfers 50 tokens to owner B, with the destination derived.
+    await client.token.instructions
+        .transferToATA({
+            mint: mint.address,
+            source: tokenA,
+            authority: ownerA,
+            recipient: ownerB.address,
+            amount: 50n,
+            decimals,
+        })
+        .sendTransaction();
 
     // Then we expect the mint and token accounts to have the following updated data.
     const [tokenB] = await findAssociatedTokenPda({
         owner: ownerB.address,
-        mint,
+        mint: mint.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
-
     const [{ data: mintData }, { data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
-        fetchMint(client.rpc, mint),
+        fetchMint(client.rpc, mint.address),
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
@@ -110,42 +90,41 @@ it('derives a new ATA and transfers tokens to it', async () => {
     expect(tokenDataB).toMatchObject(<Token>{ amount: 50n });
 });
 
-it('transfers tokens from one account to an existing ATA', async () => {
+it('transfers tokens to an existing destination ATA', async () => {
     // Given a mint account and two token accounts.
     // One with 90 tokens and the other with 10 tokens.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, ownerA, ownerB, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
     const [tokenA, tokenB] = await Promise.all([
-        createTokenWithAmount(client, payer, mintAuthority, mint, ownerA.address, 90n),
-        createTokenPdaWithAmount(client, payer, mintAuthority, mint, ownerB.address, 10n, decimals),
+        createTokenWithAmount(client, mintAuthority, mint.address, ownerA.address, 90n),
+        createTokenPdaWithAmount(client, mintAuthority, mint.address, ownerB.address, 10n, decimals),
     ]);
 
     // When owner A transfers 50 tokens to owner B.
-    const instructionPlan = getTransferToATAInstructionPlan({
-        payer,
-        mint,
-        source: tokenA,
-        authority: ownerA,
-        destination: tokenB,
-        recipient: ownerB.address,
-        amount: 50n,
-        decimals,
-    });
-
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
+    await client.token.instructions
+        .transferToATA({
+            mint: mint.address,
+            source: tokenA,
+            authority: ownerA,
+            destination: tokenB,
+            recipient: ownerB.address,
+            amount: 50n,
+            decimals,
+        })
+        .sendTransaction();
 
     // Then we expect the mint and token accounts to have the following updated data.
     const [{ data: mintData }, { data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
-        fetchMint(client.rpc, mint),
+        fetchMint(client.rpc, mint.address),
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
@@ -154,42 +133,34 @@ it('transfers tokens from one account to an existing ATA', async () => {
     expect(tokenDataB).toMatchObject(<Token>{ amount: 60n });
 });
 
-it('derives source and destination ATAs and transfers tokens', async () => {
+it('derives both source and destination ATAs and transfers tokens', async () => {
     // Given a mint account and ownerA's ATA with 100 tokens.
-    const client = createDefaultSolanaClient();
-    const [payer, mintAuthority, ownerA, ownerB] = await Promise.all([
-        generateKeyPairSignerWithSol(client),
+    const client = await createTestClient();
+    const [mintAuthority, ownerA, ownerB, mint] = await Promise.all([
+        generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
         generateKeyPairSigner(),
     ]);
     const decimals = 2;
-    const mint = await createMint(client, payer, mintAuthority.address, decimals);
-    const tokenA = await createTokenPdaWithAmount(client, payer, mintAuthority, mint, ownerA.address, 100n, decimals);
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
+    const tokenA = await createTokenPdaWithAmount(client, mintAuthority, mint.address, ownerA.address, 100n, decimals);
 
     // When owner A transfers 50 tokens to owner B without specifying source or destination.
-    const instructionPlan = await getTransferToATAInstructionPlanAsync({
-        payer,
-        mint,
-        authority: ownerA,
-        recipient: ownerB.address,
-        amount: 50n,
-        decimals,
-    });
-
-    const transactionPlanner = createDefaultTransactionPlanner(client, payer);
-    const transactionPlan = await transactionPlanner(instructionPlan);
-    await client.sendTransactionPlan(transactionPlan);
+    await client.token.instructions
+        .transferToATA({ mint: mint.address, authority: ownerA, recipient: ownerB.address, amount: 50n, decimals })
+        .sendTransaction();
 
     // Then we expect both ATAs to have the correct balances.
     const [tokenB] = await findAssociatedTokenPda({
         owner: ownerB.address,
-        mint,
+        mint: mint.address,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
     });
-
     const [{ data: mintData }, { data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
-        fetchMint(client.rpc, mint),
+        fetchMint(client.rpc, mint.address),
         fetchToken(client.rpc, tokenA),
         fetchToken(client.rpc, tokenB),
     ]);
