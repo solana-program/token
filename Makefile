@@ -40,8 +40,17 @@ clippy-%:
 		--deny=clippy::manual_let_else \
 		--deny=clippy::used_underscore_binding $(ARGS)
 
+format-check-js-%:
+	cd $(call make-path,$*) && pnpm install && pnpm format $(ARGS)
+
 format-check-%:
 	cargo $(nightly) fmt --check --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+lint-js-%:
+	cd $(call make-path,$*) && pnpm install && pnpm lint $(ARGS)
+
+test-js-%:
+	cd $(call make-path,$*) && pnpm install && pnpm build && pnpm test $(ARGS)
 
 powerset-%:
 	cargo $(nightly) hack check --feature-powerset --all-targets --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
@@ -75,15 +84,6 @@ build-doc-%:
 
 test-doc-%:
 	cargo $(nightly) test --doc --all-features --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
-
-format-check-js-%:
-	cd $(call make-path,$*) && pnpm install && pnpm format $(ARGS)
-
-lint-js-%:
-	cd $(call make-path,$*) && pnpm install && pnpm lint $(ARGS)
-
-test-js-%:
-	cd $(call make-path,$*) && pnpm install && pnpm build && pnpm test $(ARGS)
 
 test-%:
 	SBF_OUT_DIR=$(PWD)/target/deploy cargo $(nightly) test --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
