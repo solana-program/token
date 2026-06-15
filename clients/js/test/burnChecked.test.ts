@@ -1,5 +1,6 @@
 import { generateKeyPairSigner } from '@solana/kit';
 import { expect, it } from 'vitest';
+
 import { fetchMint, fetchToken } from '../src';
 import { createTestClient, createTokenWithAmount } from './_setup';
 
