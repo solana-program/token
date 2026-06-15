@@ -7,6 +7,7 @@ import {
     sequentialInstructionPlan,
     TransactionSigner,
 } from '@solana/kit';
+
 import { getInitializeMint2Instruction, getMintSize, TOKEN_PROGRAM_ADDRESS } from './generated';
 
 export type CreateMintInstructionPlanInput = {

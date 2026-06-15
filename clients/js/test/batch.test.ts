@@ -11,6 +11,7 @@ import {
     Transaction,
 } from '@solana/kit';
 import { expect, it } from 'vitest';
+
 import {
     AccountState,
     getBatchInstruction,
@@ -23,7 +24,6 @@ import {
     TOKEN_PROGRAM_ADDRESS,
     TokenInstruction,
 } from '../src';
-
 import { createTestClient } from './_setup';
 
 it('batches multiple token instructions together', async () => {
