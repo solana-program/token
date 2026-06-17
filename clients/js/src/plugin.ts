@@ -1,4 +1,4 @@
-import { ClientWithPayer, pipe } from '@solana/kit';
+import { ClientWithPayer, extendClient, pipe } from '@solana/kit';
 import { addSelfPlanAndSendFunctions, SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
 
 import { getBatchInstruction } from './batch';
@@ -54,33 +54,38 @@ export type TokenPluginInstructions = Omit<GeneratedTokenPluginInstructions, 'ba
 
 export function tokenProgram() {
     return <T extends TokenPluginRequirements>(client: T) => {
-        return pipe(client, generatedTokenProgram(), c => ({
-            ...c,
-            token: <TokenPlugin>{
-                ...c.token,
-                instructions: {
-                    ...c.token.instructions,
-                    batch: (input, config) => addSelfPlanAndSendFunctions(client, getBatchInstruction(input, config)),
-                    createMint: (input, config) =>
-                        addSelfPlanAndSendFunctions(
-                            client,
-                            getCreateMintInstructionPlan({ ...input, payer: input.payer ?? client.payer }, config),
-                        ),
-                    mintToATA: (input, config) =>
-                        addSelfPlanAndSendFunctions(
-                            client,
-                            getMintToATAInstructionPlanAsync({ ...input, payer: input.payer ?? client.payer }, config),
-                        ),
-                    transferToATA: (input, config) =>
-                        addSelfPlanAndSendFunctions(
-                            client,
-                            getTransferToATAInstructionPlanAsync(
-                                { ...input, payer: input.payer ?? client.payer },
-                                config,
+        return pipe(client, generatedTokenProgram(), c =>
+            extendClient(c, {
+                token: <TokenPlugin>{
+                    ...c.token,
+                    instructions: {
+                        ...c.token.instructions,
+                        batch: (input, config) =>
+                            addSelfPlanAndSendFunctions(client, getBatchInstruction(input, config)),
+                        createMint: (input, config) =>
+                            addSelfPlanAndSendFunctions(
+                                client,
+                                getCreateMintInstructionPlan({ ...input, payer: input.payer ?? client.payer }, config),
                             ),
-                        ),
+                        mintToATA: (input, config) =>
+                            addSelfPlanAndSendFunctions(
+                                client,
+                                getMintToATAInstructionPlanAsync(
+                                    { ...input, payer: input.payer ?? client.payer },
+                                    config,
+                                ),
+                            ),
+                        transferToATA: (input, config) =>
+                            addSelfPlanAndSendFunctions(
+                                client,
+                                getTransferToATAInstructionPlanAsync(
+                                    { ...input, payer: input.payer ?? client.payer },
+                                    config,
+                                ),
+                            ),
+                    },
                 },
-            },
-        }));
+            }),
+        );
     };
 }
