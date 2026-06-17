@@ -1,8 +1,8 @@
 {
     "private": true,
     "devDependencies": {
-        "@codama/renderers-js": "^2.2.0",
-        "codama": "^1.6.0"
+        "@codama/renderers-js": "^2.3.0",
+        "codama": "^1.8.0"
     },
     "engines": {
         "node": ">=v20.0.0"

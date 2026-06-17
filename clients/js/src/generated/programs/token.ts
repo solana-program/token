@@ -19,6 +19,7 @@ import {
     type ClientWithRpc,
     type ClientWithTransactionPlanning,
     type ClientWithTransactionSending,
+    type ExtendedClient,
     type GetAccountInfoApi,
     type GetMultipleAccountsApi,
     type Instruction,
@@ -500,7 +501,13 @@ export function parseTokenInstruction<TProgram extends string>(
     }
 }
 
-export type TokenPlugin = { accounts: TokenPluginAccounts; instructions: TokenPluginInstructions };
+export type TokenPlugin = {
+    accounts: TokenPluginAccounts;
+    instructions: TokenPluginInstructions;
+    identifyAccount: typeof identifyTokenAccount;
+    identifyInstruction: typeof identifyTokenInstruction;
+    parseInstruction: typeof parseTokenInstruction;
+};
 
 export type TokenPluginAccounts = {
     mint: ReturnType<typeof getMintCodec> & SelfFetchFunctions<MintArgs, Mint>;
@@ -582,7 +589,7 @@ export type TokenPluginRequirements = ClientWithRpc<GetAccountInfoApi & GetMulti
     ClientWithTransactionSending;
 
 export function tokenProgram() {
-    return <T extends TokenPluginRequirements>(client: T): Omit<T, 'token'> & { token: TokenPlugin } => {
+    return <T extends TokenPluginRequirements>(client: T): ExtendedClient<T, { token: TokenPlugin }> => {
         return extendClient(client, {
             token: <TokenPlugin>{
                 accounts: {
@@ -630,6 +637,9 @@ export function tokenProgram() {
                     unwrapLamports: input => addSelfPlanAndSendFunctions(client, getUnwrapLamportsInstruction(input)),
                     batch: input => addSelfPlanAndSendFunctions(client, getBatchInstruction(input)),
                 },
+                identifyAccount: identifyTokenAccount,
+                identifyInstruction: identifyTokenInstruction,
+                parseInstruction: parseTokenInstruction,
             },
         });
     };
