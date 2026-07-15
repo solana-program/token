@@ -1,4 +1,4 @@
-import { ClientWithPayer, extendClient, pipe } from '@solana/kit';
+import { ClientWithGetMinimumBalance, ClientWithPayer, extendClient, pipe } from '@solana/kit';
 import { addSelfPlanAndSendFunctions, SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
 
 import { getBatchInstruction } from './batch';
@@ -25,7 +25,7 @@ import {
 } from './transferToATA';
 import { MakeOptional } from './types';
 
-export type TokenPluginRequirements = GeneratedTokenPluginRequirements & ClientWithPayer;
+export type TokenPluginRequirements = GeneratedTokenPluginRequirements & ClientWithPayer & ClientWithGetMinimumBalance;
 
 export type TokenPlugin = Omit<GeneratedTokenPlugin, 'instructions'> & { instructions: TokenPluginInstructions };
 
@@ -65,7 +65,11 @@ export function tokenProgram() {
                         createMint: (input, config) =>
                             addSelfPlanAndSendFunctions(
                                 client,
-                                getCreateMintInstructionPlan({ ...input, payer: input.payer ?? client.payer }, config),
+                                getCreateMintInstructionPlan(
+                                    client,
+                                    { ...input, payer: input.payer ?? client.payer },
+                                    config,
+                                ),
                             ),
                         mintToATA: (input, config) =>
                             addSelfPlanAndSendFunctions(

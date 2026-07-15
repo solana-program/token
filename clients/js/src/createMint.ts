@@ -1,7 +1,7 @@
 import { getCreateAccountInstruction } from '@solana-program/system';
 import {
     Address,
-    getMinimumBalanceForRentExemption,
+    ClientWithGetMinimumBalance,
     InstructionPlan,
     OptionOrNullable,
     sequentialInstructionPlan,
@@ -33,17 +33,20 @@ export type CreateMintInstructionPlanConfig = {
     tokenProgram?: Address;
 };
 
-export function getCreateMintInstructionPlan(
+export async function getCreateMintInstructionPlan(
+    client: ClientWithGetMinimumBalance,
     input: CreateMintInstructionPlanInput,
     config?: CreateMintInstructionPlanConfig,
-): InstructionPlan {
+): Promise<InstructionPlan> {
+    const space = getMintSize();
+    const lamports = input.mintAccountLamports ?? (await client.getMinimumBalance(space));
     return sequentialInstructionPlan([
         getCreateAccountInstruction(
             {
                 payer: input.payer,
                 newAccount: input.newMint,
-                lamports: input.mintAccountLamports ?? getMinimumBalanceForRentExemption(BigInt(getMintSize())),
-                space: getMintSize(),
+                lamports,
+                space,
                 programAddress: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
             },
             {
