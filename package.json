@@ -2,7 +2,7 @@
     "private": true,
     "devDependencies": {
         "@codama/renderers-js": "^2.3.0",
-        "codama": "^1.8.0"
+        "codama": "^1.10.0"
     },
     "engines": {
         "node": ">=v20.0.0"

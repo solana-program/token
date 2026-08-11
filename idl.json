@@ -266,6 +266,11 @@
     "instructions": [
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize mint",
+          "interpolatedIntent": "Initialize mint ${accounts.mint} with ${data.decimals} decimals"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -277,6 +282,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "skip": "always"
+            },
             "name": "rent",
             "isWritable": false,
             "isSigner": false,
@@ -291,6 +300,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -357,9 +370,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize token account",
+          "interpolatedIntent": "Initialize token account ${accounts.account} for mint ${accounts.mint}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -384,6 +406,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "skip": "always"
+            },
             "name": "rent",
             "isWritable": false,
             "isSigner": false,
@@ -398,6 +424,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -433,6 +463,11 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize multisig",
+          "interpolatedIntent": "Initialize multisig ${accounts.multisig} requiring ${data.m} signatures"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -444,6 +479,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "skip": "always"
+            },
             "name": "rent",
             "isWritable": false,
             "isSigner": false,
@@ -458,6 +497,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -470,6 +513,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "label": "Required Signatures"
+            },
             "name": "m",
             "type": {
               "kind": "numberTypeNode",
@@ -491,6 +538,10 @@
         "remainingAccounts": [
           {
             "kind": "instructionRemainingAccountsNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Signers"
+            },
             "value": {
               "kind": "argumentValueNode",
               "name": "signers"
@@ -515,9 +566,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Transfer tokens",
+          "interpolatedIntent": "Transfer ${data.amount} from ${accounts.source} to ${accounts.destination}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "From"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -526,6 +586,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "To"
+            },
             "name": "destination",
             "isWritable": true,
             "isSigner": false,
@@ -547,6 +611,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -562,6 +630,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "kind": "amountNumberDisplayNode",
+                "unit": {
+                  "kind": "stringValueNode",
+                  "string": "base units"
+                }
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -596,9 +671,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Approve delegate",
+          "interpolatedIntent": "Approve ${accounts.delegate} to spend ${data.amount} from ${accounts.source}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -625,6 +709,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -640,6 +728,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "kind": "amountNumberDisplayNode",
+                "unit": {
+                  "kind": "stringValueNode",
+                  "string": "base units"
+                }
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -673,9 +768,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Revoke delegate",
+          "interpolatedIntent": "Revoke the delegate of ${accounts.source}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -694,6 +798,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -729,9 +837,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Set authority",
+          "interpolatedIntent": "Change an authority of ${accounts.owned}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Account"
+            },
             "name": "owned",
             "isWritable": true,
             "isSigner": false,
@@ -752,6 +869,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -808,9 +929,29 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Mint tokens",
+          "interpolatedIntent": "Mint ${data.amount} ${accounts.mint} to ${accounts.token}"
+        },
+        "provides": [
+          {
+            "kind": "providedNode",
+            "name": "decimals",
+            "node": {
+              "account": "mint",
+              "kind": "accountFieldValueNode",
+              "path": "decimals"
+            }
+          }
+        ],
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "accountLink": {
+              "kind": "accountLinkNode",
+              "name": "mint"
+            },
             "name": "mint",
             "isWritable": true,
             "isSigner": false,
@@ -819,6 +960,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "To"
+            },
             "name": "token",
             "isWritable": true,
             "isSigner": false,
@@ -839,6 +984,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -854,6 +1003,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "decimals": {
+                  "kind": "injectedValueNode",
+                  "key": "decimals"
+                },
+                "kind": "amountNumberDisplayNode"
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -886,9 +1042,29 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Burn tokens",
+          "interpolatedIntent": "Burn ${data.amount} ${accounts.mint} from ${accounts.account}"
+        },
+        "provides": [
+          {
+            "kind": "providedNode",
+            "name": "decimals",
+            "node": {
+              "account": "mint",
+              "kind": "accountFieldValueNode",
+              "path": "decimals"
+            }
+          }
+        ],
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -897,6 +1073,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "accountLink": {
+              "kind": "accountLinkNode",
+              "name": "mint"
+            },
             "name": "mint",
             "isWritable": true,
             "isSigner": false,
@@ -918,6 +1098,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -933,6 +1117,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "decimals": {
+                  "kind": "injectedValueNode",
+                  "key": "decimals"
+                },
+                "kind": "amountNumberDisplayNode"
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -966,9 +1157,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Close token account",
+          "interpolatedIntent": "Close ${accounts.account} and send its balance to ${accounts.destination}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -977,6 +1177,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Recipient"
+            },
             "name": "destination",
             "isWritable": true,
             "isSigner": false,
@@ -995,6 +1199,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1033,9 +1241,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Freeze token account",
+          "interpolatedIntent": "Freeze ${accounts.account}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1062,6 +1279,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1099,9 +1320,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Thaw token account",
+          "interpolatedIntent": "Thaw ${accounts.account}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1128,6 +1358,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1165,9 +1399,28 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Transfer tokens",
+          "interpolatedIntent": "Transfer ${data.amount} ${accounts.mint} from ${accounts.source} to ${accounts.destination}"
+        },
+        "provides": [
+          {
+            "kind": "providedNode",
+            "name": "decimals",
+            "node": {
+              "kind": "argumentValueNode",
+              "name": "decimals"
+            }
+          }
+        ],
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "From"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -1184,6 +1437,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "To"
+            },
             "name": "destination",
             "isWritable": true,
             "isSigner": false,
@@ -1205,6 +1462,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1220,6 +1481,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "decimals": {
+                  "kind": "injectedValueNode",
+                  "key": "decimals"
+                },
+                "kind": "amountNumberDisplayNode"
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -1227,6 +1495,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "whenInjected"
+            },
             "name": "decimals",
             "type": {
               "kind": "numberTypeNode",
@@ -1270,9 +1542,28 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Approve delegate",
+          "interpolatedIntent": "Approve ${accounts.delegate} to spend ${data.amount} ${accounts.mint} from ${accounts.source}"
+        },
+        "provides": [
+          {
+            "kind": "providedNode",
+            "name": "decimals",
+            "node": {
+              "kind": "argumentValueNode",
+              "name": "decimals"
+            }
+          }
+        ],
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -1307,6 +1598,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1322,6 +1617,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "decimals": {
+                  "kind": "injectedValueNode",
+                  "key": "decimals"
+                },
+                "kind": "amountNumberDisplayNode"
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -1329,6 +1631,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "whenInjected"
+            },
             "name": "decimals",
             "type": {
               "kind": "numberTypeNode",
@@ -1371,6 +1677,21 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Mint tokens",
+          "interpolatedIntent": "Mint ${data.amount} ${accounts.mint} to ${accounts.token}"
+        },
+        "provides": [
+          {
+            "kind": "providedNode",
+            "name": "decimals",
+            "node": {
+              "kind": "argumentValueNode",
+              "name": "decimals"
+            }
+          }
+        ],
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -1382,6 +1703,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "To"
+            },
             "name": "token",
             "isWritable": true,
             "isSigner": false,
@@ -1402,6 +1727,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1417,6 +1746,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "decimals": {
+                  "kind": "injectedValueNode",
+                  "key": "decimals"
+                },
+                "kind": "amountNumberDisplayNode"
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -1424,6 +1760,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "whenInjected"
+            },
             "name": "decimals",
             "type": {
               "kind": "numberTypeNode",
@@ -1465,9 +1805,28 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Burn tokens",
+          "interpolatedIntent": "Burn ${data.amount} ${accounts.mint} from ${accounts.account}"
+        },
+        "provides": [
+          {
+            "kind": "providedNode",
+            "name": "decimals",
+            "node": {
+              "kind": "argumentValueNode",
+              "name": "decimals"
+            }
+          }
+        ],
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1497,6 +1856,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1512,6 +1875,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "decimals": {
+                  "kind": "injectedValueNode",
+                  "key": "decimals"
+                },
+                "kind": "amountNumberDisplayNode"
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -1519,6 +1889,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "whenInjected"
+            },
             "name": "decimals",
             "type": {
               "kind": "numberTypeNode",
@@ -1561,9 +1935,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize token account",
+          "interpolatedIntent": "Initialize token account ${accounts.account} for mint ${accounts.mint}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1580,6 +1963,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "skip": "always"
+            },
             "name": "rent",
             "isWritable": false,
             "isSigner": false,
@@ -1594,6 +1981,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1629,9 +2020,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Sync wrapped SOL",
+          "interpolatedIntent": "Sync the wrapped SOL balance of ${accounts.account}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1642,6 +2042,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "skip": "always"
+            },
             "name": "rent",
             "isWritable": false,
             "isSigner": false,
@@ -1656,6 +2060,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1686,9 +2094,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize token account",
+          "interpolatedIntent": "Initialize token account ${accounts.account} for mint ${accounts.mint}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1707,6 +2124,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1739,6 +2160,11 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize multisig",
+          "interpolatedIntent": "Initialize multisig ${accounts.multisig} requiring ${data.m} signatures"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -1752,6 +2178,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1764,6 +2194,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "label": "Required Signatures"
+            },
             "name": "m",
             "type": {
               "kind": "numberTypeNode",
@@ -1785,6 +2219,10 @@
         "remainingAccounts": [
           {
             "kind": "instructionRemainingAccountsNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Signers"
+            },
             "value": {
               "kind": "argumentValueNode",
               "name": "signers"
@@ -1799,6 +2237,11 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize mint",
+          "interpolatedIntent": "Initialize mint ${accounts.mint} with ${data.decimals} decimals"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -1812,6 +2255,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1876,6 +2323,11 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Get account data size",
+          "interpolatedIntent": "Get the account size for mint ${accounts.mint}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -1889,6 +2341,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1919,9 +2375,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Initialize immutable owner",
+          "interpolatedIntent": "Make the owner of ${accounts.account} immutable"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "Token Account"
+            },
             "name": "account",
             "isWritable": true,
             "isSigner": false,
@@ -1932,6 +2397,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1964,6 +2433,10 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Convert amount to UI amount"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -1977,6 +2450,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -1992,6 +2469,13 @@
             "name": "amount",
             "type": {
               "kind": "numberTypeNode",
+              "display": {
+                "kind": "amountNumberDisplayNode",
+                "unit": {
+                  "kind": "stringValueNode",
+                  "string": "base units"
+                }
+              },
               "format": "u64",
               "endian": "le"
             },
@@ -2020,6 +2504,10 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Convert UI amount to amount"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -2033,6 +2521,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -2045,6 +2537,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "label": "UI Amount"
+            },
             "name": "uiAmount",
             "type": {
               "kind": "stringTypeNode",
@@ -2073,9 +2569,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Withdraw excess SOL",
+          "interpolatedIntent": "Withdraw excess SOL from ${accounts.source} to ${accounts.destination}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "From"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -2084,6 +2589,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "To"
+            },
             "name": "destination",
             "isWritable": true,
             "isSigner": false,
@@ -2102,6 +2611,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -2141,9 +2654,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Unwrap SOL",
+          "interpolatedIntent": "Unwrap SOL from ${accounts.source} to ${accounts.destination}"
+        },
         "accounts": [
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "From"
+            },
             "name": "source",
             "isWritable": true,
             "isSigner": false,
@@ -2152,6 +2674,10 @@
           },
           {
             "kind": "instructionAccountNode",
+            "display": {
+              "kind": "instructionAccountDisplayNode",
+              "label": "To"
+            },
             "name": "destination",
             "isWritable": true,
             "isSigner": false,
@@ -2170,6 +2696,10 @@
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -2187,6 +2717,17 @@
               "kind": "optionTypeNode",
               "item": {
                 "kind": "numberTypeNode",
+                "display": {
+                  "decimals": {
+                    "kind": "numberValueNode",
+                    "number": 9
+                  },
+                  "kind": "amountNumberDisplayNode",
+                  "unit": {
+                    "kind": "stringValueNode",
+                    "string": "SOL"
+                  }
+                },
                 "format": "u64",
                 "endian": "le"
               },
@@ -2232,10 +2773,18 @@
       },
       {
         "kind": "instructionNode",
+        "display": {
+          "kind": "instructionDisplayNode",
+          "intent": "Batch instructions"
+        },
         "accounts": [],
         "arguments": [
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "skip": "always"
+            },
             "name": "discriminator",
             "type": {
               "kind": "numberTypeNode",
@@ -2248,6 +2797,10 @@
           },
           {
             "kind": "instructionArgumentNode",
+            "display": {
+              "kind": "structFieldDisplayNode",
+              "label": "Batched Instructions"
+            },
             "name": "data",
             "type": {
               "kind": "arrayTypeNode",
@@ -2530,6 +3083,11 @@
       "instructions": [
         {
           "kind": "instructionNode",
+          "display": {
+            "kind": "instructionDisplayNode",
+            "intent": "Create associated token account",
+            "interpolatedIntent": "Create associated token account ${accounts.ata} for ${accounts.owner}"
+          },
           "accounts": [
             {
               "kind": "instructionAccountNode",
@@ -2542,6 +3100,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Token Account"
+              },
               "name": "ata",
               "isWritable": true,
               "isSigner": false,
@@ -2599,6 +3161,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "skip": "always"
+              },
               "name": "systemProgram",
               "isWritable": false,
               "isSigner": false,
@@ -2625,6 +3191,10 @@
           "arguments": [
             {
               "kind": "instructionArgumentNode",
+              "display": {
+                "kind": "structFieldDisplayNode",
+                "skip": "always"
+              },
               "name": "discriminator",
               "type": {
                 "kind": "numberTypeNode",
@@ -2652,6 +3222,11 @@
         },
         {
           "kind": "instructionNode",
+          "display": {
+            "kind": "instructionDisplayNode",
+            "intent": "Create associated token account",
+            "interpolatedIntent": "Create associated token account ${accounts.ata} for ${accounts.owner}"
+          },
           "accounts": [
             {
               "kind": "instructionAccountNode",
@@ -2664,6 +3239,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Token Account"
+              },
               "name": "ata",
               "isWritable": true,
               "isSigner": false,
@@ -2721,6 +3300,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "skip": "always"
+              },
               "name": "systemProgram",
               "isWritable": false,
               "isSigner": false,
@@ -2747,6 +3330,10 @@
           "arguments": [
             {
               "kind": "instructionArgumentNode",
+              "display": {
+                "kind": "structFieldDisplayNode",
+                "skip": "always"
+              },
               "name": "discriminator",
               "type": {
                 "kind": "numberTypeNode",
@@ -2775,9 +3362,18 @@
         },
         {
           "kind": "instructionNode",
+          "display": {
+            "kind": "instructionDisplayNode",
+            "intent": "Recover nested token account",
+            "interpolatedIntent": "Recover nested token account ${accounts.nestedAssociatedAccountAddress} to ${accounts.destinationAssociatedAccountAddress}"
+          },
           "accounts": [
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Nested Token Account"
+              },
               "name": "nestedAssociatedAccountAddress",
               "isWritable": true,
               "isSigner": false,
@@ -2821,6 +3417,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Nested Mint"
+              },
               "name": "nestedTokenMintAddress",
               "isWritable": false,
               "isSigner": false,
@@ -2829,6 +3429,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Destination Token Account"
+              },
               "name": "destinationAssociatedAccountAddress",
               "isWritable": true,
               "isSigner": false,
@@ -2870,6 +3474,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Owner Token Account"
+              },
               "name": "ownerAssociatedAccountAddress",
               "isWritable": false,
               "isSigner": false,
@@ -2913,6 +3521,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Owner Mint"
+              },
               "name": "ownerTokenMintAddress",
               "isWritable": false,
               "isSigner": false,
@@ -2921,6 +3533,10 @@
             },
             {
               "kind": "instructionAccountNode",
+              "display": {
+                "kind": "instructionAccountDisplayNode",
+                "label": "Wallet"
+              },
               "name": "walletAddress",
               "isWritable": true,
               "isSigner": true,
@@ -2943,6 +3559,10 @@
           "arguments": [
             {
               "kind": "instructionArgumentNode",
+              "display": {
+                "kind": "structFieldDisplayNode",
+                "skip": "always"
+              },
               "name": "discriminator",
               "type": {
                 "kind": "numberTypeNode",
