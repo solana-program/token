@@ -832,7 +832,7 @@ impl Processor {
         Ok(())
     }
 
-    /// Processes an [`AmountToUiAmount`](enum.TokenInstruction.html)
+    /// Processes an [`UiAmountToAmount`](enum.TokenInstruction.html)
     /// instruction
     pub fn process_ui_amount_to_amount(
         program_id: &Pubkey,
