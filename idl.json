@@ -3086,7 +3086,7 @@
           "display": {
             "kind": "instructionDisplayNode",
             "intent": "Create associated token account",
-            "interpolatedIntent": "Create associated token account ${accounts.ata} for ${accounts.owner}"
+            "interpolatedIntent": "Create the associated token account of ${accounts.owner} for mint ${accounts.mint}"
           },
           "accounts": [
             {
@@ -3225,7 +3225,7 @@
           "display": {
             "kind": "instructionDisplayNode",
             "intent": "Create associated token account",
-            "interpolatedIntent": "Create associated token account ${accounts.ata} for ${accounts.owner}"
+            "interpolatedIntent": "Create the associated token account of ${accounts.owner} for mint ${accounts.mint}"
           },
           "accounts": [
             {
