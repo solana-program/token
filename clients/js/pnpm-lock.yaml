@@ -18,9 +18,6 @@ importers:
       '@solana/kit':
         specifier: ^8.0.0
         version: 8.0.0(typescript@5.9.3)
-      '@solana/kit-client-rpc':
-        specifier: ^0.15.0
-        version: 0.15.1(@solana/kit@8.0.0(typescript@5.9.3))
       '@solana/kit-plugin-litesvm':
         specifier: ^0.18.0
         version: 0.18.0(@solana/kit@8.0.0(typescript@5.9.3))(typescript@5.9.3)
@@ -1024,16 +1021,6 @@ packages:
       typescript:
         optional: true
 
-  '@solana/kit-client-rpc@0.15.1':
-    resolution: {integrity: sha512-MrhqGU5bpVducAv0YfimmL7xj1m7xdUoiAVHYmk+Ks9ZUw5Xfk+DB76y3VGWqlB0VQdOqqHfvox//AHN2Cym5Q==}
-    peerDependencies:
-      '@solana/kit': ^7.0.0
-
-  '@solana/kit-plugin-instruction-plan@0.13.0':
-    resolution: {integrity: sha512-9RA94e0LLtVLN+bvGclpu8l0lAXGOGS72DxPIQ1VyGZs7vK/WTwPOqKnWhjJs2Cv/SDJ2xsCAhYkXr0UltVrOg==}
-    peerDependencies:
-      '@solana/kit': ^7.0.0
-
   '@solana/kit-plugin-instruction-plan@0.18.0':
     resolution: {integrity: sha512-GVhSf/QFtowshm4zhwqOrFI5oMpeOgRDCv5WMmYER0xZqE8+aSDxHsbEyI3dS/s4YilA296EHpQpzTAdlpj/bw==}
     peerDependencies:
@@ -1043,16 +1030,6 @@ packages:
     resolution: {integrity: sha512-KAUdUzUSDkQKfkNKykZRB7Nd5JvvAUBw6jYo0hrVXqKeGGVQ4ZbiX5sAhUR7EKjXAWfN08VLGZ7vdjGeEKkWYg==}
     peerDependencies:
       '@solana/kit': ^8.0.0
-
-  '@solana/kit-plugin-payer@0.15.1':
-    resolution: {integrity: sha512-Uv5XgVxrKJx5OKbeB//cg9buxuwDArL9p6sfKopkudlEhgmQbpaEUy8+BBFi6EQTK4exijW1Omr1MqCT1U/fnA==}
-    peerDependencies:
-      '@solana/kit': ^7.0.0
-
-  '@solana/kit-plugin-rpc@0.15.0':
-    resolution: {integrity: sha512-Abymr7WLP9yQ6ixCCv+tKzjoWpAkxJ90JWzL+pfkTAFGTpVk9N0myhMcO2ohl6yztJRMOxsw1CXWjcVecxxUlg==}
-    peerDependencies:
-      '@solana/kit': ^7.0.0
 
   '@solana/kit-plugin-signer@0.18.0':
     resolution: {integrity: sha512-/CkyDE0HArqH503UUdsiiknBYpM0gAbe/QhlQ37hCRwP+WcnQkqQNdqhx999vMZaKii68ffSD8+xsvOZcSvC+w==}
@@ -2921,17 +2898,6 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/kit-client-rpc@0.15.1(@solana/kit@8.0.0(typescript@5.9.3))':
-    dependencies:
-      '@solana/kit': 8.0.0(typescript@5.9.3)
-      '@solana/kit-plugin-instruction-plan': 0.13.0(@solana/kit@8.0.0(typescript@5.9.3))
-      '@solana/kit-plugin-payer': 0.15.1(@solana/kit@8.0.0(typescript@5.9.3))
-      '@solana/kit-plugin-rpc': 0.15.0(@solana/kit@8.0.0(typescript@5.9.3))
-
-  '@solana/kit-plugin-instruction-plan@0.13.0(@solana/kit@8.0.0(typescript@5.9.3))':
-    dependencies:
-      '@solana/kit': 8.0.0(typescript@5.9.3)
-
   '@solana/kit-plugin-instruction-plan@0.18.0(@solana/kit@8.0.0(typescript@5.9.3))':
     dependencies:
       '@solana/kit': 8.0.0(typescript@5.9.3)
@@ -2946,15 +2912,6 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - typescript
       - utf-8-validate
-
-  '@solana/kit-plugin-payer@0.15.1(@solana/kit@8.0.0(typescript@5.9.3))':
-    dependencies:
-      '@solana/kit': 8.0.0(typescript@5.9.3)
-
-  '@solana/kit-plugin-rpc@0.15.0(@solana/kit@8.0.0(typescript@5.9.3))':
-    dependencies:
-      '@solana/kit': 8.0.0(typescript@5.9.3)
-      '@solana/kit-plugin-instruction-plan': 0.13.0(@solana/kit@8.0.0(typescript@5.9.3))
 
   '@solana/kit-plugin-signer@0.18.0(@solana/kit@8.0.0(typescript@5.9.3))':
     dependencies:
