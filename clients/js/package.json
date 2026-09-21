@@ -44,11 +44,11 @@
         "prepublishOnly": "pnpm build"
     },
     "dependencies": {
-        "@solana-program/system": "^0.14.0"
+        "@solana-program/system": "^0.15.0"
     },
     "devDependencies": {
         "@solana-config/oxc": "^0.1.1",
-        "@solana/kit": "^8.0.0",
+        "@solana/kit": "^8.3.0",
         "@solana/kit-plugin-litesvm": "^0.18.0",
         "@solana/kit-plugin-signer": "^0.18.0",
         "@types/node": "^24",
@@ -62,7 +62,7 @@
         "vitest": "^4.0.15"
     },
     "peerDependencies": {
-        "@solana/kit": "^8.0.0"
+        "@solana/kit": "^8.3.0"
     },
     "devEngines": {
         "runtime": {

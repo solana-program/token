@@ -1,7 +1,7 @@
 {
     "private": true,
     "devDependencies": {
-        "@codama/renderers-js": "^2.3.0",
+        "@codama/renderers-js": "^2.5.0",
         "codama": "^1.10.0"
     },
     "engines": {
