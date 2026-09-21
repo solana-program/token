@@ -26,14 +26,17 @@ import {
     type InstructionWithData,
     type ReadonlyAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
     type WritableSignerAccount,
 } from '@solana/kit';
 import {
     getAccountMetaFactory,
     getAddressFromResolvedInstructionAccount,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
     type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
 } from '@solana/kit/program-client-core';
 import { findAssociatedTokenPda } from '../pdas';
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programs';
@@ -95,34 +98,34 @@ export function getCreateAssociatedTokenIdempotentInstructionDataCodec(): FixedS
 }
 
 export type CreateAssociatedTokenIdempotentAsyncInput<
-    TAccountPayer extends string = string,
-    TAccountAta extends string = string,
-    TAccountOwner extends string = string,
-    TAccountMint extends string = string,
-    TAccountSystemProgram extends string = string,
-    TAccountTokenProgram extends string = string,
+    TAccountPayer extends InstructionSignerInput = InstructionSignerInput,
+    TAccountAta extends InstructionAccountInput = InstructionAccountInput,
+    TAccountOwner extends InstructionAccountInput = InstructionAccountInput,
+    TAccountMint extends InstructionAccountInput = InstructionAccountInput,
+    TAccountSystemProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountTokenProgram extends InstructionAccountInput = InstructionAccountInput,
 > = {
     /** Funding account (must be a system account). */
-    payer: TransactionSigner<TAccountPayer>;
+    payer: TAccountPayer;
     /** Associated token account address to be created. */
-    ata?: Address<TAccountAta>;
+    ata?: TAccountAta;
     /** Wallet address for the new associated token account. */
-    owner: Address<TAccountOwner>;
+    owner: TAccountOwner;
     /** The token mint for the new associated token account. */
-    mint: Address<TAccountMint>;
+    mint: TAccountMint;
     /** System program. */
-    systemProgram?: Address<TAccountSystemProgram>;
+    systemProgram?: TAccountSystemProgram;
     /** SPL Token program. */
-    tokenProgram?: Address<TAccountTokenProgram>;
+    tokenProgram?: TAccountTokenProgram;
 };
 
 export async function getCreateAssociatedTokenIdempotentInstructionAsync<
-    TAccountPayer extends string,
-    TAccountAta extends string,
-    TAccountOwner extends string,
-    TAccountMint extends string,
-    TAccountSystemProgram extends string,
-    TAccountTokenProgram extends string,
+    TAccountPayer extends InstructionSignerInput,
+    TAccountAta extends InstructionAccountInput,
+    TAccountOwner extends InstructionAccountInput,
+    TAccountMint extends InstructionAccountInput,
+    TAccountSystemProgram extends InstructionAccountInput,
+    TAccountTokenProgram extends InstructionAccountInput,
     TProgramAddress extends Address = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
 >(
     input: CreateAssociatedTokenIdempotentAsyncInput<
@@ -137,25 +140,28 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
 ): Promise<
     CreateAssociatedTokenIdempotentInstruction<
         TProgramAddress,
-        TAccountPayer,
-        TAccountAta,
-        TAccountOwner,
-        TAccountMint,
-        TAccountSystemProgram,
-        TAccountTokenProgram
+        ResolvedInstructionAccountMeta<TAccountPayer, InstructionAccountInputAddress<TAccountPayer>>,
+        ResolvedInstructionAccountMeta<TAccountAta, InstructionAccountInputAddress<TAccountAta>>,
+        ResolvedInstructionAccountMeta<TAccountOwner, InstructionAccountInputAddress<TAccountOwner>>,
+        ResolvedInstructionAccountMeta<TAccountMint, InstructionAccountInputAddress<TAccountMint>>,
+        ResolvedInstructionAccountMeta<TAccountSystemProgram, InstructionAccountInputAddress<TAccountSystemProgram>>,
+        ResolvedInstructionAccountMeta<TAccountTokenProgram, InstructionAccountInputAddress<TAccountTokenProgram>>
     >
 > {
     // Program address.
     const programAddress = config?.programAddress ?? ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        payer: { value: input.payer ?? null, isWritable: true },
-        ata: { value: input.ata ?? null, isWritable: true },
-        owner: { value: input.owner ?? null, isWritable: false },
-        mint: { value: input.mint ?? null, isWritable: false },
-        systemProgram: { value: input.systemProgram ?? null, isWritable: false },
-        tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
+        payer: { value: input.payer ?? null, isSigner: true, isWritable: true },
+        ata: { value: input.ata ?? null, isSigner: false, isWritable: true },
+        owner: { value: input.owner ?? null, isSigner: false, isWritable: false },
+        mint: { value: input.mint ?? null, isSigner: false, isWritable: false },
+        systemProgram: { value: input.systemProgram ?? null, isSigner: false, isWritable: false },
+        tokenProgram: { value: input.tokenProgram ?? null, isSigner: false, isWritable: false },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
@@ -165,18 +171,20 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
             'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
     }
     if (!accounts.ata.value) {
-        accounts.ata.value = await findAssociatedTokenPda({
-            owner: getAddressFromResolvedInstructionAccount('owner', accounts.owner.value),
-            tokenProgram: getAddressFromResolvedInstructionAccount('tokenProgram', accounts.tokenProgram.value),
-            mint: getAddressFromResolvedInstructionAccount('mint', accounts.mint.value),
-        });
+        accounts.ata.value = await findAssociatedTokenPda(
+            {
+                owner: getAddressFromResolvedInstructionAccount('owner', accounts.owner.value),
+                tokenProgram: getAddressFromResolvedInstructionAccount('tokenProgram', accounts.tokenProgram.value),
+                mint: getAddressFromResolvedInstructionAccount('mint', accounts.mint.value),
+            },
+            { programAddress },
+        );
     }
     if (!accounts.systemProgram.value) {
         accounts.systemProgram.value =
             '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
     }
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [
             getAccountMeta('payer', accounts.payer),
@@ -190,44 +198,44 @@ export async function getCreateAssociatedTokenIdempotentInstructionAsync<
         programAddress,
     } as CreateAssociatedTokenIdempotentInstruction<
         TProgramAddress,
-        TAccountPayer,
-        TAccountAta,
-        TAccountOwner,
-        TAccountMint,
-        TAccountSystemProgram,
-        TAccountTokenProgram
+        ResolvedInstructionAccountMeta<TAccountPayer, InstructionAccountInputAddress<TAccountPayer>>,
+        ResolvedInstructionAccountMeta<TAccountAta, InstructionAccountInputAddress<TAccountAta>>,
+        ResolvedInstructionAccountMeta<TAccountOwner, InstructionAccountInputAddress<TAccountOwner>>,
+        ResolvedInstructionAccountMeta<TAccountMint, InstructionAccountInputAddress<TAccountMint>>,
+        ResolvedInstructionAccountMeta<TAccountSystemProgram, InstructionAccountInputAddress<TAccountSystemProgram>>,
+        ResolvedInstructionAccountMeta<TAccountTokenProgram, InstructionAccountInputAddress<TAccountTokenProgram>>
     >);
 }
 
 export type CreateAssociatedTokenIdempotentInput<
-    TAccountPayer extends string = string,
-    TAccountAta extends string = string,
-    TAccountOwner extends string = string,
-    TAccountMint extends string = string,
-    TAccountSystemProgram extends string = string,
-    TAccountTokenProgram extends string = string,
+    TAccountPayer extends InstructionSignerInput = InstructionSignerInput,
+    TAccountAta extends InstructionAccountInput = InstructionAccountInput,
+    TAccountOwner extends InstructionAccountInput = InstructionAccountInput,
+    TAccountMint extends InstructionAccountInput = InstructionAccountInput,
+    TAccountSystemProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountTokenProgram extends InstructionAccountInput = InstructionAccountInput,
 > = {
     /** Funding account (must be a system account). */
-    payer: TransactionSigner<TAccountPayer>;
+    payer: TAccountPayer;
     /** Associated token account address to be created. */
-    ata: Address<TAccountAta>;
+    ata: TAccountAta;
     /** Wallet address for the new associated token account. */
-    owner: Address<TAccountOwner>;
+    owner: TAccountOwner;
     /** The token mint for the new associated token account. */
-    mint: Address<TAccountMint>;
+    mint: TAccountMint;
     /** System program. */
-    systemProgram?: Address<TAccountSystemProgram>;
+    systemProgram?: TAccountSystemProgram;
     /** SPL Token program. */
-    tokenProgram?: Address<TAccountTokenProgram>;
+    tokenProgram?: TAccountTokenProgram;
 };
 
 export function getCreateAssociatedTokenIdempotentInstruction<
-    TAccountPayer extends string,
-    TAccountAta extends string,
-    TAccountOwner extends string,
-    TAccountMint extends string,
-    TAccountSystemProgram extends string,
-    TAccountTokenProgram extends string,
+    TAccountPayer extends InstructionSignerInput,
+    TAccountAta extends InstructionAccountInput,
+    TAccountOwner extends InstructionAccountInput,
+    TAccountMint extends InstructionAccountInput,
+    TAccountSystemProgram extends InstructionAccountInput,
+    TAccountTokenProgram extends InstructionAccountInput,
     TProgramAddress extends Address = typeof ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
 >(
     input: CreateAssociatedTokenIdempotentInput<
@@ -241,24 +249,27 @@ export function getCreateAssociatedTokenIdempotentInstruction<
     config?: { programAddress?: TProgramAddress },
 ): CreateAssociatedTokenIdempotentInstruction<
     TProgramAddress,
-    TAccountPayer,
-    TAccountAta,
-    TAccountOwner,
-    TAccountMint,
-    TAccountSystemProgram,
-    TAccountTokenProgram
+    ResolvedInstructionAccountMeta<TAccountPayer, InstructionAccountInputAddress<TAccountPayer>>,
+    ResolvedInstructionAccountMeta<TAccountAta, InstructionAccountInputAddress<TAccountAta>>,
+    ResolvedInstructionAccountMeta<TAccountOwner, InstructionAccountInputAddress<TAccountOwner>>,
+    ResolvedInstructionAccountMeta<TAccountMint, InstructionAccountInputAddress<TAccountMint>>,
+    ResolvedInstructionAccountMeta<TAccountSystemProgram, InstructionAccountInputAddress<TAccountSystemProgram>>,
+    ResolvedInstructionAccountMeta<TAccountTokenProgram, InstructionAccountInputAddress<TAccountTokenProgram>>
 > {
     // Program address.
     const programAddress = config?.programAddress ?? ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        payer: { value: input.payer ?? null, isWritable: true },
-        ata: { value: input.ata ?? null, isWritable: true },
-        owner: { value: input.owner ?? null, isWritable: false },
-        mint: { value: input.mint ?? null, isWritable: false },
-        systemProgram: { value: input.systemProgram ?? null, isWritable: false },
-        tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
+        payer: { value: input.payer ?? null, isSigner: true, isWritable: true },
+        ata: { value: input.ata ?? null, isSigner: false, isWritable: true },
+        owner: { value: input.owner ?? null, isSigner: false, isWritable: false },
+        mint: { value: input.mint ?? null, isSigner: false, isWritable: false },
+        systemProgram: { value: input.systemProgram ?? null, isSigner: false, isWritable: false },
+        tokenProgram: { value: input.tokenProgram ?? null, isSigner: false, isWritable: false },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
@@ -272,7 +283,6 @@ export function getCreateAssociatedTokenIdempotentInstruction<
             '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
     }
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [
             getAccountMeta('payer', accounts.payer),
@@ -286,12 +296,12 @@ export function getCreateAssociatedTokenIdempotentInstruction<
         programAddress,
     } as CreateAssociatedTokenIdempotentInstruction<
         TProgramAddress,
-        TAccountPayer,
-        TAccountAta,
-        TAccountOwner,
-        TAccountMint,
-        TAccountSystemProgram,
-        TAccountTokenProgram
+        ResolvedInstructionAccountMeta<TAccountPayer, InstructionAccountInputAddress<TAccountPayer>>,
+        ResolvedInstructionAccountMeta<TAccountAta, InstructionAccountInputAddress<TAccountAta>>,
+        ResolvedInstructionAccountMeta<TAccountOwner, InstructionAccountInputAddress<TAccountOwner>>,
+        ResolvedInstructionAccountMeta<TAccountMint, InstructionAccountInputAddress<TAccountMint>>,
+        ResolvedInstructionAccountMeta<TAccountSystemProgram, InstructionAccountInputAddress<TAccountSystemProgram>>,
+        ResolvedInstructionAccountMeta<TAccountTokenProgram, InstructionAccountInputAddress<TAccountTokenProgram>>
     >);
 }
 
