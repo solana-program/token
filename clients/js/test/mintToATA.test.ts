@@ -129,3 +129,36 @@ it('also mints to an existing associated token account', async () => {
         },
     });
 });
+
+it('accepts address wrappers for the mint and owner', async () => {
+    // Given a mint account, its mint authority and a token owner.
+    const client = await createTestClient();
+    const [mintAuthority, owner, mint] = await Promise.all([
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+    const decimals = 2;
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
+
+    // When we mint to the owner using HasAddress wrappers.
+    await client.token.instructions
+        .mintToATA({
+            mint: { address: mint.address },
+            owner: { address: owner.address },
+            mintAuthority,
+            amount: 1_000n,
+            decimals,
+        })
+        .sendTransaction();
+
+    // Then we expect the derived ATA to hold the minted tokens.
+    const [ata] = await findAssociatedTokenPda({
+        mint: mint.address,
+        owner: owner.address,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    });
+    expect(await fetchToken(client.rpc, ata)).toMatchObject({ data: { amount: 1000n } });
+});
