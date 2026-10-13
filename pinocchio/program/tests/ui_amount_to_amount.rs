@@ -109,8 +109,8 @@ fn fail_ui_amount_to_amount_with_invalid_ui_amount() {
     );
 
     // String representing the ui value `2.0`
-    let ui_amount = [b'2', b'.', b'0'];
-    let input = from_utf8(&ui_amount).unwrap();
+    let ui_amount = b"2.0";
+    let input = from_utf8(ui_amount).unwrap();
 
     // When we try to convert the ui amount using the mint, the transaction should
     // fail with an error since the resulting value does not fit in an `u64`.
