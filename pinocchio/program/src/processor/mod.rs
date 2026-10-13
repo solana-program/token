@@ -1,3 +1,5 @@
+#[cfg(any(target_arch = "bpf", target_os = "solana"))]
+use pinocchio::syscalls::sol_memcpy_;
 use {
     core::{slice::from_raw_parts, str::from_utf8_unchecked},
     pinocchio::{
@@ -5,7 +7,6 @@ use {
         hint::{likely, unlikely},
         program_error::ProgramError,
         pubkey::{pubkey_eq, Pubkey},
-        syscalls::sol_memcpy_,
         ProgramResult,
     },
     pinocchio_token_interface::{
@@ -180,6 +181,7 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
 
     // SAFETY: the total length of `amount_str` and `after_decimal` is less than
     // `MAX_FORMATTED_DIGITS`.
+    #[cfg(any(target_arch = "bpf", target_os = "solana"))]
     unsafe {
         sol_memcpy_(digits.as_mut_ptr(), amount_str.as_ptr(), length as u64);
 
@@ -188,6 +190,11 @@ fn try_ui_amount_into_amount(ui_amount: &str, decimals: u8) -> Result<u64, Progr
             after_decimal.as_ptr(),
             after_decimal.len() as u64,
         );
+    }
+    #[cfg(not(any(target_arch = "bpf", target_os = "solana")))]
+    {
+        digits[..length].copy_from_slice(amount_str.as_bytes());
+        digits[length..length + after_decimal.len()].copy_from_slice(after_decimal.as_bytes());
     }
 
     let length = amount_str.len() + decimals;
