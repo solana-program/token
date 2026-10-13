@@ -47,7 +47,7 @@ fn do_process_instruction(
     // Update accounts after the instruction is processed.
     for (original, (_, updated)) in accounts
         .iter_mut()
-        .zip(result.resulting_accounts.into_iter())
+        .zip(result.resulting_accounts)
     {
         original.data = updated.data().to_vec();
         original.lamports = updated.lamports();
