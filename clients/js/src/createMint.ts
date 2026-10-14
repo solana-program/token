@@ -2,11 +2,13 @@ import { getCreateAccountInstruction } from '@solana-program/system';
 import {
     Address,
     ClientWithGetMinimumBalance,
+    HasAddress,
     InstructionPlan,
     OptionOrNullable,
     sequentialInstructionPlan,
     TransactionSigner,
 } from '@solana/kit';
+import { getAddressFromResolvedInstructionAccount } from '@solana/kit/program-client-core';
 
 import { getInitializeMint2Instruction, getMintSize, TOKEN_PROGRAM_ADDRESS } from './generated';
 
@@ -29,8 +31,8 @@ export type CreateMintInstructionPlanInput = {
 };
 
 export type CreateMintInstructionPlanConfig = {
-    systemProgram?: Address;
-    tokenProgram?: Address;
+    systemProgram?: Address | HasAddress;
+    tokenProgram?: Address | HasAddress;
 };
 
 export async function getCreateMintInstructionPlan(
@@ -40,6 +42,10 @@ export async function getCreateMintInstructionPlan(
 ): Promise<InstructionPlan> {
     const space = getMintSize();
     const lamports = input.mintAccountLamports ?? (await client.getMinimumBalance(space));
+    const systemProgram =
+        config?.systemProgram && getAddressFromResolvedInstructionAccount('systemProgram', config.systemProgram);
+    const tokenProgram =
+        config?.tokenProgram && getAddressFromResolvedInstructionAccount('tokenProgram', config.tokenProgram);
     return sequentialInstructionPlan([
         getCreateAccountInstruction(
             {
@@ -47,10 +53,10 @@ export async function getCreateMintInstructionPlan(
                 newAccount: input.newMint,
                 lamports,
                 space,
-                programAddress: config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
+                programAddress: tokenProgram ?? TOKEN_PROGRAM_ADDRESS,
             },
             {
-                programAddress: config?.systemProgram,
+                programAddress: systemProgram,
             },
         ),
         getInitializeMint2Instruction(
@@ -61,7 +67,7 @@ export async function getCreateMintInstructionPlan(
                 freezeAuthority: input.freezeAuthority,
             },
             {
-                programAddress: config?.tokenProgram,
+                programAddress: tokenProgram,
             },
         ),
     ]);

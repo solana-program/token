@@ -1,7 +1,8 @@
-import { InstructionPlan, sequentialInstructionPlan, Address, TransactionSigner } from '@solana/kit';
+import { InstructionPlan, sequentialInstructionPlan, Address, HasAddress, TransactionSigner } from '@solana/kit';
 import {
     getAddressFromResolvedInstructionAccount,
     type InstructionAccountInput,
+    type InstructionSignerInput,
 } from '@solana/kit/program-client-core';
 
 import {
@@ -20,7 +21,7 @@ export type TransferToATAInstructionPlanInput = {
     /** The source account for the transfer. */
     source: InstructionAccountInput;
     /** The source account's owner/delegate or its multisignature account. */
-    authority: Address | TransactionSigner;
+    authority: InstructionAccountInput | InstructionSignerInput;
     /** Associated token account address to transfer to.
      * Will be created if it does not already exist.
      * Note: Use {@link getTransferToATAInstructionPlanAsync} instead to derive this automatically.
@@ -37,15 +38,20 @@ export type TransferToATAInstructionPlanInput = {
 };
 
 export type TransferToATAInstructionPlanConfig = {
-    systemProgram?: Address;
-    tokenProgram?: Address;
-    associatedTokenProgram?: Address;
+    systemProgram?: Address | HasAddress;
+    tokenProgram?: Address | HasAddress;
+    associatedTokenProgram?: Address | HasAddress;
 };
 
 export function getTransferToATAInstructionPlan(
     input: TransferToATAInstructionPlanInput,
     config?: TransferToATAInstructionPlanConfig,
 ): InstructionPlan {
+    const tokenProgram =
+        config?.tokenProgram && getAddressFromResolvedInstructionAccount('tokenProgram', config.tokenProgram);
+    const associatedTokenProgram =
+        config?.associatedTokenProgram &&
+        getAddressFromResolvedInstructionAccount('associatedTokenProgram', config.associatedTokenProgram);
     return sequentialInstructionPlan([
         getCreateAssociatedTokenIdempotentInstruction(
             {
@@ -54,10 +60,10 @@ export function getTransferToATAInstructionPlan(
                 owner: input.recipient,
                 mint: input.mint,
                 systemProgram: config?.systemProgram,
-                tokenProgram: config?.tokenProgram,
+                tokenProgram,
             },
             {
-                programAddress: config?.associatedTokenProgram,
+                programAddress: associatedTokenProgram,
             },
         ),
         getTransferCheckedInstruction(
@@ -71,7 +77,7 @@ export function getTransferToATAInstructionPlan(
                 multiSigners: input.multiSigners,
             },
             {
-                programAddress: config?.tokenProgram,
+                programAddress: tokenProgram,
             },
         ),
     ]);
@@ -86,7 +92,9 @@ export async function getTransferToATAInstructionPlanAsync(
     input: TransferToATAInstructionPlanAsyncInput,
     config?: TransferToATAInstructionPlanConfig,
 ): Promise<InstructionPlan> {
-    const tokenProgram = config?.tokenProgram ?? TOKEN_PROGRAM_ADDRESS;
+    const tokenProgram =
+        (config?.tokenProgram && getAddressFromResolvedInstructionAccount('tokenProgram', config.tokenProgram)) ??
+        TOKEN_PROGRAM_ADDRESS;
 
     const mint = getAddressFromResolvedInstructionAccount('mint', input.mint);
 

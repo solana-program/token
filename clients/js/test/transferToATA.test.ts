@@ -1,7 +1,16 @@
+import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { generateKeyPairSigner } from '@solana/kit';
 import { expect, it } from 'vitest';
 
-import { Mint, TOKEN_PROGRAM_ADDRESS, Token, fetchMint, fetchToken, findAssociatedTokenPda } from '../src';
+import {
+    ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    Mint,
+    TOKEN_PROGRAM_ADDRESS,
+    Token,
+    fetchMint,
+    fetchToken,
+    findAssociatedTokenPda,
+} from '../src';
 import { createTestClient, createTokenPdaWithAmount, createTokenWithAmount } from './_setup';
 
 it('transfers tokens from an explicit source to an explicit destination ATA', async () => {
@@ -194,6 +203,47 @@ it('accepts address wrappers for the mint and recipient', async () => {
             amount: 50n,
             decimals,
         })
+        .sendTransaction();
+
+    // Then we expect both ATAs to have the correct balances.
+    const [tokenB] = await findAssociatedTokenPda({
+        owner: ownerB.address,
+        mint: mint.address,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    });
+    const [{ data: tokenDataA }, { data: tokenDataB }] = await Promise.all([
+        fetchToken(client.rpc, tokenA),
+        fetchToken(client.rpc, tokenB),
+    ]);
+    expect(tokenDataA).toMatchObject(<Token>{ amount: 50n });
+    expect(tokenDataB).toMatchObject(<Token>{ amount: 50n });
+});
+
+it('accepts address wrappers for the program overrides', async () => {
+    // Given a mint account and ownerA's ATA with 100 tokens.
+    const client = await createTestClient();
+    const [mintAuthority, ownerA, ownerB, mint] = await Promise.all([
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+    const decimals = 2;
+    await client.token.instructions
+        .createMint({ newMint: mint, decimals, mintAuthority: mintAuthority.address })
+        .sendTransaction();
+    const tokenA = await createTokenPdaWithAmount(client, mintAuthority, mint.address, ownerA.address, 100n, decimals);
+
+    // When owner A transfers 50 tokens to owner B passing the programs as HasAddress wrappers.
+    await client.token.instructions
+        .transferToATA(
+            { mint: mint.address, authority: ownerA, recipient: ownerB.address, amount: 50n, decimals },
+            {
+                systemProgram: { address: SYSTEM_PROGRAM_ADDRESS },
+                tokenProgram: { address: TOKEN_PROGRAM_ADDRESS },
+                associatedTokenProgram: { address: ASSOCIATED_TOKEN_PROGRAM_ADDRESS },
+            },
+        )
         .sendTransaction();
 
     // Then we expect both ATAs to have the correct balances.
