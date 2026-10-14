@@ -79,3 +79,32 @@ it('accepts address wrappers for the program overrides', async () => {
     const mintAccount = await fetchMint(client.rpc, mint.address);
     expect(mintAccount).toMatchObject({ programAddress: TOKEN_PROGRAM_ADDRESS, data: { isInitialized: true } });
 });
+
+it('accepts address wrappers for the mint and freeze authorities', async () => {
+    // Given a mint authority, a freeze authority and a mint account.
+    const client = await createTestClient();
+    const [mintAuthority, freezeAuthority, mint] = await Promise.all([
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+
+    // When we create the mint passing the authorities as HasAddress wrappers.
+    await client.token.instructions
+        .createMint({
+            newMint: mint,
+            decimals: 2,
+            mintAuthority: { address: mintAuthority.address },
+            freezeAuthority: some({ address: freezeAuthority.address }),
+        })
+        .sendTransaction();
+
+    // Then we expect the mint account to store the unwrapped authority addresses.
+    const mintAccount = await fetchMint(client.rpc, mint.address);
+    expect(mintAccount).toMatchObject({
+        data: {
+            mintAuthority: some(mintAuthority.address),
+            freezeAuthority: some(freezeAuthority.address),
+        },
+    });
+});

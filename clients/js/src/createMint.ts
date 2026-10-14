@@ -20,9 +20,9 @@ export type CreateMintInstructionPlanInput = {
     /** Number of base 10 digits to the right of the decimal place. */
     decimals: number;
     /** The authority/multisignature to mint tokens. */
-    mintAuthority: Address;
+    mintAuthority: Address | HasAddress;
     /** The optional freeze authority/multisignature of the mint. */
-    freezeAuthority?: OptionOrNullable<Address>;
+    freezeAuthority?: OptionOrNullable<Address | HasAddress>;
     /**
      * Optional override for the amount of Lamports to fund the mint account with.
      * @default enough to make the account rent-exempt (currently 1,461,600 Lamports)
