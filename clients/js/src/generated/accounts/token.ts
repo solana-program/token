@@ -31,6 +31,7 @@ import {
     type FixedSizeCodec,
     type FixedSizeDecoder,
     type FixedSizeEncoder,
+    type HasAddress,
     type MaybeAccount,
     type MaybeEncodedAccount,
     type Option,
@@ -67,16 +68,16 @@ export type Token = {
 
 export type TokenArgs = {
     /** The mint associated with this account. */
-    mint: Address;
+    mint: Address | HasAddress;
     /** The owner of this account. */
-    owner: Address;
+    owner: Address | HasAddress;
     /** The amount of tokens this account holds. */
     amount: number | bigint;
     /**
      * If `delegate` is `Some` then `delegated_amount` represents
      * the amount authorized by the delegate.
      */
-    delegate: OptionOrNullable<Address>;
+    delegate: OptionOrNullable<Address | HasAddress>;
     /** The account's state. */
     state: AccountStateArgs;
     /**
@@ -89,7 +90,7 @@ export type TokenArgs = {
     /** The amount delegated. */
     delegatedAmount: number | bigint;
     /** Optional authority to close the account. */
-    closeAuthority: OptionOrNullable<Address>;
+    closeAuthority: OptionOrNullable<Address | HasAddress>;
 };
 
 /** Gets the encoder for {@link TokenArgs} account data. */
