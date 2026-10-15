@@ -45,11 +45,6 @@ export function getMintToATAInstructionPlan(
     input: MintToATAInstructionPlanInput,
     config?: MintToATAInstructionPlanConfig,
 ): InstructionPlan {
-    const tokenProgram =
-        config?.tokenProgram && getAddressFromResolvedInstructionAccount('tokenProgram', config.tokenProgram);
-    const associatedTokenProgram =
-        config?.associatedTokenProgram &&
-        getAddressFromResolvedInstructionAccount('associatedTokenProgram', config.associatedTokenProgram);
     return sequentialInstructionPlan([
         getCreateAssociatedTokenIdempotentInstruction(
             {
@@ -58,10 +53,10 @@ export function getMintToATAInstructionPlan(
                 owner: input.owner,
                 mint: input.mint,
                 systemProgram: config?.systemProgram,
-                tokenProgram,
+                tokenProgram: config?.tokenProgram,
             },
             {
-                programAddress: associatedTokenProgram,
+                programAddress: config?.associatedTokenProgram,
             },
         ),
         // mint to this token account
@@ -75,7 +70,7 @@ export function getMintToATAInstructionPlan(
                 multiSigners: input.multiSigners,
             },
             {
-                programAddress: tokenProgram,
+                programAddress: config?.tokenProgram,
             },
         ),
     ]);

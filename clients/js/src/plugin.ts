@@ -1,4 +1,4 @@
-import { ClientWithGetMinimumBalance, ClientWithPayer, extendClient, pipe } from '@solana/kit';
+import { Address, ClientWithGetMinimumBalance, ClientWithPayer, extendClient, HasAddress, pipe } from '@solana/kit';
 import { addSelfPlanAndSendFunctions, SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
 
 import { getBatchInstruction } from './batch';
@@ -52,39 +52,53 @@ export type TokenPluginInstructions = Omit<GeneratedTokenPluginInstructions, 'ba
     ) => ReturnType<typeof getTransferToATAInstructionPlanAsync> & SelfPlanAndSendFunctions;
 };
 
-export function tokenProgram() {
+export function tokenProgram(config: { programAddress?: Address | HasAddress } = {}) {
     return <T extends TokenPluginRequirements>(client: T) => {
-        return pipe(client, generatedTokenProgram(), c =>
+        return pipe(client, generatedTokenProgram(config), c =>
             extendClient(c, {
                 token: <TokenPlugin>{
                     ...c.token,
                     instructions: {
                         ...c.token.instructions,
-                        batch: (input, config) =>
-                            addSelfPlanAndSendFunctions(client, getBatchInstruction(input, config)),
-                        createMint: (input, config) =>
+                        batch: (input, instructionConfig) =>
+                            addSelfPlanAndSendFunctions(
+                                client,
+                                getBatchInstruction(input, {
+                                    programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                                }),
+                            ),
+                        createMint: (input, instructionConfig) =>
                             addSelfPlanAndSendFunctions(
                                 client,
                                 getCreateMintInstructionPlan(
                                     client,
                                     { ...input, payer: input.payer ?? client.payer },
-                                    config,
+                                    {
+                                        ...instructionConfig,
+                                        tokenProgram: instructionConfig?.tokenProgram ?? config.programAddress,
+                                    },
                                 ),
                             ),
-                        mintToATA: (input, config) =>
+                        mintToATA: (input, instructionConfig) =>
                             addSelfPlanAndSendFunctions(
                                 client,
                                 getMintToATAInstructionPlanAsync(
                                     { ...input, payer: input.payer ?? client.payer },
-                                    config,
+                                    {
+                                        ...instructionConfig,
+                                        tokenProgram: instructionConfig?.tokenProgram ?? config.programAddress,
+                                    },
                                 ),
                             ),
-                        transferToATA: (input, config) =>
+                        transferToATA: (input, instructionConfig) =>
                             addSelfPlanAndSendFunctions(
                                 client,
                                 getTransferToATAInstructionPlanAsync(
                                     { ...input, payer: input.payer ?? client.payer },
-                                    config,
+                                    {
+                                        ...instructionConfig,
+                                        tokenProgram: instructionConfig?.tokenProgram ?? config.programAddress,
+                                    },
                                 ),
                             ),
                     },
