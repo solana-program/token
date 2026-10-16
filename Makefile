@@ -24,7 +24,7 @@ audit:
 	cargo audit \
 			--ignore RUSTSEC-2022-0093 \
 			--ignore RUSTSEC-2024-0344 \
-			--ignore RUSTSEC-2024-0376 $(ARGS)
+			$(ARGS)
 
 spellcheck:
 	cargo spellcheck --code 1 $(ARGS)
