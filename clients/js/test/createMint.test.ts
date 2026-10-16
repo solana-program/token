@@ -1,7 +1,8 @@
+import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { Account, generateKeyPairSigner, none, some } from '@solana/kit';
 import { expect, it } from 'vitest';
 
-import { fetchMint, Mint } from '../src';
+import { fetchMint, Mint, TOKEN_PROGRAM_ADDRESS } from '../src';
 import { createTestClient } from './_setup';
 
 it('creates and initializes a new mint account', async () => {
@@ -51,6 +52,56 @@ it('creates a new mint account with a freeze authority', async () => {
     const mintAccount = await fetchMint(client.rpc, mint.address);
     expect(mintAccount).toMatchObject(<Account<Mint>>{
         address: mint.address,
+        data: {
+            mintAuthority: some(mintAuthority.address),
+            freezeAuthority: some(freezeAuthority.address),
+        },
+    });
+});
+
+it('accepts address wrappers for the program overrides', async () => {
+    // Given an authority and a mint account.
+    const client = await createTestClient();
+    const [authority, mint] = await Promise.all([generateKeyPairSigner(), generateKeyPairSigner()]);
+
+    // When we create the mint passing the programs as HasAddress wrappers.
+    await client.token.instructions
+        .createMint(
+            { newMint: mint, decimals: 2, mintAuthority: authority.address },
+            {
+                systemProgram: { address: SYSTEM_PROGRAM_ADDRESS },
+                tokenProgram: { address: TOKEN_PROGRAM_ADDRESS },
+            },
+        )
+        .sendTransaction();
+
+    // Then we expect the mint account to be owned by the token program.
+    const mintAccount = await fetchMint(client.rpc, mint.address);
+    expect(mintAccount).toMatchObject({ programAddress: TOKEN_PROGRAM_ADDRESS, data: { isInitialized: true } });
+});
+
+it('accepts address wrappers for the mint and freeze authorities', async () => {
+    // Given a mint authority, a freeze authority and a mint account.
+    const client = await createTestClient();
+    const [mintAuthority, freezeAuthority, mint] = await Promise.all([
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+        generateKeyPairSigner(),
+    ]);
+
+    // When we create the mint passing the authorities as HasAddress wrappers.
+    await client.token.instructions
+        .createMint({
+            newMint: mint,
+            decimals: 2,
+            mintAuthority: { address: mintAuthority.address },
+            freezeAuthority: some({ address: freezeAuthority.address }),
+        })
+        .sendTransaction();
+
+    // Then we expect the mint account to store the unwrapped authority addresses.
+    const mintAccount = await fetchMint(client.rpc, mint.address);
+    expect(mintAccount).toMatchObject({
         data: {
             mintAuthority: some(mintAuthority.address),
             freezeAuthority: some(freezeAuthority.address),

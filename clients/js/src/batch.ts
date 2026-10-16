@@ -24,9 +24,10 @@ export type BatchInstruction<
 
 export function getBatchInstruction<TProgramAddress extends Address = typeof TOKEN_PROGRAM_ADDRESS>(
     instructions: BatchableInstruction<TProgramAddress>[],
-    config?: { programAddress?: TProgramAddress },
+    config?: { programAddress?: TProgramAddress | { readonly address: TProgramAddress } },
 ): BatchInstruction<TProgramAddress, AccountMeta<string>[]> {
-    const programAddress = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
+    const programAddressInput = config?.programAddress ?? TOKEN_PROGRAM_ADDRESS;
+    const programAddress = typeof programAddressInput === 'string' ? programAddressInput : programAddressInput.address;
     const hasNestedBatchInstruction = instructions.some(
         instruction => instruction.programAddress === programAddress && instruction.data?.[0] === BATCH_DISCRIMINATOR,
     );
