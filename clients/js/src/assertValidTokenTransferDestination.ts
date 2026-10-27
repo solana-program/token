@@ -47,7 +47,8 @@ export type InvalidTokenTransferDestinationDetails =
           reason: 'token-owner-mismatch';
           /** The current owner of the destination token account. */
           tokenOwner: Address;
-      };
+      }
+    | { reason: 'frozen' };
 
 /** Distinguishes why a destination was rejected by {@link assertValidTokenTransferDestination}. */
 export type InvalidTokenTransferDestinationReason = InvalidTokenTransferDestinationDetails['reason'];
@@ -153,6 +154,7 @@ function isTokenAccountData(data: ReadonlyUint8Array, tokenProgram: Address): bo
  * - `'mint-mismatch'`: a non-associated `destination` holds a different mint.
  * - `'token-owner-mismatch'`: the destination exists but is not owned by `recipient`, e.g. an associated
  *   token account whose owner was reassigned.
+ * - `'frozen'`: the destination is frozen by the mint's freeze authority, so the transfer would fail.
  *
  * Checks run in the order listed, so a destination that fails several reports the first.
  */
@@ -256,6 +258,14 @@ export async function assertValidTokenTransferDestination(
             destination,
             recipient,
             { reason: 'token-owner-mismatch', tokenOwner: token.owner },
+        );
+    }
+    if (token.state === AccountState.Frozen) {
+        throw new InvalidTokenTransferDestinationError(
+            `Refusing to transfer tokens to ${destination}: the token account is frozen, so the transfer would fail.`,
+            destination,
+            recipient,
+            { reason: 'frozen' },
         );
     }
 }

@@ -28,10 +28,16 @@ class AddressWrapper implements HasAddress {
     constructor(readonly address: Address) {}
 }
 
-const createTestMint = async (client: TestClient, tokenProgram?: Address): Promise<Address> => {
+const createTestMint = async (
+    client: TestClient,
+    { freezeAuthority, tokenProgram }: { freezeAuthority?: Address; tokenProgram?: Address } = {},
+): Promise<Address> => {
     const [mint, mintAuthority] = await Promise.all([generateKeyPairSigner(), generateKeyPairSigner()]);
     await client.token.instructions
-        .createMint({ newMint: mint, decimals: 2, mintAuthority: mintAuthority.address }, { tokenProgram })
+        .createMint(
+            { newMint: mint, decimals: 2, mintAuthority: mintAuthority.address, freezeAuthority },
+            { tokenProgram },
+        )
         .sendTransaction();
     return mint.address;
 };
@@ -430,6 +436,25 @@ it('rejects an associated token account whose owner was reassigned', async () =>
     });
 });
 
+it('rejects a frozen associated token account', async () => {
+    // Given a funded recipient whose associated token account was frozen by the mint's freeze authority.
+    const client = await createTestClient();
+    const freezeAuthority = await generateKeyPairSigner();
+    const [mint, recipient] = await Promise.all([
+        createTestMint(client, { freezeAuthority: freezeAuthority.address }),
+        createFundedAddress(client),
+    ]);
+    const destination = await createAta(client, recipient, mint);
+    await client.token.instructions
+        .freezeAccount({ account: destination, mint, owner: freezeAuthority })
+        .sendTransaction();
+
+    // Then it is rejected as frozen.
+    await expect(
+        assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }),
+    ).rejects.toMatchObject({ destination, recipient, details: { reason: 'frozen' } });
+});
+
 it('accepts signer, HasAddress and ProgramDerivedAddress inputs', async () => {
     // Given a mint held in an `AddressWrapper` and a funded recipient held as a signer.
     const client = await createTestClient();
@@ -452,7 +477,7 @@ it('accepts a Token-2022 associated token account when tokenProgram is set', asy
     // Given a funded recipient with a Token-2022 associated token account, which carries an extension.
     const client = await createTestClient();
     const [mint, recipient] = await Promise.all([
-        createTestMint(client, TOKEN_2022_PROGRAM_ADDRESS),
+        createTestMint(client, { tokenProgram: TOKEN_2022_PROGRAM_ADDRESS }),
         createFundedAddress(client),
     ]);
     const destination = await createAta(client, recipient, mint, TOKEN_2022_PROGRAM_ADDRESS);
