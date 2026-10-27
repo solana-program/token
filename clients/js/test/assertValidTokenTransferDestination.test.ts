@@ -138,20 +138,20 @@ it('accepts an existing associated token account when allowMissingAssociatedToke
     ).resolves.toBeUndefined();
 });
 
-it('rejects an unfunded recipient as missing-token-account when allowMissingAssociatedTokenAccount is false', async () => {
-    // Given an on-curve recipient with no account on-chain.
+it('accepts an existing associated token account of an unfunded recipient when allowMissingAssociatedTokenAccount is false', async () => {
+    // Given an on-curve recipient with no account on-chain but an associated token account for the mint.
     const client = await createTestClient();
     const [mint, { address: recipient }] = await Promise.all([createTestMint(client), generateKeyPairSigner()]);
-    const destination = await findAta(recipient, mint);
+    const destination = await createAta(client, recipient, mint);
 
-    // Then it is rejected even when unfunded recipients are allowed.
+    // Then it is valid when unfunded recipients are allowed and missing associated token accounts are not.
     await expect(
         assertValidTokenTransferDestination(
             client.rpc,
             { mint, destination, recipient },
             { allowMissingAssociatedTokenAccount: false, allowUnfundedRecipient: true },
         ),
-    ).rejects.toMatchObject({ details: { reason: 'missing-token-account' } });
+    ).resolves.toBeUndefined();
 });
 
 it('rejects a recipient owned by another program', async () => {
@@ -279,7 +279,7 @@ it('rejects a destination that is the recipient associated token account for ano
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }),
     ).rejects.toMatchObject({
-        message: expect.stringContaining(`(${expectedDestination})`),
+        message: expect.stringContaining(`(ATA is: ${expectedDestination})`),
         destination,
         recipient,
         details: { reason: 'ata-mismatch' },

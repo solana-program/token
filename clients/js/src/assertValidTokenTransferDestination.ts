@@ -80,7 +80,7 @@ export type AssertValidTokenTransferDestinationConfig = FetchAccountConfig & {
     /**
      * Allow an off-curve (program-derived) recipient, existing or not. Defaults to `true`, since
      * program-controlled wallets such as multisigs are common, legitimate recipients; set to `false` to
-     * reject off-curve recipients until they confirm they control them.
+     * reject off-curve recipients.
      */
     allowOffCurve?: boolean;
     /**
@@ -103,16 +103,17 @@ export type AssertValidTokenTransferDestinationConfig = FetchAccountConfig & {
 };
 
 /**
- * Asserts that `recipient` can safely receive a transfer of `mint` at `destination`, its associated token
- * account, by fetching both accounts. Matches the inputs of `getTransferToATAInstructionPlan`. Otherwise
- * throws an {@link InvalidTokenTransferDestinationError} with one of these reasons:
+ * Asserts that `recipient` can safely receive a transfer of `mint` at `destination` by fetching both
+ * accounts. By default, `destination` must be the recipient's associated token account for `mint`, matching
+ * the inputs of `getTransferToATAInstructionPlan`. Otherwise throws an
+ * {@link InvalidTokenTransferDestinationError} with one of these reasons:
  *
  * - `'unexpected-owner'`: the recipient account exists but is not owned by `programOwner` (the System
  *   Program by default), e.g. a token account or mint passed as the recipient.
  * - `'unfunded-recipient'`: the recipient has no account on-chain, which often means a mistyped address.
  *   Skipped when `allowUnfundedRecipient` is set.
- * - `'off-curve'`: the recipient is off-curve, existing or not, and may be a smart wallet they must confirm
- *   they control. Only checked when `allowOffCurve` is `false`.
+ * - `'off-curve'`: the recipient is off-curve (program-derived), existing or not. Only checked when
+ *   `allowOffCurve` is `false`.
  * - `'ata-mismatch'`: `destination` is not the recipient's associated token account for `mint`. Skipped
  *   when `allowNonAssociatedTokenAccount` is set.
  * - `'missing-token-account'`: `destination` has no account on-chain. Skipped for an associated token
@@ -122,9 +123,7 @@ export type AssertValidTokenTransferDestinationConfig = FetchAccountConfig & {
  * - `'token-owner-mismatch'`: the destination exists but is not owned by `recipient`, e.g. an associated
  *   token account whose owner was reassigned.
  *
- * Checks run in the order listed, so a destination that fails several reports the first. Since an
- * unfunded recipient cannot have an associated token account, setting `allowMissingAssociatedTokenAccount`
- * to `false` also rejects unfunded recipients.
+ * Checks run in the order listed, so a destination that fails several reports the first.
  */
 export async function assertValidTokenTransferDestination(
     rpc: Rpc<GetAccountInfoApi>,
@@ -166,9 +165,9 @@ export async function assertValidTokenTransferDestination(
         );
     }
 
-    if (isOffCurveAddress(recipient) && !allowOffCurve) {
+    if (!allowOffCurve && isOffCurveAddress(recipient)) {
         throw new InvalidTokenTransferDestinationError(
-            `Refusing to transfer tokens to ${recipient}: it is an off-curve (program-derived) address, which no keypair controls. It may be a program-controlled account such as a multisig or smart wallet; once the recipient confirms they control it, pass { allowOffCurve: true }.`,
+            `Refusing to transfer tokens to ${recipient}: it is an off-curve (program-derived) address, which no keypair controls. It may be a program-controlled account such as a multisig or smart wallet; to allow it, pass { allowOffCurve: true }.`,
             destination,
             recipient,
             { reason: 'off-curve' },
@@ -178,7 +177,7 @@ export async function assertValidTokenTransferDestination(
     const isAssociatedTokenAccount = destination === ata;
     if (!isAssociatedTokenAccount && !allowNonAssociatedTokenAccount) {
         throw new InvalidTokenTransferDestinationError(
-            `Refusing to transfer tokens to ${destination}: it is not the associated token account of ${recipient} for mint ${mint} (${ata}). To send to another token account owned by the recipient, pass { allowNonAssociatedTokenAccount: true }.`,
+            `Refusing to transfer tokens to ${destination}: it is not the associated token account of ${recipient} for mint ${mint} (ATA is: ${ata}). To send to another token account owned by the recipient, pass { allowNonAssociatedTokenAccount: true }.`,
             destination,
             recipient,
             { reason: 'ata-mismatch' },
