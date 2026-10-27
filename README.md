@@ -5,11 +5,18 @@
 <a href="https://www.npmjs.com/package/@solana-program/token"><img src="https://img.shields.io/npm/v/%40solana-program%2Ftoken?logo=npm&color=377CC0" /></a>
 <a href="https://crates.io/crates/spl-token-client"><img src="https://img.shields.io/crates/v/spl-token-client?logo=rust" /></a>
 
-This template should help get you started developing Solana programs. Let's walk through this generated program repository and see what's included.
+This repository contains the SPL Token program and its clients:
+
+- [`program`](./program): the original SPL Token program (`spl-token`).
+- [`pinocchio/program`](./pinocchio/program): the pinocchio-based Token program (p-token).
+- [`interface`](./interface) and [`pinocchio/interface`](./pinocchio/interface): the instruction and state definitions used by the programs.
+- [`clients/js`](./clients/js): the JS client, generated from the IDL.
 
 ## Project setup
 
-The first thing you'll want to do is install NPM dependencies which will allow you to access all the scripts and tools provided by this template.
+This repository uses a `Makefile` for building, testing and linting. Package names are mapped to directories by replacing the first `-` with a `/` (for example, `pinocchio-program` refers to `pinocchio/program` and `clients-js` to `clients/js`).
+
+Install the NPM dependencies once to make the Codama renderers available for client generation:
 
 ```sh
 pnpm install
@@ -17,31 +24,33 @@ pnpm install
 
 ## Managing programs
 
-You'll notice a `program` folder in the root of this repository. This is where your generated Solana program is located.
-
-Whilst only one program gets generated, note that you can have as many programs as you like in this repository.
-Whenever you add a new program folder to this repository, remember to add it to the `members` array of your root `Cargo.toml` file.
-That way, your programs will be recognized by the following scripts that allow you to build, test, format and lint your programs respectively.
+Build the SBF artifacts into `target/deploy/` with:
 
 ```sh
-pnpm programs:build
-pnpm programs:test
-pnpm programs:format
-pnpm programs:lint
+make build-sbf-program
+make build-sbf-pinocchio-program
+```
+
+The program tests run against the built artifacts using [Mollusk](https://github.com/anza-xyz/mollusk), so build the program before testing it:
+
+```sh
+make test-program
+make test-pinocchio-program
+```
+
+You can also format-check and lint any Rust package, for example:
+
+```sh
+make format-check-program
+make clippy-program
 ```
 
 ## Generating clients
 
-Once your programs' IDLs have been generated, you can generate clients for them using the following command.
+The program IDL is checked in at the repository root as [`idl.json`](./idl.json). Regenerate the JS client from it with:
 
 ```sh
-pnpm generate:clients
-```
-
-Alternatively, you can use the `generate` script to generate both the IDLs and the clients at once.
-
-```sh
-pnpm generate
+make generate-clients
 ```
 
 ## Managing clients
@@ -51,42 +60,9 @@ The following clients are available for your programs. You may use the following
 - [JS client](./clients/js)
 - [Rust client](./clients/rust)
 
-## Starting and stopping the local validator
-
-The following script is available to start your local validator.
+The JS client tests load `target/deploy/pinocchio_token_program.so` into LiteSVM, so build the pinocchio program first:
 
 ```sh
-pnpm validator:start
-```
-
-By default, if a local validator is already running, the script will be skipped. You may use the `validator:restart` script instead to force the validator to restart.
-
-```sh
-pnpm validator:restart
-```
-
-Finally, you may stop the local validator using the following command.
-
-```sh
-pnpm validator:stop
-```
-
-## Using external programs in your validator
-
-If your program requires any external programs to be running, you'll want to add them to your local validator.
-
-You can do this by adding their program addresses to the `program-dependencies` array in the `Cargo.toml` of your program.
-
-```toml
-program-dependencies = [
-  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-  "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
-]
-```
-
-Next time you build your program and run your validator, these external programs will automatically be fetched from mainnet and used in your local validator.
-
-```sh
-pnpm programs:build
-pnpm validator:restart
+make build-sbf-pinocchio-program
+make test-js-clients-js
 ```
