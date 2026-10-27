@@ -118,7 +118,7 @@ it('rejects a missing associated token account when allowMissingAssociatedTokenA
     ).rejects.toMatchObject({
         message: expect.stringContaining('allowMissingAssociatedTokenAccount'),
         destination,
-        reason: 'missing-token-account',
+        details: { reason: 'missing-token-account' },
     });
 });
 
@@ -151,7 +151,7 @@ it('rejects an unfunded recipient as missing-token-account when allowMissingAsso
             { mint, destination, recipient },
             { allowMissingAssociatedTokenAccount: false, allowUnfundedRecipient: true },
         ),
-    ).rejects.toMatchObject({ reason: 'missing-token-account' });
+    ).rejects.toMatchObject({ details: { reason: 'missing-token-account' } });
 });
 
 it('rejects a recipient owned by another program', async () => {
@@ -167,8 +167,7 @@ it('rejects a recipient owned by another program', async () => {
         message: expect.stringContaining(`owned by program ${OTHER_PROGRAM_ADDRESS}`),
         destination,
         recipient,
-        reason: 'unexpected-owner',
-        owner: OTHER_PROGRAM_ADDRESS,
+        details: { reason: 'unexpected-owner', owner: OTHER_PROGRAM_ADDRESS },
     });
 });
 
@@ -182,7 +181,7 @@ it('rejects a token account passed as the recipient as unexpected-owner before o
     // Then the owner check fails first, even when off-curve recipients are disallowed.
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }, { allowOffCurve: false }),
-    ).rejects.toMatchObject({ reason: 'unexpected-owner', owner: TOKEN_PROGRAM_ADDRESS });
+    ).rejects.toMatchObject({ details: { reason: 'unexpected-owner', owner: TOKEN_PROGRAM_ADDRESS } });
 });
 
 it('accepts a recipient owned by the program given in programOwner', async () => {
@@ -210,7 +209,7 @@ it('rejects an unfunded recipient by default', async () => {
     // Then it is rejected as unfunded.
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }),
-    ).rejects.toMatchObject({ recipient, reason: 'unfunded-recipient' });
+    ).rejects.toMatchObject({ recipient, details: { reason: 'unfunded-recipient' } });
 });
 
 it('accepts an unfunded recipient when allowUnfundedRecipient is set', async () => {
@@ -241,7 +240,7 @@ it('accepts an off-curve recipient unless allowOffCurve is false', async () => {
     await expect(assertValidTokenTransferDestination(client.rpc, input)).resolves.toBeUndefined();
     await expect(
         assertValidTokenTransferDestination(client.rpc, input, { allowOffCurve: false }),
-    ).rejects.toMatchObject({ recipient, reason: 'off-curve' });
+    ).rejects.toMatchObject({ recipient, details: { reason: 'off-curve' } });
 });
 
 it('rejects an unfunded off-curve recipient as off-curve when allowOffCurve is false', async () => {
@@ -260,7 +259,7 @@ it('rejects an unfunded off-curve recipient as off-curve when allowOffCurve is f
             allowOffCurve: false,
             allowUnfundedRecipient: true,
         }),
-    ).rejects.toMatchObject({ reason: 'off-curve' });
+    ).rejects.toMatchObject({ details: { reason: 'off-curve' } });
 });
 
 it('rejects a destination that is the recipient associated token account for another mint', async () => {
@@ -283,7 +282,7 @@ it('rejects a destination that is the recipient associated token account for ano
         message: expect.stringContaining(`(${expectedDestination})`),
         destination,
         recipient,
-        reason: 'ata-mismatch',
+        details: { reason: 'ata-mismatch' },
     });
 });
 
@@ -296,7 +295,7 @@ it('rejects a non-associated token account owned by the recipient', async () => 
     // Then it is rejected as not the expected associated token account.
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }),
-    ).rejects.toMatchObject({ reason: 'ata-mismatch' });
+    ).rejects.toMatchObject({ details: { reason: 'ata-mismatch' } });
 });
 
 it('accepts a non-associated token account owned by the recipient when allowNonAssociatedTokenAccount is set', async () => {
@@ -335,7 +334,7 @@ it('rejects a missing non-associated token account', async () => {
     // Then it is rejected as missing.
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }, nonAta),
-    ).rejects.toMatchObject({ destination, reason: 'missing-token-account' });
+    ).rejects.toMatchObject({ destination, details: { reason: 'missing-token-account' } });
 });
 
 it('rejects a non-associated destination that is not a token account', async () => {
@@ -353,7 +352,7 @@ it('rejects a non-associated destination that is not a token account', async () 
     for (const destination of [wallet, mint, multisig, uninitialized]) {
         await expect(
             assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }, nonAta),
-        ).rejects.toMatchObject({ destination, reason: 'not-token-account' });
+        ).rejects.toMatchObject({ destination, details: { reason: 'not-token-account' } });
     }
 });
 
@@ -370,7 +369,7 @@ it('rejects a non-associated token account for another mint', async () => {
     // Then it is rejected as a mint mismatch.
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }, nonAta),
-    ).rejects.toMatchObject({ destination, reason: 'mint-mismatch', mint: otherMint });
+    ).rejects.toMatchObject({ destination, details: { reason: 'mint-mismatch', mint: otherMint } });
 });
 
 it('rejects a non-associated token account owned by someone else', async () => {
@@ -386,7 +385,7 @@ it('rejects a non-associated token account owned by someone else', async () => {
     // Then it is rejected as owned by someone other than the recipient.
     await expect(
         assertValidTokenTransferDestination(client.rpc, { mint, destination, recipient }, nonAta),
-    ).rejects.toMatchObject({ destination, reason: 'token-owner-mismatch', tokenOwner: otherOwner });
+    ).rejects.toMatchObject({ destination, details: { reason: 'token-owner-mismatch', tokenOwner: otherOwner } });
 });
 
 it('rejects an associated token account whose owner was reassigned', async () => {
@@ -414,8 +413,7 @@ it('rejects an associated token account whose owner was reassigned', async () =>
     ).rejects.toMatchObject({
         destination,
         recipient: recipient.address,
-        reason: 'token-owner-mismatch',
-        tokenOwner: newOwner.address,
+        details: { reason: 'token-owner-mismatch', tokenOwner: newOwner.address },
     });
 });
 

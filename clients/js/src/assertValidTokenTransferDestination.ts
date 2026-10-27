@@ -14,45 +14,43 @@ import {
 
 import { AccountState, decodeToken, findAssociatedTokenPda, getTokenSize, TOKEN_PROGRAM_ADDRESS } from './generated';
 
-/** Distinguishes why a destination was rejected by {@link assertValidTokenTransferDestination}. */
-export type InvalidTokenTransferDestinationReason =
-    | 'unexpected-owner'
-    | 'unfunded-recipient'
-    | 'off-curve'
-    | 'ata-mismatch'
-    | 'missing-token-account'
-    | 'not-token-account'
-    | 'mint-mismatch'
-    | 'token-owner-mismatch';
+/** Why a destination was rejected by {@link assertValidTokenTransferDestination}, with the fields specific to that reason. */
+export type InvalidTokenTransferDestinationDetails =
+    | {
+          reason: 'unexpected-owner';
+          /** The program that owns the recipient account. */
+          owner: Address;
+      }
+    | { reason: 'unfunded-recipient' }
+    | { reason: 'off-curve' }
+    | { reason: 'ata-mismatch' }
+    | { reason: 'missing-token-account' }
+    | { reason: 'not-token-account' }
+    | {
+          reason: 'mint-mismatch';
+          /** The mint the destination token account holds. */
+          mint: Address;
+      }
+    | {
+          reason: 'token-owner-mismatch';
+          /** The current owner of the destination token account. */
+          tokenOwner: Address;
+      };
 
-/** Details attached to an {@link InvalidTokenTransferDestinationError}, depending on its `reason`. */
-export type InvalidTokenTransferDestinationDetails = {
-    /** The program that owns the recipient account. Set when `reason` is `'unexpected-owner'`. */
-    owner?: Address;
-    /** The mint the destination token account holds. Set when `reason` is `'mint-mismatch'`. */
-    mint?: Address;
-    /** The current owner of the destination token account. Set when `reason` is `'token-owner-mismatch'`. */
-    tokenOwner?: Address;
-};
+/** Distinguishes why a destination was rejected by {@link assertValidTokenTransferDestination}. */
+export type InvalidTokenTransferDestinationReason = InvalidTokenTransferDestinationDetails['reason'];
 
 /** Thrown by {@link assertValidTokenTransferDestination} when a destination is rejected. */
 export class InvalidTokenTransferDestinationError extends Error {
     override readonly name = 'InvalidTokenTransferDestinationError';
-    readonly owner?: Address;
-    readonly mint?: Address;
-    readonly tokenOwner?: Address;
 
     constructor(
         message: string,
         readonly destination: Address,
         readonly recipient: Address,
-        readonly reason: InvalidTokenTransferDestinationReason,
-        details: InvalidTokenTransferDestinationDetails = {},
+        readonly details: InvalidTokenTransferDestinationDetails,
     ) {
         super(message);
-        this.owner = details.owner;
-        this.mint = details.mint;
-        this.tokenOwner = details.tokenOwner;
     }
 }
 
@@ -156,8 +154,7 @@ export async function assertValidTokenTransferDestination(
                 `Refusing to transfer tokens to ${recipient}: it is owned by program ${recipientAccount.programAddress}, not the expected program (${programOwner}).`,
                 destination,
                 recipient,
-                'unexpected-owner',
-                { owner: recipientAccount.programAddress },
+                { reason: 'unexpected-owner', owner: recipientAccount.programAddress },
             );
         }
     } else if (!allowUnfundedRecipient) {
@@ -165,7 +162,7 @@ export async function assertValidTokenTransferDestination(
             `Refusing to transfer tokens to ${recipient}: it has no account on-chain yet, which often means the address is mistyped. If you intend to send to a new wallet, pass { allowUnfundedRecipient: true }.`,
             destination,
             recipient,
-            'unfunded-recipient',
+            { reason: 'unfunded-recipient' },
         );
     }
 
@@ -174,7 +171,7 @@ export async function assertValidTokenTransferDestination(
             `Refusing to transfer tokens to ${recipient}: it is an off-curve (program-derived) address, which no keypair controls. It may be a program-controlled account such as a multisig or smart wallet; once the recipient confirms they control it, pass { allowOffCurve: true }.`,
             destination,
             recipient,
-            'off-curve',
+            { reason: 'off-curve' },
         );
     }
 
@@ -184,7 +181,7 @@ export async function assertValidTokenTransferDestination(
             `Refusing to transfer tokens to ${destination}: it is not the associated token account of ${recipient} for mint ${mint} (${ata}). To send to another token account owned by the recipient, pass { allowNonAssociatedTokenAccount: true }.`,
             destination,
             recipient,
-            'ata-mismatch',
+            { reason: 'ata-mismatch' },
         );
     }
 
@@ -196,7 +193,7 @@ export async function assertValidTokenTransferDestination(
                 : `Refusing to transfer tokens to ${destination}: it has no account on-chain, and only an associated token account can be created as part of the transfer.`,
             destination,
             recipient,
-            'missing-token-account',
+            { reason: 'missing-token-account' },
         );
     }
 
@@ -209,7 +206,7 @@ export async function assertValidTokenTransferDestination(
             `Refusing to transfer tokens to ${destination}: it is not an initialized token account.`,
             destination,
             recipient,
-            'not-token-account',
+            { reason: 'not-token-account' },
         );
     }
     if (token.mint !== mint) {
@@ -217,8 +214,7 @@ export async function assertValidTokenTransferDestination(
             `Refusing to transfer tokens to ${destination}: it holds mint ${token.mint}, not the expected mint (${mint}).`,
             destination,
             recipient,
-            'mint-mismatch',
-            { mint: token.mint },
+            { reason: 'mint-mismatch', mint: token.mint },
         );
     }
     if (token.owner !== recipient) {
@@ -226,8 +222,7 @@ export async function assertValidTokenTransferDestination(
             `Refusing to transfer tokens to ${destination}: it is owned by ${token.owner}, not the recipient ${recipient}.`,
             destination,
             recipient,
-            'token-owner-mismatch',
-            { tokenOwner: token.owner },
+            { reason: 'token-owner-mismatch', tokenOwner: token.owner },
         );
     }
 }
