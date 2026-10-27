@@ -11,6 +11,7 @@ import { expect, it, vi } from 'vitest';
 
 import {
     assertValidTokenTransferDestination,
+    ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
     AuthorityType,
     findAssociatedTokenPda,
     getMultisigSize,
@@ -21,15 +22,16 @@ import {
 import { createTestClient, createToken, type TestClient } from './_setup';
 
 const OTHER_PROGRAM_ADDRESS = address('BPFLoaderUpgradeab1e11111111111111111111111');
+const TOKEN_2022_PROGRAM_ADDRESS = address('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
 
 class AddressWrapper implements HasAddress {
     constructor(readonly address: Address) {}
 }
 
-const createTestMint = async (client: TestClient): Promise<Address> => {
+const createTestMint = async (client: TestClient, tokenProgram?: Address): Promise<Address> => {
     const [mint, mintAuthority] = await Promise.all([generateKeyPairSigner(), generateKeyPairSigner()]);
     await client.token.instructions
-        .createMint({ newMint: mint, decimals: 2, mintAuthority: mintAuthority.address })
+        .createMint({ newMint: mint, decimals: 2, mintAuthority: mintAuthority.address }, { tokenProgram })
         .sendTransaction();
     return mint.address;
 };
@@ -55,16 +57,27 @@ const deriveOffCurveAddress = async (): Promise<Address> => {
     return pda;
 };
 
-const findAta = async (owner: Address, mint: Address): Promise<Address> => {
-    const [ata] = await findAssociatedTokenPda({ owner, mint, tokenProgram: TOKEN_PROGRAM_ADDRESS });
+const findAta = async (
+    owner: Address,
+    mint: Address,
+    tokenProgram: Address = TOKEN_PROGRAM_ADDRESS,
+): Promise<Address> => {
+    const [ata] = await findAssociatedTokenPda({ owner, mint, tokenProgram });
     return ata;
 };
 
-const createAta = async (client: TestClient, owner: Address, mint: Address): Promise<Address> => {
+const createAta = async (
+    client: TestClient,
+    owner: Address,
+    mint: Address,
+    tokenProgram: Address = TOKEN_PROGRAM_ADDRESS,
+): Promise<Address> => {
     const payer = await generateKeyPairSigner();
     await client.airdrop(payer.address, lamports(1_000_000_000n));
-    await client.associatedToken.instructions.createAssociatedToken({ payer, owner, mint }).sendTransaction();
-    return await findAta(owner, mint);
+    await client.associatedToken.instructions
+        .createAssociatedToken({ payer, owner, mint, tokenProgram })
+        .sendTransaction();
+    return await findAta(owner, mint, tokenProgram);
 };
 
 const createUninitializedTokenProgramAccount = async (client: TestClient, space: number): Promise<Address> => {
@@ -435,6 +448,43 @@ it('accepts signer, HasAddress and ProgramDerivedAddress inputs', async () => {
     ).resolves.toBeUndefined();
 });
 
+it('accepts a Token-2022 associated token account when tokenProgram is set', async () => {
+    // Given a funded recipient with a Token-2022 associated token account, which carries an extension.
+    const client = await createTestClient();
+    const [mint, recipient] = await Promise.all([
+        createTestMint(client, TOKEN_2022_PROGRAM_ADDRESS),
+        createFundedAddress(client),
+    ]);
+    const destination = await createAta(client, recipient, mint, TOKEN_2022_PROGRAM_ADDRESS);
+    const input = { mint, destination, recipient };
+
+    // Then it is valid for the Token-2022 program and not the associated token account of the Token program.
+    await expect(
+        assertValidTokenTransferDestination(client.rpc, input, {
+            tokenProgram: new AddressWrapper(TOKEN_2022_PROGRAM_ADDRESS),
+        }),
+    ).resolves.toBeUndefined();
+    await expect(assertValidTokenTransferDestination(client.rpc, input)).rejects.toMatchObject({
+        details: { reason: 'ata-mismatch' },
+    });
+});
+
+it('derives the associated token account from the associatedTokenProgram', async () => {
+    // Given a funded recipient with an associated token account for the mint.
+    const client = await createTestClient();
+    const [mint, recipient] = await Promise.all([createTestMint(client), createFundedAddress(client)]);
+    const destination = await createAta(client, recipient, mint);
+
+    // Then it is not the associated token account derived from another associated token program.
+    await expect(
+        assertValidTokenTransferDestination(
+            client.rpc,
+            { mint, destination, recipient },
+            { associatedTokenProgram: new AddressWrapper(OTHER_PROGRAM_ADDRESS) },
+        ),
+    ).rejects.toMatchObject({ details: { reason: 'ata-mismatch' } });
+});
+
 it('does not forward guard options to getAccountInfo', async () => {
     // Given a funded recipient and an RPC that records getAccountInfo calls.
     const client = await createTestClient();
@@ -448,10 +498,14 @@ it('does not forward guard options to getAccountInfo', async () => {
         rpc,
         { mint, destination, recipient },
         {
+            allowMissingAssociatedTokenAccount: true,
+            allowNonAssociatedTokenAccount: true,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
             allowOffCurve: true,
             allowUnfundedRecipient: true,
             commitment: 'confirmed',
             programOwner: SYSTEM_PROGRAM_ADDRESS,
+            tokenProgram: TOKEN_PROGRAM_ADDRESS,
         },
     );
 

@@ -5,6 +5,8 @@ import {
     type Address,
     type FetchAccountConfig,
     type GetAccountInfoApi,
+    type HasAddress,
+    type ReadonlyUint8Array,
     type Rpc,
 } from '@solana/kit';
 import {
@@ -12,7 +14,17 @@ import {
     type InstructionAccountInput,
 } from '@solana/kit/program-client-core';
 
-import { AccountState, decodeToken, findAssociatedTokenPda, getTokenSize, TOKEN_PROGRAM_ADDRESS } from './generated';
+import {
+    AccountState,
+    decodeToken,
+    findAssociatedTokenPda,
+    getMultisigSize,
+    getTokenSize,
+    TOKEN_PROGRAM_ADDRESS,
+} from './generated';
+
+/** The Token-2022 `AccountType` byte, stored right after the base layout, that marks a token account. */
+const TOKEN_2022_ACCOUNT_TYPE = 2;
 
 /** Why a destination was rejected by {@link assertValidTokenTransferDestination}, with the fields specific to that reason. */
 export type InvalidTokenTransferDestinationDetails =
@@ -100,7 +112,26 @@ export type AssertValidTokenTransferDestinationConfig = FetchAccountConfig & {
      * `false` to avoid paying its rent or to require that the recipient has held the mint before.
      */
     allowMissingAssociatedTokenAccount?: boolean;
+    /**
+     * The token program that owns `mint` and `destination`. Defaults to the Token program
+     * ({@link TOKEN_PROGRAM_ADDRESS}); pass the Token-2022 program address for Token-2022 mints.
+     */
+    tokenProgram?: Address | HasAddress;
+    /** The program that derives associated token accounts. Defaults to the Associated Token program. */
+    associatedTokenProgram?: Address | HasAddress;
 };
+
+/**
+ * Whether `data` has the layout of a token account for `tokenProgram`: exactly the base token account size,
+ * or, outside the Token program, longer and marked as an account (Token-2022 extensions) rather than a mint or
+ * multisig.
+ */
+function isTokenAccountData(data: ReadonlyUint8Array, tokenProgram: Address): boolean {
+    const tokenSize = getTokenSize();
+    if (data.length === tokenSize) return true;
+    if (tokenProgram === TOKEN_PROGRAM_ADDRESS) return false;
+    return data.length > tokenSize && data.length !== getMultisigSize() && data[tokenSize] === TOKEN_2022_ACCOUNT_TYPE;
+}
 
 /**
  * Asserts that `recipient` can safely receive a transfer of `mint` at `destination` by fetching both
@@ -139,12 +170,15 @@ export async function assertValidTokenTransferDestination(
         programOwner = SYSTEM_PROGRAM_ADDRESS,
         allowNonAssociatedTokenAccount = false,
         allowMissingAssociatedTokenAccount = true,
+        tokenProgram: tokenProgramInput = TOKEN_PROGRAM_ADDRESS,
+        associatedTokenProgram,
         ...fetchConfig
     } = config ?? {};
+    const tokenProgram = getAddressFromResolvedInstructionAccount('tokenProgram', tokenProgramInput);
     const [recipientAccount, destinationAccount, [ata]] = await Promise.all([
         fetchEncodedAccount(rpc, recipient, fetchConfig),
         fetchEncodedAccount(rpc, destination, fetchConfig),
-        findAssociatedTokenPda({ owner: recipient, mint, tokenProgram: TOKEN_PROGRAM_ADDRESS }),
+        findAssociatedTokenPda({ owner: recipient, mint, tokenProgram }, { programAddress: associatedTokenProgram }),
     ]);
 
     if (recipientAccount.exists) {
@@ -197,7 +231,7 @@ export async function assertValidTokenTransferDestination(
     }
 
     const token =
-        destinationAccount.programAddress === TOKEN_PROGRAM_ADDRESS && destinationAccount.data.length === getTokenSize()
+        destinationAccount.programAddress === tokenProgram && isTokenAccountData(destinationAccount.data, tokenProgram)
             ? decodeToken(destinationAccount).data
             : null;
     if (!token || token.state === AccountState.Uninitialized) {
