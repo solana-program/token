@@ -22,9 +22,12 @@ cargo-nightly:
 
 audit:
 	cargo audit \
-			--ignore RUSTSEC-2022-0093 \
-			--ignore RUSTSEC-2024-0344 \
-			$(ARGS)
+		--ignore RUSTSEC-2022-0093 \
+		--ignore RUSTSEC-2024-0344 \
+		--ignore RUSTSEC-2026-0387 \
+		--ignore RUSTSEC-2026-0391 \
+		--ignore RUSTSEC-2026-0403 \
+		$(ARGS)
 
 spellcheck:
 	cargo spellcheck --code 1 $(ARGS)
