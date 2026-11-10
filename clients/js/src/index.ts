@@ -7,4 +7,3 @@ export { type BatchInstruction, getBatchInstruction, parseBatchInstruction } fro
 export * from './createMint';
 export * from './mintToATA';
 export * from './transferToATA';
-export * from './assertValidTokenTransferDestination';
