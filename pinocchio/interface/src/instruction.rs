@@ -567,15 +567,15 @@ pub enum TokenInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   * Single owner/delegate
+    ///   * Single authority
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
-    ///   2. `[signer]` The source account's owner/delegate.
+    ///   2. `[signer]` The source account's authority.
     ///
-    ///   * Multisignature owner/delegate
+    ///   * Multisignature authority
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
-    ///   2. `[]` The source account's multisignature owner/delegate.
+    ///   2. `[]` The source account's multisignature authority.
     ///   3. `..+M` `[signer]` M signer accounts.
     WithdrawExcessLamports = 38,
 
