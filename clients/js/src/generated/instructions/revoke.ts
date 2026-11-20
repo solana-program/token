@@ -87,7 +87,7 @@ export type RevokeInput<
 > = {
     /** The source account. */
     source: TAccountSource;
-    /** The source account owner or its multisignature. */
+    /** The source account owner or delegate, or its multisignature. */
     owner: TAccountOwner;
     multiSigners?: Array<InstructionSignerInput>;
 };
@@ -162,7 +162,7 @@ export type ParsedRevokeInstruction<
     accounts: {
         /** The source account. */
         source: TAccountMetas[0];
-        /** The source account owner or its multisignature. */
+        /** The source account owner or delegate, or its multisignature. */
         owner: TAccountMetas[1];
     };
     data: RevokeInstructionData;
