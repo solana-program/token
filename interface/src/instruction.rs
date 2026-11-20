@@ -478,17 +478,21 @@ pub enum TokenInstruction<'a> {
     /// owned account by sending them to any other account, leaving behind only
     /// lamports for rent exemption.
     ///
+    /// The authority is the owner of a token account, the mint authority of a
+    /// mint (or the mint itself when it has no mint authority), or the
+    /// multisignature account itself. Delegates are not accepted.
+    ///
     /// Accounts expected by this instruction:
     ///
-    ///   * Single owner/delegate
+    ///   * Single authority
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
-    ///   2. `[signer]` The source account's owner/delegate.
+    ///   2. `[signer]` The source account's authority.
     ///
-    ///   * Multisignature owner/delegate
+    ///   * Multisignature authority
     ///   0. `[writable]` The source account.
     ///   1. `[writable]` The destination account.
-    ///   2. `[]` The source account's multisignature owner/delegate.
+    ///   2. `[]` The source account's multisignature authority.
     ///   3. `..+M` `[signer]` M signer accounts.
     WithdrawExcessLamports = 38,
     /// Transfer lamports from a native SOL account to a destination account.
