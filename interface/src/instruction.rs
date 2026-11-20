@@ -1638,6 +1638,10 @@ pub fn batch(
             return Err(ProgramError::IncorrectProgramId);
         }
 
+        if instruction.accounts.len() > u8::MAX as usize {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+
         data.push(instruction.accounts.len() as u8);
 
         if instruction.data.len() > u8::MAX as usize {
@@ -1938,6 +1942,27 @@ mod test {
         assert_eq!(packed, expect);
         let unpacked = TokenInstruction::unpack(&expect).unwrap();
         assert_eq!(unpacked, check);
+    }
+
+    #[test]
+    fn test_batch_rejects_too_many_accounts() {
+        let program_id = crate::id();
+        let account = AccountMeta::new_readonly(Pubkey::new_unique(), false);
+        let mut instruction = Instruction {
+            program_id,
+            accounts: vec![account.clone(); u8::MAX as usize],
+            data: TokenInstruction::SyncNative.pack(),
+        };
+
+        let batched = batch(&program_id, &[instruction.clone()]).unwrap();
+        assert_eq!(batched.data, vec![255, u8::MAX, 1, 17]);
+        assert_eq!(batched.accounts.len(), u8::MAX as usize);
+
+        instruction.accounts.push(account);
+        assert_eq!(
+            batch(&program_id, &[instruction]).unwrap_err(),
+            ProgramError::InvalidInstructionData
+        );
     }
 
     #[test]
