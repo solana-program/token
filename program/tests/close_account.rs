@@ -21,7 +21,8 @@ fn success_init_after_close_account() {
     let destination = Pubkey::new_unique();
     let decimals = 9;
 
-    let owner_account = SolanaAccount::new(1_000_000_000, 0, &system_program::id());
+    let owner_account =
+        SolanaAccount::new_with_data(1_000_000_000, vec![0; 0], &system_program::id());
     let mint_account = setup::setup_mint_account(None, None, 0, decimals);
     let token_account = setup::setup_token_account(&mint, &owner, 0);
 
@@ -92,7 +93,8 @@ fn fail_init_after_close_account() {
     let destination = Pubkey::new_unique();
     let decimals = 9;
 
-    let owner_account = SolanaAccount::new(1_000_000_000, 0, &system_program::id());
+    let owner_account =
+        SolanaAccount::new_with_data(1_000_000_000, vec![0; 0], &system_program::id());
     let mint_account = setup::setup_mint_account(None, None, 0, decimals);
     let token_account = setup::setup_token_account(&mint, &owner, 0);
 

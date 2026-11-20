@@ -6,7 +6,7 @@ use {
     assert_matches::assert_matches,
     pinocchio_token_interface::state::{account::Account, mint::Mint, multisig::Multisig},
     setup::{mint, TOKEN_PROGRAM_ID},
-    solana_instruction::error::InstructionError,
+    solana_instruction_error::InstructionError,
     solana_keypair::Keypair,
     solana_program_pack::Pack,
     solana_program_test::{tokio, BanksClientError, ProgramTest},
