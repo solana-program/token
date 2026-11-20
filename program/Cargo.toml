@@ -38,7 +38,7 @@ mollusk-svm = { workspace = true }
 mollusk-svm-fuzz-fixture = { workspace = true }
 proptest = "1.5"
 serial_test = "3.2.0"
-solana-account = "3.0.0"
+solana-account = "5.0.0"
 solana-account-info = "3.0.0"
 solana-clock = "3.0.0"
 solana-native-token = "3.0.0"

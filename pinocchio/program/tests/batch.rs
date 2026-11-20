@@ -307,7 +307,7 @@ fn mollusk() -> Mollusk {
         //fs.active_mut()
         //    .remove(&agave_feature_set::account_data_direct_mapping::id());
         //fs
-        FeatureSet::all_enabled()
+        FeatureSet::all_enabled().runtime_features()
     };
     let mut mollusk = Mollusk {
         feature_set,
@@ -359,7 +359,7 @@ async fn batch_transfer() {
     // Expected to succeed.
 
     mollusk().process_and_validate_instruction_chain(
-        &[(&instruction, &[Check::success(), Check::all_rent_exempt()])],
+        &[(&instruction, &[Check::success()])],
         &[
             (source_account_key, source_account),
             (destination_account_key, destination_account),
@@ -419,10 +419,7 @@ async fn batch_fail_transfer_with_invalid_program_owner() {
     mollusk().process_and_validate_instruction_chain(
         &[(
             &instruction,
-            &[
-                Check::err(ProgramError::IncorrectProgramId),
-                Check::all_rent_exempt(),
-            ],
+            &[Check::err(ProgramError::IncorrectProgramId)],
         )],
         &[
             (source_account_key, source_account),
@@ -487,10 +484,7 @@ async fn batch_fail_transfer_checked_with_invalid_program_owner() {
     mollusk().process_and_validate_instruction_chain(
         &[(
             &instruction,
-            &[
-                Check::err(ProgramError::IncorrectProgramId),
-                Check::all_rent_exempt(),
-            ],
+            &[Check::err(ProgramError::IncorrectProgramId)],
         )],
         &[
             (source_account_key, source_account),
@@ -576,10 +570,7 @@ async fn batch_fail_swap_tokens_with_invalid_program_owner() {
     mollusk().process_and_validate_instruction_chain(
         &[(
             &instruction,
-            &[
-                Check::err(ProgramError::IncorrectProgramId),
-                Check::all_rent_exempt(),
-            ],
+            &[Check::err(ProgramError::IncorrectProgramId)],
         )],
         &[
             (account_a_key, account_a),
@@ -647,10 +638,7 @@ async fn batch_fail_mint_to_with_invalid_program_owner() {
     mollusk().process_and_validate_instruction_chain(
         &[(
             &instruction,
-            &[
-                Check::err(ProgramError::IncorrectProgramId),
-                Check::all_rent_exempt(),
-            ],
+            &[Check::err(ProgramError::IncorrectProgramId)],
         )],
         &[
             (mint_key, mint),
@@ -742,10 +730,7 @@ async fn batch_fail_burn_with_invalid_program_owner() {
     mollusk().process_and_validate_instruction_chain(
         &[(
             &instruction,
-            &[
-                Check::err(ProgramError::IncorrectProgramId),
-                Check::all_rent_exempt(),
-            ],
+            &[Check::err(ProgramError::IncorrectProgramId)],
         )],
         &[
             (mint_key, mint),

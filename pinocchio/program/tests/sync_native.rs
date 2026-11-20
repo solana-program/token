@@ -119,7 +119,7 @@ fn sync_native_with_rent_change() {
     // Executes the sync_native instruction.
 
     let mut rent = Rent::default();
-    rent.lamports_per_byte_year *= 2;
+    rent.lamports_per_byte *= 2;
 
     let space = size_of::<TokenAccount>();
     let new_rent_exempt_reserve = rent.minimum_balance(space);

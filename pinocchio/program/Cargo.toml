@@ -21,25 +21,26 @@ pinocchio-pubkey = "0.3"
 pinocchio-token-interface = { version = "^0", path = "../interface" }
 
 [dev-dependencies]
-agave-feature-set = "3.0.0"
+agave-feature-set = "4.4.1"
 assert_matches = "1.5.0"
 mollusk-svm = { workspace = true }
 mollusk-svm-fuzz-fixture = { workspace = true }
 num-traits = { workspace = true }
-solana-account = "3.0.0"
+solana-account = "5.0.0"
 solana-instruction = { workspace = true }
-solana-keypair = "3.0.0"
+solana-instruction-error = "3.0.0"
+solana-keypair = "4.0.0"
 solana-program-error = { workspace = true }
 solana-program-option = { workspace = true }
 solana-program-pack = { workspace = true }
-solana-program-test = { version = "3.1.10", features = ["agave-unstable-api"] }
+solana-program-test = { version = "4.4.1", features = ["agave-unstable-api"] }
 solana-pubkey = { workspace = true }
-solana-rent = "3.0.0"
+solana-rent = "4.4.0"
 solana-sdk-ids = "3.0.0"
 solana-signature = "3.0.0"
-solana-signer = "3.0.0"
-solana-transaction = "3.0.0"
-solana-transaction-error = "3.0.0"
+solana-signer = "4.0.0"
+solana-transaction = "5.0.0"
+solana-transaction-error = "4.0.0"
 solana-system-interface = { workspace = true }
 spl-token-interface = { workspace = true }
 spl-token-2022-interface = "2"
