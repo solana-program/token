@@ -127,15 +127,17 @@ pub enum TokenInstruction<'a> {
     },
     /// Revokes the delegate's authority.
     ///
+    /// Note that a delegate can revoke its own delegation.
+    ///
     /// Accounts expected by this instruction:
     ///
-    ///   * Single owner
+    ///   * Single owner/delegate
     ///   0. `[writable]` The source account.
-    ///   1. `[signer]` The source account owner.
+    ///   1. `[signer]` The source account's owner/delegate.
     ///
-    ///   * Multisignature owner
+    ///   * Multisignature owner/delegate
     ///   0. `[writable]` The source account.
-    ///   1. `[]` The source account's multisignature owner.
+    ///   1. `[]` The source account's multisignature owner/delegate.
     ///   2. ..`2+M` `[signer]` M signer accounts
     Revoke,
     /// Sets a new authority of a mint or account.

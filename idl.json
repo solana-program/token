@@ -792,7 +792,7 @@
             "isWritable": false,
             "isSigner": "either",
             "isOptional": false,
-            "docs": ["The source account owner or its multisignature."]
+            "docs": ["The source account owner or delegate, or its multisignature."]
           }
         ],
         "arguments": [
@@ -832,7 +832,10 @@
           }
         ],
         "name": "revoke",
-        "docs": ["Revokes the delegate's authority."],
+        "docs": [
+          "Revokes the delegate's authority.",
+          "A delegate can revoke its own delegation."
+        ],
         "optionalAccountStrategy": "programId"
       },
       {
